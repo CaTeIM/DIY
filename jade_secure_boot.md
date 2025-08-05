@@ -1,114 +1,160 @@
-﻿# 🔐 Carteira Hardware Jade na TTGO com Secure Boot v2
+﻿# 🔐 Carteira Jade na TTGO T-Display com Secure Boot
 
-Este tutorial mostra o processo completo para instalar o firmware da [Blockstream Jade](https://github.com/Blockstream/Jade) em uma placa de desenvolvimento **TTGO T-Display de 16MB**, ativando a camada extra de segurança **Secure Boot v2**.
+Este tutorial mostra o processo completo para instalar e customizar o firmware da [Blockstream Jade](https://github.com/Blockstream/Jade) em uma placa **TTGO T-Display de 16MB**, ativando o **Secure Boot** e removendo o ícone de bateria para um visual mais limpo.
 
-Isso transforma um hardware de baixo custo em uma hardware wallet muito mais robusta, onde a placa só aceitará firmwares assinados por você.
+O resultado é uma hardware wallet DIY robusta, segura e com acabamento profissional.
 
 ## 🧰 Materiais Necessários
 
 ### Hardware
-- 1x Placa [LILYGO TTGO T-Display (ESP32)](https://s.click.aliexpress.com/e/_mqRUCxl) com **16MB de Flash**
-- 1x Cabo USB-C de dados
+
+* 1x Placa [LILYGO TTGO T-Display (ESP32)](https://s.click.aliexpress.com/e/_mqRUCxl) com **16MB de Flash**
+* 1x Cabo USB-C de dados
 
 ### Software
-- [ESP-IDF Tools Installer](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/windows-setup.html) (para Windows)
-- [Git](https://git-scm.com/downloads)
-- Um editor de texto simples (ex: Bloco de Notas, VS Code)
+
+* [ESP-IDF Tools v5.4](https://github.com/espressif/idf-installer/releases/download/offline-5.4/esp-idf-tools-setup-offline-5.4.exe)
+* [Git](https://git-scm.com/downloads)
+* Um editor de texto simples (ex: Bloco de Notas, VS Code)
 
 ## 🛠️ Parte 1: Preparando o Ambiente (Do Zero)
 
-Aqui vamos instalar as ferramentas necessárias no computador para compilar e gravar o firmware.
+### 1.1. Verificar a Versão Correta do ESP-IDF
 
-### 1.1. Instalar o ESP-IDF
-1.  **Baixe o Instalador:** Vá para a [página de downloads da Espressif](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/windows-setup.html), clique em **Windows Installer Download** e pegue o **Universal Online Installer**.
-2.  **Execute a Instalação:** Siga os passos. Quando perguntar a versão, escolha uma estável recente (ex: `v5.1` ou superior). Mantenha os caminhos de instalação padrão.
-3.  **Abra o Terminal Correto:** Após instalar, procure por **"ESP-IDF X.X CMD"** no seu menu Iniciar. **Use sempre este terminal** para os comandos a seguir.
+Para evitar erros de compilação, é **crucial** usar a mesma versão do ESP-IDF para a qual o projeto Jade foi desenvolvido.
 
-### 1.2. Baixar o Código da Jade
-Dentro do terminal do ESP-IDF que você abriu:
+1.  **Acesse o repositório** oficial da [Blockstream Jade no GitHub](https://github.com/Blockstream/Jade).
+2.  **Navegue até o arquivo de configuração** de testes do projeto. Geralmente, ele se encontra em: `.github/workflows/github-actions-test.yml`.
+3.  **Abra o arquivo** e procure pela linha que define a versão do ESP-IDF, que será algo como: `esp_idf_version: v5.4`.
+4.  **Anote essa versão.** É ela que você deve baixar e instalar. Para este guia, usaremos a **v5.4**.
 
-1.  **Clonar o repositório:**
+### 1.2. Instalar o ESP-IDF v5.4
+
+1.  **Limpeza:** Garanta que desinstalou versões antigas do ESP-IDF e apagou a pasta `C:\Espressif`.
+2.  **Baixe o Instalador Offline:** Use o link para a versão que descobrimos: [**ESP-IDF v5.4 Offline Installer**](https://github.com/espressif/idf-installer/releases/download/offline-5.4/esp-idf-tools-setup-offline-5.4.exe)
+3.  **Execute a Instalação:** Siga os passos do instalador
+4.  (
+
+### 1.3. Baixar o Código da Jade
+
+Dentro do terminal do **ESP-IDF 5.4 CMD**:
+
+1.  **Navegue para a pasta de frameworks:**
+    ```powershell
+    cd C:\Espressif\frameworks
+    ```
+2.  **Clonar o repositório:**
     ```powershell
     git clone https://github.com/Blockstream/Jade.git
     ```
-2.  **Entrar na pasta:**
+3.  **Entrar na pasta:**
     ```powershell
     cd Jade
     ```
-3.  **Baixar as dependências (submódulos):** Este passo é crucial e evita erros de compilação.
+4.  **Baixar as dependências (submódulos):** Passo crucial para evitar erros.
     ```powershell
     git submodule update --init --recursive
     ```
 
-## 🔥 Parte 2: Compilar e Gravar com Secure Boot
+## 🔥 Parte 2: Customizar, Compilar e Gravar
 
-Agora vamos configurar o projeto para a placa de 16MB, ativar o Secure Boot e mandar para a placa.
+### 2.1. Remover o Ícone da Bateria
 
-### 2.1. Criar o Mapa de Partição para 16MB
+1.  **Edite o arquivo `gui.c`:**
+    -   Abra o arquivo `C:\Espressif\frameworks\Jade\main\gui.c` no seu editor de texto.
+2.  **Encontre a função `update_status_bar`**.
+3.  **Comente o bloco da bateria:** Adicione `/*` no início e `*/` no final do bloco `if (status_bar.battery_update_counter == 0) { ... }`.
+
+    ```c
+    /*
+        if (status_bar.battery_update_counter == 0) {
+            uint8_t new_bat = power_get_battery_status();
+            color_t color = new_bat == 0 ? TFT_RED : new_bat == 1 ? TFT_ORANGE : TFT_WHITE;
+            if (power_get_battery_charging()) {
+                new_bat = new_bat + 12;
+            }
+            if (new_bat != status_bar.last_battery_val) {
+                status_bar.last_battery_val = new_bat;
+                gui_set_color(status_bar.battery_text, color);
+                update_text_node_text(status_bar.battery_text, (char[]){ new_bat + '0', '\0' });
+                status_bar.updated = true;
+            }
+            status_bar.battery_update_counter = 60;
+        }
+    */
+    ```
+4.  **Salve o arquivo `gui.c`**.
+
+### 2.2. Criar o Mapa de Partição para 16MB
+
 1.  **Copie o arquivo de partição padrão:**
     ```powershell
     copy partitions.csv partitions_custom.csv
     ```
-2.  **Edite o novo arquivo:** Abra o `partitions_custom.csv` com um editor de texto. Apague todo o conteúdo e cole o seguinte:
+2.  **Edite o novo arquivo:** Abra o `partitions_custom.csv`, apague todo o conteúdo e cole o seguinte:
 
     ```csv
-	# Espressif ESP32 Partition Table - CUSTOM 16MB by CaTeIM
-	# Name,   Type, SubType, Offset,  Size, Flags
-	nvs,      data, nvs,     0xA000,  0x4000,
-	otadata,  data, ota,     0xE000,  0x2000, encrypted
-	ota_0,    app,  ota_0,   ,         6144K,
-	ota_1,    app,  ota_1,   ,         6144K,
-	nvs_key,  data, nvs_keys,,            4K, encrypted
+    # Espressif ESP32 Partition Table - CUSTOM 16MB by CaTeIM
+    # Name,   Type, SubType, Offset,  Size, Flags
+    nvs,      data, nvs,     0xA000,  0x4000,
+    otadata,  data, ota,     0xE000,  0x2000, encrypted
+    ota_0,    app,  ota_0,   ,         6144K,
+    ota_1,    app,  ota_1,   ,         6144K,
+    nvs_key,  data, nvs_keys,,            4K, encrypted
     ```
 3.  Salve e feche o arquivo.
 
-### 2.2. Configurar o Projeto (`menuconfig`)
+### 2.3. Configurar o Projeto (`menuconfig`)
+
 1.  **Abra o Menu de Configuração:**
     ```powershell
     idf.py menuconfig
     ```
-2.  **Ative o Secure Boot (O Ponto de Não Retorno):**
-    - Navegue até `Security features` e tecle `Enter`.
-    - Marque com a barra de espaço a opção `[*] Enable hardware Secure Boot in bootloader`.
-    - Deixe `Secure bootloader mode` como `One-time flash (Recommended)`.
-    - Deixe `Secure Boot signing key` como `Generate signing key automatically...`.
+
+2.  **Ative o Secure Boot:**
+    -   Vá em `Security features` -> `[*] Enable hardware Secure Boot in bootloader`.
+    -   Deixe `Secure bootloader mode (One-time flash)`.
+    -   Marque `[*] Sign binaries during build`.
 
 3.  **Ajuste o Tamanho da Flash:**
-    - Navegue até `Serial flasher config` -> `Flash size (4 MB) --->`.
-    - Selecione **`16 MB`** e tecle `Enter`.
-    - Tecle `Esc` para voltar ao menu principal.
+    -   Vá em `Serial flasher config` -> `Flash size (4 MB) --->`.
+    -   Selecione **`(X) 16 MB`**.
 
-4.  **Aponte para o Mapa de Partição Customizado:**
-    - Navegue até `Partition Table`.
-    - Em `Custom partition CSV file`, digite o nome do nosso novo arquivo: **`partitions_custom.csv`**.
+4.  **Aponte para o Mapa de Partição:**
+    -   Vá em `Partition Table` -> `Partition Table (Custom partition CSV) --->`.
+    -   Marque `(X) Custom partition table CSV`.
+    -   Saia desse sub-menu (ESC) e no campo `Custom partition CSV file` digite: **`partitions_custom.csv`**.
 
-5.  **Salve e Saia:**
-    - Tecle `S` para salvar.
-    - Tecle `Enter` para confirmar.
-    - Tecle `Q` para sair.
+5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
-🚨 **AVISO IRREVERSÍVEL!** 🚨
+### 2.4. Gerar a Chave de Assinatura
 
-Ao executar o próximo passo (`flash`), uma chave de assinatura (`secure_boot_signing_key.pem`) será criada. Um "resumo" dessa chave será **permanentemente gravado** na sua placa.
-
-- **FAÇA BACKUP IMEDIATO DO ARQUIVO `secure_boot_signing_key.pem`!**
-- Se você perder esta chave, **você NUNCA MAIS poderá atualizar o firmware desta placa**.
-
-### 2.3. A Gravação (Flash)
-1.  **Conecte a TTGO T-Display** no seu computador.
-2.  Execute o comando de flash:
+1.  **Limpe compilações antigas:**
     ```powershell
-    idf.py flash
+    idf.py fullclean
     ```
-3.  O processo de compilação vai começar. No final, ele tentará se conectar à placa. Se ele ficar parado em "Connecting...", coloque a placa em modo bootloader manualmente:
-    - Segure o botão `BOOT`.
-    - Aperte e solte o botão `RST`.
-    - Solte o botão `BOOT`.
+2.  **Gere a chave de assinatura:**
+    ```powershell
+    espsecure.py generate_signing_key secure_boot_signing_key.pem
+    ```
 
-Se tudo der certo, a placa irá reiniciar com o firmware da Jade, Secure Boot ativado e usando todo o potencial dos seus 16MB de flash.
+> 🚨 **AVISO IRREVERSÍVEL!** 🚨
+> O arquivo `secure_boot_signing_key.pem` é a chave mestra da sua placa. Um resumo dela será **permanentemente gravado** no hardware no próximo passo.
+> - **FAÇA BACKUP DESTE ARQUIVO!**
+> - Se você perder esta chave, **NUNCA MAIS poderá atualizar o firmware desta placa**.
+
+### 2.5. A Gravação (Flash)
+
+1.  **Conecte a TTGO T-Display** no seu computador.
+2.  **Descubra a porta serial (COM)** no Gerenciador de Dispositivos do Windows.
+3.  **Execute o comando de flash** (substitua `COM3` pela sua porta):
+    ```powershell
+    idf.py flash -p COM3
+    ```
+4.  Se travar em "Connecting...", coloque a placa em modo bootloader: segure `BOOT`, aperte e solte `RST`, depois solte `BOOT`.
 
 ## ✅ Verificação Final
-Após a instalação, a Jade vai iniciar. O Secure Boot é verificado silenciosamente a cada boot. Se a placa ligar e mostrar a interface da Jade, a operação foi um sucesso!
 
----
-*Tutorial criado para o repositório [DIY na Prática](https://github.com/CaTeIM/DIY). Adaptado e testado para entusiastas de hardware e Bitcoin.* 🚀
+A placa irá reiniciar com o firmware da Jade, com Secure Boot, usando os 16MB e sem o ícone de bateria. Agora sim, operação concluída!
+
+*Tutorial criado para o repositório* [_DIY na Prática_](https://github.com/CaTeIM/DIY)_. Adaptado e testado para entusiastas de hardware e Bitcoin._ 🚀
