@@ -13,9 +13,9 @@ O resultado é uma hardware wallet DIY robusta, segura e com acabamento profissi
 
 ### Software
 
-* [ESP-IDF Tools v5.4](https://github.com/espressif/idf-installer/releases/download/offline-5.4/esp-idf-tools-setup-offline-5.4.exe)
+* [ESP-IDF Tools Installer for Windows](https://github.com/espressif/idf-installer/releases/)
 * [Git](https://git-scm.com/downloads)
-* Um editor de texto simples (ex: Bloco de Notas, VS Code)
+* Um editor de texto simples (ex: Bloco de Notas, VS Code, Notepad++)
 
 ## 🛠️ Parte 1: Preparando o Ambiente (Do Zero)
 
@@ -32,8 +32,8 @@ Para evitar erros de compilação, é **crucial** usar a mesma versão do ESP-ID
 
 1.  **Limpeza:** Garanta que desinstalou versões antigas do ESP-IDF e apagou a pasta `C:\Espressif`.
 2.  **Baixe o Instalador Offline:** Use o link para a versão que descobrimos: [**ESP-IDF v5.4 Offline Installer**](https://github.com/espressif/idf-installer/releases/download/offline-5.4/esp-idf-tools-setup-offline-5.4.exe)
-3.  **Execute a Instalação:** Siga os passos do instalador
-4.  (
+3.  **Execute a Instalação:** Siga os passos do instalador. Ao final, marque a opção para abrir o terminal.
+4.  **Abra o Terminal Correto:** Após instalar, procure por **"ESP-IDF 5.4 CMD"** no seu menu Iniciar. **Use sempre este terminal** para os comandos a seguir.
 
 ### 1.3. Baixar o Código da Jade
 
@@ -45,7 +45,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     ```
 2.  **Clonar o repositório:**
     ```powershell
-    git clone https://github.com/Blockstream/Jade.git
+    git clone [https://github.com/Blockstream/Jade.git](https://github.com/Blockstream/Jade.git)
     ```
 3.  **Entrar na pasta:**
     ```powershell
@@ -92,7 +92,6 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     copy partitions.csv partitions_custom.csv
     ```
 2.  **Edite o novo arquivo:** Abra o `partitions_custom.csv`, apague todo o conteúdo e cole o seguinte:
-
     ```csv
     # Espressif ESP32 Partition Table - CUSTOM 16MB by CaTeIM
     # Name,   Type, SubType, Offset,  Size, Flags
@@ -151,10 +150,11 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     ```powershell
     idf.py flash -p COM3
     ```
-4.  Se travar em "Connecting...", coloque a placa em modo bootloader: segure `BOOT`, aperte e solte `RST`, depois solte `BOOT`.
+4.  Se travar em "Connecting...", coloque a placa em modo bootloader manualmente:
+    -   Segure o botão `BOOT`, aperte e solte o `RST`, depois solte o `BOOT`.
 
 ## ✅ Verificação Final
 
-A placa irá reiniciar com o firmware da Jade, com Secure Boot, usando os 16MB e sem o ícone de bateria. Agora sim, operação concluída!
+A placa irá reiniciar com o firmware da Jade, com Secure Boot, usando os 16MB e sem o ícone de bateria. Operação concluída com sucesso!
 
 *Tutorial criado para o repositório* [_DIY na Prática_](https://github.com/CaTeIM/DIY)_. Adaptado e testado para entusiastas de hardware e Bitcoin._ 🚀
