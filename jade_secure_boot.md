@@ -43,14 +43,17 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     ```powershell
     cd C:\Espressif\frameworks
     ```
+
 2.  **Clonar o repositório:**
     ```powershell
-    git clone [https://github.com/Blockstream/Jade.git](https://github.com/Blockstream/Jade.git)
+    git clone https://github.com/Blockstream/Jade.git
     ```
+
 3.  **Entrar na pasta:**
     ```powershell
     cd Jade
     ```
+
 4.  **Baixar as dependências (submódulos):** Passo crucial para evitar erros.
     ```powershell
     git submodule update --init --recursive
@@ -64,7 +67,6 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     -   Abra o arquivo `C:\Espressif\frameworks\Jade\main\gui.c` no seu editor de texto.
 2.  **Encontre a função `update_status_bar`**.
 3.  **Comente o bloco da bateria:** Adicione `/*` no início e `*/` no final do bloco `if (status_bar.battery_update_counter == 0) { ... }`.
-
     ```c
     /*
         if (status_bar.battery_update_counter == 0) {
@@ -91,6 +93,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     ```powershell
     copy partitions.csv partitions_custom.csv
     ```
+
 2.  **Edite o novo arquivo:** Abra o `partitions_custom.csv`, apague todo o conteúdo e cole o seguinte:
     ```csv
     # Espressif ESP32 Partition Table - CUSTOM 16MB by CaTeIM
@@ -101,6 +104,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     ota_1,    app,  ota_1,   ,         6144K,
     nvs_key,  data, nvs_keys,,            4K, encrypted
     ```
+
 3.  Salve e feche o arquivo.
 
 ### 2.3. Configurar o Projeto (`menuconfig`)
@@ -132,6 +136,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     ```powershell
     idf.py fullclean
     ```
+
 2.  **Gere a chave de assinatura:**
     ```powershell
     espsecure.py generate_signing_key secure_boot_signing_key.pem
@@ -157,4 +162,4 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 A placa irá reiniciar com o firmware da Jade, com Secure Boot, usando os 16MB e sem o ícone de bateria. Operação concluída com sucesso!
 
-*Tutorial criado para o repositório* [_DIY na Prática_](https://github.com/CaTeIM/DIY)_. Adaptado e testado para entusiastas de hardware e Bitcoin._ 🚀
+*Tutorial criado para o repositório* [_DIY na Prática_](https://github.com/CaTeIM/DIY). _Adaptado e testado para entusiastas de hardware e Bitcoin._ 🚀
