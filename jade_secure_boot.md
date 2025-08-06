@@ -1,4 +1,4 @@
-﻿# 🔐 Carteira Jade na TTGO T-Display com Secure Boot
+# 🔐 Carteira Jade ₿🪙 na TTGO T-Display com Secure Boot
 
 Este tutorial mostra o processo completo para instalar e customizar o firmware da [Blockstream Jade](https://github.com/Blockstream/Jade) em uma placa **TTGO T-Display de 16MB**, ativando o **Secure Boot** e removendo o ícone de bateria para um visual mais limpo.
 
@@ -24,7 +24,7 @@ O resultado é uma hardware wallet DIY robusta, segura e com acabamento profissi
 Para evitar erros de compilação, é **crucial** usar a mesma versão do ESP-IDF para a qual o projeto Jade foi desenvolvido.
 
 1.  **Acesse o repositório** oficial da [Blockstream Jade no GitHub](https://github.com/Blockstream/Jade).
-2.  **Navegue até o arquivo de configuração** de testes do projeto. Geralmente, ele se encontra em: `.github/workflows/github-actions-test.yml`.
+2.  **Navegue até o arquivo de configuração** de testes do projeto. Geralmente, ele se encontra em: [`.github/workflows/github-actions-test.yml`](https://github.com/Blockstream/Jade/blob/master/.github/workflows/github-actions-test.yml).
 3.  **Abra o arquivo** e procure pela linha que define a versão do ESP-IDF, que será algo como: `esp_idf_version: v5.4`.
 4.  **Anote essa versão.** É ela que você deve baixar e instalar. Para este guia, usaremos a **v5.4**.
 
@@ -40,33 +40,52 @@ Para evitar erros de compilação, é **crucial** usar a mesma versão do ESP-ID
 Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 1.  **Navegue para a pasta de frameworks:**
+
     ```powershell
     cd C:\Espressif\frameworks
     ```
 
 2.  **Clonar o repositório:**
+
     ```powershell
     git clone https://github.com/Blockstream/Jade.git
     ```
 
 3.  **Entrar na pasta:**
+
     ```powershell
     cd Jade
     ```
 
 4.  **Baixar as dependências (submódulos):** Passo crucial para evitar erros.
+
     ```powershell
     git submodule update --init --recursive
     ```
 
 ## 🔥 Parte 2: Customizar, Compilar e Gravar
 
-### 2.1. Remover o Ícone da Bateria
+### 2.1. Aplicar Configuração Base da Placa
+Antes de qualquer customização, vamos carregar as configurações padrão para a TTGO T-Display.
 
+1.  **Limpe configs antigas (por segurança):**
+
+    ```powershell
+    del sdkconfig
+    ```
+
+2.  **Copie a configuração da TTGO T-Display:**
+
+    ```powershell
+    copy configs\sdkconfig_display_ttgo_tdisplay.defaults sdkconfig.defaults
+    ```
+
+### 2.2. Remover o Ícone da Bateria
 1.  **Edite o arquivo `gui.c`:**
     -   Abra o arquivo `C:\Espressif\frameworks\Jade\main\gui.c` no seu editor de texto.
 2.  **Encontre a função `update_status_bar`**.
 3.  **Comente o bloco da bateria:** Adicione `/*` no início e `*/` no final do bloco `if (status_bar.battery_update_counter == 0) { ... }`.
+
     ```c
     /*
         if (status_bar.battery_update_counter == 0) {
@@ -85,16 +104,18 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
         }
     */
     ```
+
 4.  **Salve o arquivo `gui.c`**.
 
-### 2.2. Criar o Mapa de Partição para 16MB
-
+### 2.3. Criar o Mapa de Partição para 16MB
 1.  **Copie o arquivo de partição padrão:**
+
     ```powershell
     copy partitions.csv partitions_custom.csv
     ```
 
 2.  **Edite o novo arquivo:** Abra o `partitions_custom.csv`, apague todo o conteúdo e cole o seguinte:
+
     ```csv
     # Espressif ESP32 Partition Table - CUSTOM 16MB by CaTeIM
     # Name,   Type, SubType, Offset,  Size, Flags
@@ -107,9 +128,9 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 3.  Salve e feche o arquivo.
 
-### 2.3. Configurar o Projeto (`menuconfig`)
-
+### 2.4. Configurar o Projeto (`menuconfig`)
 1.  **Abra o Menu de Configuração:**
+
     ```powershell
     idf.py menuconfig
     ```
@@ -130,14 +151,15 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
-### 2.4. Gerar a Chave de Assinatura
-
+### 2.5. Gerar a Chave de Assinatura
 1.  **Limpe compilações antigas:**
+
     ```powershell
     idf.py fullclean
     ```
 
 2.  **Gere a chave de assinatura:**
+
     ```powershell
     espsecure.py generate_signing_key secure_boot_signing_key.pem
     ```
@@ -147,14 +169,15 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 > - **FAÇA BACKUP DESTE ARQUIVO!**
 > - Se você perder esta chave, **NUNCA MAIS poderá atualizar o firmware desta placa**.
 
-### 2.5. A Gravação (Flash)
-
+### 2.6. A Gravação (Flash)
 1.  **Conecte a TTGO T-Display** no seu computador.
 2.  **Descubra a porta serial (COM)** no Gerenciador de Dispositivos do Windows.
 3.  **Execute o comando de flash** (substitua `COM3` pela sua porta):
+
     ```powershell
     idf.py flash -p COM3
     ```
+
 4.  Se travar em "Connecting...", coloque a placa em modo bootloader manualmente:
     -   Segure o botão `BOOT`, aperte e solte o `RST`, depois solte o `BOOT`.
 
@@ -162,4 +185,4 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 A placa irá reiniciar com o firmware da Jade, com Secure Boot, usando os 16MB e sem o ícone de bateria. Operação concluída com sucesso!
 
-*Tutorial criado para o repositório* [_DIY na Prática_](https://github.com/CaTeIM/DIY). _Adaptado e testado para entusiastas de hardware e Bitcoin._ 🚀
+*Tutorial criado para o repositório* [_DIY na Prática_](https://github.com/CaTeIM/DIY). _Adaptado e testado para entusiastas de hardware e Bitcoin._ ₿🪙🚀
