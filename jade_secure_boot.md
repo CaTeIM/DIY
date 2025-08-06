@@ -66,6 +66,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 ## 🔥 Parte 2: Customizar, Compilar e Gravar
 
 ### 2.1. Aplicar Configuração Base da Placa
+
 Antes de qualquer customização, vamos carregar as configurações padrão para a TTGO T-Display.
 
 1.  **Limpe configs antigas (por segurança):**
@@ -81,8 +82,9 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
     ```
 
 ### 2.2. Remover o Ícone da Bateria
+
 1.  **Edite o arquivo `gui.c`:**
-    -   Abra o arquivo `C:\Espressif\frameworks\Jade\main\gui.c` no seu editor de texto.
+    * Abra o arquivo `C:\Espressif\frameworks\Jade\main\gui.c` no seu editor de texto.
 2.  **Encontre a função `update_status_bar`**.
 3.  **Comente o bloco da bateria:** Adicione `/*` no início e `*/` no final do bloco `if (status_bar.battery_update_counter == 0) { ... }`.
 
@@ -108,6 +110,7 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
 4.  **Salve o arquivo `gui.c`**.
 
 ### 2.3. Criar o Mapa de Partição para 16MB
+
 1.  **Copie o arquivo de partição padrão:**
 
     ```powershell
@@ -121,14 +124,15 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
     # Name,   Type, SubType, Offset,  Size, Flags
     nvs,      data, nvs,     0xA000,  0x4000,
     otadata,  data, ota,     0xE000,  0x2000, encrypted
-    ota_0,    app,  ota_0,   ,         6144K,
-    ota_1,    app,  ota_1,   ,         6144K,
-    nvs_key,  data, nvs_keys,,            4K, encrypted
+    ota_0,    app,  ota_0,   ,        6144K,
+    ota_1,    app,  ota_1,   ,        6144K,
+    nvs_key,  data, nvs_keys,,        4K, encrypted
     ```
 
 3.  Salve e feche o arquivo.
 
 ### 2.4. Configurar o Projeto (`menuconfig`)
+
 1.  **Abra o Menu de Configuração:**
 
     ```powershell
@@ -136,22 +140,23 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
     ```
 
 2.  **Ative o Secure Boot:**
-    -   Vá em `Security features` -> `[*] Enable hardware Secure Boot in bootloader`.
-    -   Deixe `Secure bootloader mode (One-time flash)`.
-    -   Marque `[*] Sign binaries during build`.
+    * Vá em `Security features` -> `[*] Enable hardware Secure Boot in bootloader`.
+    * Deixe `Secure bootloader mode (One-time flash)`.
+    * Marque `[*] Sign binaries during build`.
 
 3.  **Ajuste o Tamanho da Flash:**
-    -   Vá em `Serial flasher config` -> `Flash size (4 MB) --->`.
-    -   Selecione **`(X) 16 MB`**.
+    * Vá em `Serial flasher config` -> `Flash size (4 MB) --->`.
+    * Selecione **`(X) 16 MB`**.
 
 4.  **Aponte para o Mapa de Partição:**
-    -   Vá em `Partition Table` -> `Partition Table (Custom partition CSV) --->`.
-    -   Marque `(X) Custom partition table CSV`.
-    -   Saia desse sub-menu (ESC) e no campo `Custom partition CSV file` digite: **`partitions_custom.csv`**.
+    * Vá em `Partition Table` -> `Partition Table (Custom partition CSV) --->`.
+    * Marque `(X) Custom partition table CSV`.
+    * Saia desse sub-menu (ESC) e no campo `Custom partition CSV file` digite: **`partitions_custom.csv`**.
 
 5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
 ### 2.5. Gerar a Chave de Assinatura
+
 1.  **Limpe compilações antigas:**
 
     ```powershell
@@ -169,20 +174,27 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
 > - **FAÇA BACKUP DESTE ARQUIVO!**
 > - Se você perder esta chave, **NUNCA MAIS poderá atualizar o firmware desta placa**.
 
-### 2.6. A Gravação (Flash)
+### 2.6. A Gravação (Flash) em Etapas
+
 1.  **Conecte a TTGO T-Display** no seu computador.
 2.  **Descubra a porta serial (COM)** no Gerenciador de Dispositivos do Windows.
-3.  **Execute o comando de flash** (substitua `COM3` pela sua porta):
+3.  **Grave o Bootloader:** Este é o primeiro passo e o mais crítico, pois ele ativa o Secure Boot de forma irreversível. (substitua `COM3` pela sua porta):
 
     ```powershell
-    idf.py flash -p COM3
+    idf.py -p COM3 bootloader-flash
     ```
 
-4.  Se travar em "Connecting...", coloque a placa em modo bootloader manualmente:
-    -   Segure o botão `BOOT`, aperte e solte o `RST`, depois solte o `BOOT`.
+4.  **Grave a Aplicação e a Tabela de Partição:** Após o bootloader, gravamos o restante.
+
+    ```powershell
+    idf.py -p COM3 app-flash partition-table-flash
+    ```
+
+5.  Se travar em "Connecting...", coloque a placa em modo bootloader manualmente:
+    * Segure o botão `BOOT`, aperte e solte o `RST`, depois solte o `BOOT`.
 
 ## ✅ Verificação Final
 
 A placa irá reiniciar com o firmware da Jade, com Secure Boot, usando os 16MB e sem o ícone de bateria. Operação concluída com sucesso!
 
-*Tutorial criado para o repositório* [_DIY na Prática_](https://github.com/CaTeIM/DIY). _Adaptado e testado para entusiastas de hardware e Bitcoin._ ₿🪙🚀
+*Tutorial criado para o repositório* [*DIY na Prática*](https://github.com/CaTeIM/DIY). *Adaptado e testado para entusiastas de hardware e Bitcoin.* ₿🪙🚀
