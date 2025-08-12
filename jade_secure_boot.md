@@ -81,7 +81,40 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
     copy configs\sdkconfig_display_ttgo_tdisplay.defaults sdkconfig.defaults
     ```
 
-### 2.2. Remover o Ícone da Bateria
+### 2.2. 🩹 Corrigir a Configuração Base (Passo Crítico!)
+
+O arquivo de configuração padrão que copiamos (`sdkconfig.defaults`) contém **dois erros** para placas TTGO T-Display de 16MB: ele desliga o console serial (o que causa o log corrompido e falhas de conexão) e define o tamanho da memória flash errado.
+
+Vamos corrigir isso manualmente:
+
+1.  **Abra o arquivo** `sdkconfig.defaults` que você acabou de criar na pasta `C:\Espressif\frameworks\Jade` com seu editor de texto.
+2.  **Encontre e comente** (adicione um `#` no início) as duas linhas a seguir para desativá-las:
+    * `CONFIG_ESP_CONSOLE_NONE=y`
+    * `CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y`
+
+    **Elas devem ficar assim:**
+
+    ```
+    # CONFIG_ESP_CONSOLE_NONE=y
+    # CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+    ```
+
+3.  Agora, vá até o **final do arquivo** e adicione as seguintes linhas para forçar a configuração correta:
+
+    ```
+    # CORREÇÃO: Força o console para UART0 para evitar log corrompido (não precisa copiar)
+    CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+    CONFIG_ESP_CONSOLE_UART_NUM=0
+    
+    # CORREÇÃO: Define o tamanho correto da flash para 16MB (não precisa copiar)
+    CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+    ```
+
+4.  **Salve e feche** o arquivo `sdkconfig.defaults`.
+
+Com isso, a base do projeto está corrigida e pronta para ser customizada e compilada sem erros de comunicação. ✅
+
+### 2.3. Remover o Ícone da Bateria
 
 1.  **Edite o arquivo `gui.c`:**
     * Abra o arquivo `C:\Espressif\frameworks\Jade\main\gui.c` no seu editor de texto.
@@ -109,7 +142,7 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
 
 4.  **Salve o arquivo `gui.c`**.
 
-### 2.3. Criar o Mapa de Partição para 16MB
+### 2.4. Criar o Mapa de Partição para 16MB
 
 1.  **Copie o arquivo de partição padrão:**
 
@@ -121,17 +154,17 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
 
     ```csv
     # Espressif ESP32 Partition Table - CUSTOM 16MB by CaTeIM
-    # Name,   Type, SubType, Offset,  Size, Flags
-    nvs,      data, nvs,     0xA000,  0x4000,
-    otadata,  data, ota,     0xE000,  0x2000, encrypted
-    ota_0,    app,  ota_0,   ,        6144K,
-    ota_1,    app,  ota_1,   ,        6144K,
-    nvs_key,  data, nvs_keys,,        4K, encrypted
+    # Name,    Type, SubType, Offset,  Size, Flags
+    nvs,       data, nvs,     0xA000,  0x4000,
+    otadata,   data, ota,     0xE000,  0x2000, encrypted
+    ota_0,     app,  ota_0,   ,        6144K,
+    ota_1,     app,  ota_1,   ,        6144K,
+    nvs_key,   data, nvs_keys,,        4K, encrypted
     ```
 
 3.  Salve e feche o arquivo.
 
-### 2.4. Configurar o Projeto (`menuconfig`)
+### 2.5. Configurar o Projeto (`menuconfig`)
 
 1.  **Abra o Menu de Configuração:**
 
@@ -143,19 +176,16 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
     * Vá em `Security features` -> `[*] Enable hardware Secure Boot in bootloader`.
     * Deixe `Secure bootloader mode (One-time flash)`.
     * Marque `[*] Sign binaries during build`.
-
 3.  **Ajuste o Tamanho da Flash:**
     * Vá em `Serial flasher config` -> `Flash size (4 MB) --->`.
     * Selecione **`(X) 16 MB`**.
-
 4.  **Aponte para o Mapa de Partição:**
     * Vá em `Partition Table` -> `Partition Table (Custom partition CSV) --->`.
     * Marque `(X) Custom partition table CSV`.
     * Saia desse sub-menu (ESC) e no campo `Custom partition CSV file` digite: **`partitions_custom.csv`**.
-
 5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
-### 2.5. Gerar a Chave de Assinatura
+### 2.6. Gerar a Chave de Assinatura
 
 1.  **Limpe compilações antigas:**
 
@@ -174,7 +204,7 @@ Antes de qualquer customização, vamos carregar as configurações padrão para
 > - **FAÇA BACKUP DESTE ARQUIVO!**
 > - Se você perder esta chave, **NUNCA MAIS poderá atualizar o firmware desta placa**.
 
-### 2.6. A Gravação (Flash) em Etapas
+### 2.7. A Gravação (Flash) em Etapas
 
 1.  **Conecte a TTGO T-Display** no seu computador.
 2.  **Descubra a porta serial (COM)** no Gerenciador de Dispositivos do Windows.
