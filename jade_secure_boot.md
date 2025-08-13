@@ -100,7 +100,7 @@ Agora vamos aplicar as correções que resolvem o log corrompido e a instabilida
 #### 2.3.1. Correção do Log (Cirurgia no Código)
 
 1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\main.c`.
-2.  **Encontre a função `boot_process(void)`** (por volta da linha 179).
+2.  **Encontre a função `boot_process(void)`** (por volta da linha 144).
 3.  **Comente a linha** `esp_log_set_vprintf(serial_logger);` para desativar o logger customizado da Jade.
 
     **Antes:**
