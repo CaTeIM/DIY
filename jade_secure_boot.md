@@ -117,18 +117,22 @@ Agora vamos aplicar as correções que resolvem o log corrompido e a instabilida
     ```
 4.  **Salve e feche** o arquivo `main.c`.
 
-#### 2.3.2. Correção do Bluetooth (`menuconfig`)
+#### 2.3.2. Correção do Bluetooth e Estabilidade (`menuconfig`)
 
 1.  **Abra o Menu de Configuração:**
     ```powershell
     idf.py menuconfig
     ```
 2.  **Navegue até** `Component config ---> Bluetooth ---> NimBLE Options`.
-3.  **Faça estas três mudanças** para deixar o Bluetooth mais estável, como no exemplo que funcionou:
+3.  **Faça estas três mudanças** para deixar o Bluetooth mais estável:
     * Mude o valor de `(517) Preferred MTU size in octets` para **`256`**.
     * **Desmarque** a opção `[*] Persist BLE bonding keys in NVS` (deve ficar `[ ]`).
     * **Desmarque** a opção `[*] Blob transfer` (deve ficar `[ ]`).
-4.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
+4.  **Volte** (`ESC`) e navegue até `Component config ---> ESP System Settings`.
+5.  **Faça estas duas mudanças** para melhorar a estabilidade e o debugging:
+    * Entre em `CPU frequency` e mude de `(X) 240 MHz` para **`(X) 160 MHz`**.
+    * Entre em `Panic handler behaviour` e mude de `(X) Silent reboot` para **`(X) Print registers and reboot`**.
+6.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
 ### 2.4. Criar o Mapa de Partição para 16MB
 
