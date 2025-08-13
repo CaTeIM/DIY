@@ -93,9 +93,9 @@ O arquivo de configuração padrão que copiamos contém erros para clones de 16
     ```
 4.  **Salve e feche** o arquivo.
 
-### 2.3. 🩹 Correções Críticas para Clones (Log e Bluetooth)
+### 2.3. 🩹 Correções Críticas para Clones (Log, Estabilidade e Bluetooth)
 
-Agora vamos aplicar as correções que resolvem o log corrompido e a instabilidade do Bluetooth.
+Agora vamos aplicar as correções que resolvem o log corrompido e a instabilidade geral do sistema.
 
 #### 2.3.1. Correção do Log (Cirurgia no Código)
 
@@ -117,7 +117,7 @@ Agora vamos aplicar as correções que resolvem o log corrompido e a instabilida
     ```
 4.  **Salve e feche** o arquivo `main.c`.
 
-#### 2.3.2. Correção do Bluetooth e Estabilidade (`menuconfig`)
+#### 2.3.2. Correções de Estabilidade e Bluetooth (`menuconfig`)
 
 1.  **Abra o Menu de Configuração:**
     ```powershell
@@ -132,7 +132,9 @@ Agora vamos aplicar as correções que resolvem o log corrompido e a instabilida
 5.  **Faça estas duas mudanças** para melhorar a estabilidade e o debugging:
     * Entre em `CPU frequency` e mude de `(X) 240 MHz` para **`(X) 160 MHz`**.
     * Entre em `Panic handler behaviour` e mude de `(X) Silent reboot` para **`(X) Print registers and reboot`**.
-6.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
+6.  **Volte** (`ESC`) e navegue até `Component config ---> Wireless Coexistence`.
+7.  **Marque** a opção `[*] Software controls coexistance`.
+8.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
 ### 2.4. Criar o Mapa de Partição para 16MB
 
