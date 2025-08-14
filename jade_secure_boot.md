@@ -170,7 +170,7 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
     ```
 2.  **Se estiver usando Secure Boot, gere a chave:**
     ```powershell
-    espsecure.py generate_signing_key secure_boot_signing_key.pem
+    espsecure.py generate_signing_key --version 2 secure_boot_signing_key.pem
     ```
     > 🚨 **AVISO IRREVERSÍVEL!** 🚨
     > O arquivo `secure_boot_signing_key.pem` é a chave mestra da sua placa. Um resumo dela será **permanentemente gravado** no hardware no próximo passo.
