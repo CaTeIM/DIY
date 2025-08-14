@@ -1,4 +1,4 @@
-# 🔐 Carteira Jade ₿🪙 na TTGO T-Display com Secure Boot
+# 🔐 Carteira Jade ₿🪙 na TTGO T-Display com Secure Boot V2
 
 Este tutorial mostra o processo completo para instalar e customizar o firmware da [Blockstream Jade](https://github.com/Blockstream/Jade) em uma placa **TTGO T-Display de 16MB** (ou clones compatíveis). Passamos por uma longa jornada de debugging para fazer tudo funcionar, e este guia inclui todas as correções para evitar os erros mais comuns.
 
@@ -104,7 +104,7 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
 #### 2.3.1. Modificando o `CMakeLists.txt`
 
 1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\CMakeLists.txt`.
-2.  **Encontre a linha** (por volta da linha 12) que começa com `if (CONFIG_BOARD_TYPE_JADE...`.
+2.  **Encontre a linha** (por volta da linha 13) que começa com `if (CONFIG_BOARD_TYPE_JADE...`.
 3.  **Adicione a nossa placa** no final da condição.
 
     **A linha deve ficar assim:**
