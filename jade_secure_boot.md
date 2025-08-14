@@ -1,4 +1,4 @@
-# 🔐 Carteira Jade ₿🪙 na TTGO T-Display com Secure Boot (Versão Definitiva)
+# 🔐 Carteira Jade ₿🪙 na TTGO T-Display com Secure Boot
 
 Este tutorial mostra o processo completo para instalar e customizar o firmware da [Blockstream Jade](https://github.com/Blockstream/Jade) em uma placa **TTGO T-Display de 16MB** (ou clones compatíveis). Passamos por uma longa jornada de debugging para fazer tudo funcionar, e este guia inclui todas as correções para evitar os erros mais comuns.
 
@@ -68,75 +68,36 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
     copy configs\sdkconfig_display_ttgo_tdisplay.defaults sdkconfig.defaults
     ```
 
-### 2.2. 🩹 Corrigir a Configuração Base (`sdkconfig.defaults`)
+### 2.2. 🩹 Corrigindo a Lógica dos Botões (Cirurgia no Kconfig)
 
-O arquivo de configuração padrão que copiamos contém erros para clones de 16MB. Vamos corrigi-los:
+O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o que também causa o bug do "aperto fantasma" na conexão USB. Vamos corrigir isso na fonte.
 
-1.  **Abra o arquivo** `sdkconfig.defaults` na pasta `C:\Espressif\frameworks\Jade`.
-2.  **Comente** (adicione um `#` no início) as duas linhas a seguir:
-    * `CONFIG_ESP_CONSOLE_NONE=y`
-    * `CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y`
-
-    **Elas devem ficar assim:**
-    ```
-    # CONFIG_ESP_CONSOLE_NONE=y
-    # CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
-    ```
-3.  Agora, vá até o **final do arquivo** e adicione estas linhas para forçar a configuração correta:
-    ```
-    # CORREÇÃO: Força o console para UART0 para evitar log corrompido
-    CONFIG_ESP_CONSOLE_UART_DEFAULT=y
-    CONFIG_ESP_CONSOLE_UART_NUM=0
-    
-    # CORREÇÃO: Define o tamanho correto da flash para 16MB
-    CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
-    ```
-4.  **Salve e feche** o arquivo.
-
-### 2.3. 🩹 Correções Críticas para Clones (Log, Estabilidade e Bluetooth)
-
-Agora vamos aplicar as correções que resolvem o log corrompido e a instabilidade geral do sistema.
-
-#### 2.3.1. Correção do Log (Cirurgia no Código)
-
-1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\main.c`.
-2.  **Encontre a função `boot_process(void)`** (por volta da linha 144).
-3.  **Comente a linha** `esp_log_set_vprintf(serial_logger);` para desativar o logger customizado da Jade.
+1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\Kconfig.projbuild` no seu editor de texto.
+2.  **Procure (`Ctrl+F`)** pelo termo `INPUT_BTN_A`.
+3.  Você encontrará um bloco de código que define os botões. **Altere os valores `default`** para inverter os pinos dos botões A e B.
 
     **Antes:**
-    ```c
-    #ifndef CONFIG_LOG_DEFAULT_LEVEL_NONE
-        esp_log_set_vprintf(serial_logger);
-    #endif
     ```
+        config INPUT_BTN_A
+            int "BTN A"
+            default 0 if BOARD_TYPE_TTGO_TDISPLAY || BOARD_TYPE_TTGO_TDISPLAYS3
+        config INPUT_BTN_B
+            int "BTN B"
+            default 35 if BOARD_TYPE_TTGO_TDISPLAY || BOARD_TYPE_M5_STICKC_PLUS_2
+    ```
+
     **Depois (o jeito certo):**
-    ```c
-    #ifndef CONFIG_LOG_DEFAULT_LEVEL_NONE
-        // esp_log_set_vprintf(serial_logger);
-    #endif
     ```
-4.  **Salve e feche** o arquivo `main.c`.
-
-#### 2.3.2. Correções de Estabilidade e Bluetooth (`menuconfig`)
-
-1.  **Abra o Menu de Configuração:**
-    ```powershell
-    idf.py menuconfig
+        config INPUT_BTN_A
+            int "BTN A"
+            default 35 if BOARD_TYPE_TTGO_TDISPLAY || BOARD_TYPE_TTGO_TDISPLAYS3
+        config INPUT_BTN_B
+            int "BTN B"
+            default 0 if BOARD_TYPE_TTGO_TDISPLAY || BOARD_TYPE_M5_STICKC_PLUS_2
     ```
-2.  **Navegue até** `Component config ---> Bluetooth ---> NimBLE Options`.
-3.  **Faça estas três mudanças** para deixar o Bluetooth mais estável:
-    * Mude o valor de `(517) Preferred MTU size in octets` para **`256`**.
-    * **Desmarque** a opção `[*] Persist BLE bonding keys in NVS` (deve ficar `[ ]`).
-    * **Desmarque** a opção `[*] Blob transfer` (deve ficar `[ ]`).
-4.  **Volte** (`ESC`) e navegue até `Component config ---> ESP System Settings`.
-5.  **Faça estas duas mudanças** para melhorar a estabilidade e o debugging:
-    * Entre em `CPU frequency` e mude de `(X) 240 MHz` para **`(X) 160 MHz`**.
-    * Entre em `Panic handler behaviour` e mude de `(X) Silent reboot` para **`(X) Print registers and reboot`**.
-6.  **Volte** (`ESC`) e navegue até `Component config ---> Wireless Coexistence`.
-7.  **Marque** a opção `[*] Software controls coexistance`.
-8.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
+4.  **Salve e feche** o arquivo `Kconfig.projbuild`.
 
-### 2.4. Criar o Mapa de Partição para 16MB
+### 2.3. Criar o Mapa de Partição para 16MB
 
 1.  **Copie o arquivo de partição padrão:**
     ```powershell
@@ -154,9 +115,9 @@ Agora vamos aplicar as correções que resolvem o log corrompido e a instabilida
     ```
 3.  Salve e feche o arquivo.
 
-### 2.5. Configurar o Restante do Projeto (`menuconfig`)
+### 2.4. Configurar o Restante do Projeto (`menuconfig`)
 
-1.  **Abra o Menu de Configuração novamente:**
+1.  **Abra o Menu de Configuração:**
     ```powershell
     idf.py menuconfig
     ```
@@ -173,7 +134,7 @@ Agora vamos aplicar as correções que resolvem o log corrompido e a instabilida
     * No campo `Custom partition CSV file`, digite: **`partitions_custom.csv`**.
 5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
-### 2.6. Compilar e Gravar
+### 2.5. Compilar e Gravar
 
 1.  **Limpe compilações antigas:**
     ```powershell
@@ -212,8 +173,7 @@ Agora vamos aplicar as correções que resolvem o log corrompido e a instabilida
 #### Tela Maluca ao Conectar no PC (O Bug do "Aperto Fantasma")
 
 * **Sintoma:** A tela da Jade fica avançando sozinha, como se um botão estivesse pressionado, **apenas** quando você tenta conectar com um app no PC (Blockstream Green, Sparrow).
-* **Causa:** É um bug de hardware. O app no PC ativa uma linha do cabo USB que é fisicamente ligada ao pino `GPIO 0` na placa. O firmware da Jade usa esse pino como o botão principal.
-* **Solução:** A solução ideal (inverter os botões via software) ainda não foi encontrada de forma estável. A melhor abordagem é **inicializar e usar a Jade via Bluetooth**, evitando o bug da conexão USB.
+* **Causa:** É um bug de hardware. O app no PC ativa uma linha do cabo USB que é fisicamente ligada ao pino `GPIO 0` na placa. O firmware da Jade usa esse pino como o botão principal. A correção que fizemos no passo 2.2 inverte os botões para contornar esse problema.
 
 ## ✅ Verificação Final
 
@@ -225,7 +185,5 @@ Essa jornada foi longa. Veja como isolamos os problemas:
 
 1.  **Teste do `hello_world`:** Primeiro, compilamos um "Olá, Mundo" padrão. O log apareceu limpo. Isso provou que a placa, o cabo e o ambiente ESP-IDF estavam **perfeitos**. A culpa era do firmware da Jade.
 2.  **Correção do Log:** Ao ver que o log da Jade era corrompido, mas o do `hello_world` não, concluímos que a Jade usava um sistema de log customizado e bugado. A solução foi "operar" o `main.c` e desativá-lo.
-3.  **Teste do `bleprph`:** Compilamos um exemplo de Bluetooth padrão do ESP-IDF. A conexão ficou 100% estável. Isso provou que o **hardware do Bluetooth era bom**, e que o bug estava nas configurações ou no código da Jade.
-4.  **Comparação dos `sdkconfig`:** Com a prova de que o `bleprph` funcionava, comparamos seu arquivo de configuração com o da Jade, linha por linha. Foi assim que encontramos as diferenças cruciais (MTU, NVS, Blob Transfer) e as aplicamos na Jade para consertar a instabilidade.
 
 *Tutorial criado para o repositório* [*DIY na Prática*](https://github.com/CaTeIM/DIY). *Adaptado e testado para entusiastas de hardware e Bitcoin.* ₿🪙🚀
