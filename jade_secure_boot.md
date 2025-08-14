@@ -70,7 +70,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 ### 2.2. 🩹 Corrigindo a Lógica dos Botões (Cirurgia no Kconfig)
 
-O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o que também causa o bug do "aperto fantasma" na conexão USB. Vamos corrigir isso na fonte.
+O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o que causa o bug do "aperto fantasma" na conexão USB. Vamos corrigir isso na fonte, antes de compilar.
 
 1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\Kconfig.projbuild` no seu editor de texto.
 2.  **Procure (`Ctrl+F`)** pelo termo `INPUT_BTN_A`.
@@ -97,7 +97,35 @@ O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o qu
     ```
 4.  **Salve e feche** o arquivo `Kconfig.projbuild`.
 
-### 2.3. Criar o Mapa de Partição para 16MB
+### 2.3. 🎨 Adicionando a Logo da Blockstream (Cirurgia no Código)
+
+Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. Vamos adicionar a TTGO T-Display na "lista VIP".
+
+#### 2.3.1. Modificando o `CMakeLists.txt`
+
+1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\CMakeLists.txt`.
+2.  **Encontre a linha** (por volta da linha 12) que começa com `if (CONFIG_BOARD_TYPE_JADE...`.
+3.  **Adicione a nossa placa** no final da condição.
+
+    **A linha deve ficar assim:**
+    ```cmake
+    if (CONFIG_BOARD_TYPE_JADE OR CONFIG_BOARD_TYPE_JADE_V1_1 OR CONFIG_BOARD_TYPE_JADE_V2 OR CONFIG_BOARD_TYPE_TTGO_TDISPLAY)
+    ```
+4.  **Salve e feche** o arquivo.
+
+#### 2.3.2. Modificando o `gui.c`
+
+1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\gui.c`.
+2.  **Encontre as DUAS linhas** (por volta das linhas 2594 e 2606) que começam com `#if defined(CONFIG_BOARD_TYPE_JADE)...`.
+3.  **Adicione a nossa placa** no final da condição em **AMBAS** as linhas.
+
+    **As duas linhas devem ficar assim:**
+    ```c
+    #if defined(CONFIG_BOARD_TYPE_JADE) || defined(CONFIG_BOARD_TYPE_JADE_V1_1) || defined(CONFIG_BOARD_TYPE_JADE_V2) || defined(CONFIG_BOARD_TYPE_TTGO_TDISPLAY)
+    ```
+4.  **Salve e feche** o arquivo.
+
+### 2.4. Criar o Mapa de Partição para 16MB
 
 1.  **Copie o arquivo de partição padrão:**
     ```powershell
@@ -115,7 +143,7 @@ O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o qu
     ```
 3.  Salve e feche o arquivo.
 
-### 2.4. Configurar o Restante do Projeto (`menuconfig`)
+### 2.5. Configurar o Projeto (`menuconfig`)
 
 1.  **Abra o Menu de Configuração:**
     ```powershell
@@ -134,7 +162,7 @@ O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o qu
     * No campo `Custom partition CSV file`, digite: **`partitions_custom.csv`**.
 5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
-### 2.5. Compilar e Gravar
+### 2.6. Compilar e Gravar
 
 1.  **Limpe compilações antigas:**
     ```powershell
