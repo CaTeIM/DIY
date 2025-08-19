@@ -1,4 +1,4 @@
-# 🔐 Carteira Jade ₿🪙 na TTGO T-Display com Secure Boot V2
+# 🔐 Carteira Jade ₿🪙 na TTGO T-Display com Secure Boot V1
 
 Este tutorial mostra o processo completo para instalar e customizar o firmware da [Blockstream Jade](https://github.com/Blockstream/Jade) em uma placa **TTGO T-Display de 16MB** (ou clones compatíveis). Passamos por uma longa jornada de debugging para fazer tudo funcionar, e este guia inclui todas as correções para evitar os erros mais comuns.
 
@@ -125,7 +125,56 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
     ```
 4.  **Salve e feche** o arquivo.
 
-### 2.4. Criar o Mapa de Partição para 16MB
+### 2.4. 🔋 Remover o Ícone da Bateria (Opcional)
+
+Como a TTGO T-Display não tem um circuito preciso para medição de bateria, o ícone na tela não é funcional. Vamos removê-lo para um visual mais limpo.
+
+1.  **Abra novamente o arquivo** `C:\Espressif\frameworks\Jade\main\gui.c`.
+2.  **Impeça a criação do ícone:**
+    * Procure pela função `make_status_bar`.
+    * Localize o bloco `#else` que corresponde à tela menor da TTGO.
+    * Altere a linha `gui_make_hsplit` para ter 4 partes em vez de 5, removendo o último valor (`17`).
+    * Comente ou delete as 3 linhas que criam o `status_bar.battery_text`.
+
+    **O bloco modificado deve ficar assim:**
+    ```c
+    // ...
+    #else
+        // AJUSTE: Mude de 5 para 4 partes e remova o último parâmetro (17)
+        gui_make_hsplit(&status_parent, GUI_SPLIT_RELATIVE, 4, 10, 65, 8, 8);
+        gui_set_padding(status_parent, GUI_MARGIN_ALL_DIFFERENT, 3, 0, 0, 4);
+        gui_set_parent(status_parent, status_bar.root);
+
+        // ... (código do logo, nome, usb, ble) ...
+
+        // REMOVIDO: Comente ou delete as próximas 3 linhas
+        // gui_make_text_font(&status_bar.battery_text, "0", TFT_WHITE, JADE_SYMBOLS_16x32_FONT);
+        // gui_set_align(status_bar.battery_text, GUI_ALIGN_RIGHT, GUI_ALIGN_MIDDLE);
+        // gui_set_parent(status_bar.battery_text, status_parent);
+    #endif // HOME_SCREEN_DEEP_STATUS_BAR
+    // ...
+    ```
+3.  **Impeça a atualização do ícone:**
+    * Procure pela função `update_status_bar`.
+    * Encontre o bloco de código que começa com `if (status_bar.battery_update_counter == 0)`.
+    * Comente todo o bloco e a linha `status_bar.battery_update_counter--;` logo abaixo dele.
+
+    **O trecho modificado deve ficar assim:**
+    ```c
+    // ...
+        // REMOVIDO: Comente todo o bloco que atualiza a bateria
+        /*
+        if (status_bar.battery_update_counter == 0) {
+            // ... (todo o conteúdo original do if) ...
+        }
+
+        status_bar.battery_update_counter--;
+        */
+    // ...
+    ```
+4.  **Salve e feche** o arquivo `gui.c`.
+
+### 2.5. Criar o Mapa de Partição para 16MB
 
 1.  **Copie o arquivo de partição padrão:**
     ```powershell
@@ -133,17 +182,17 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
     ```
 2.  **Edite o `partitions_custom.csv`**, apague todo o conteúdo e cole o seguinte:
     ```csv
-    # Espressif ESP32 Partition Table - CUSTOM 16MB
+    # Espressif ESP32 Partition Table - CUSTOM 16MB CaTeIM
     # Name,    Type, SubType, Offset,  Size, Flags
-    nvs,       data, nvs,     0xA000,  0x4000,
-    otadata,   data, ota,     0xE000,  0x2000, encrypted
-    ota_0,     app,  ota_0,   ,        6144K,
-    ota_1,     app,  ota_1,   ,        6144K,
-    nvs_key,   data, nvs_keys,,        4K, encrypted
+    nvs,       data, nvs,      0xA000,  0x4000,
+    otadata,   data, ota,      0xE000,  0x2000, encrypted
+    ota_0,     app,  ota_0,   ,         6144K,
+    ota_1,     app,  ota_1,   ,         6144K,
+    nvs_key,   data, nvs_keys,,         4K, encrypted
     ```
 3.  Salve e feche o arquivo.
 
-### 2.5. Configurar o Projeto (`menuconfig`)
+### 2.6. Configurar o Projeto (`menuconfig`)
 
 1.  **Abra o Menu de Configuração:**
     ```powershell
@@ -162,7 +211,7 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
     * No campo `Custom partition CSV file`, digite: **`partitions_custom.csv`**.
 5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
-### 2.6. Compilar e Gravar
+### 2.7. Compilar e Gravar
 
 1.  **Limpe compilações antigas:**
     ```powershell
@@ -170,7 +219,7 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
     ```
 2.  **Se estiver usando Secure Boot, gere a chave:**
     ```powershell
-    espsecure.py generate_signing_key --version 2 secure_boot_signing_key.pem
+    espsecure.py generate_signing_key --version 1 secure_boot_signing_key.pem
     ```
     > 🚨 **AVISO IRREVERSÍVEL!** 🚨
     > O arquivo `secure_boot_signing_key.pem` é a chave mestra da sua placa. Um resumo dela será **permanentemente gravado** no hardware no próximo passo.
@@ -215,3 +264,4 @@ Essa jornada foi longa. Veja como isolamos os problemas:
 2.  **Correção do Log:** Ao ver que o log da Jade era corrompido, mas o do `hello_world` não, concluímos que a Jade usava um sistema de log customizado e bugado. A solução foi "operar" o `main.c` e desativá-lo.
 
 *Tutorial criado para o repositório* [*DIY na Prática*](https://github.com/CaTeIM/DIY). *Adaptado e testado para entusiastas de hardware e Bitcoin.* ₿🪙🚀
+
