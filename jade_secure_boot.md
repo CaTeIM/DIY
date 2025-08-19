@@ -70,7 +70,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 ### 2.2. 🩹 Corrigindo a Lógica dos Botões (Cirurgia no Kconfig)
 
-O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o que causa o bug do "aperto fantasma" na conexão USB. Vamos corrigir isso na fonte, antes de compilar.
+O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o que pode contribuir para o comportamento errático na conexão USB. Vamos corrigir isso na fonte, antes de compilar.
 
 1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\Kconfig.projbuild` no seu editor de texto.
 2.  **Procure (`Ctrl+F`)** pelo termo `INPUT_BTN_A`.
@@ -97,11 +97,34 @@ O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o qu
     ```
 4.  **Salve e feche** o arquivo `Kconfig.projbuild`.
 
-### 2.3. 🎨 Adicionando a Logo da Blockstream (Cirurgia no Código)
+### 2.3. 🩹 Amenizando o Bug do Clique Fantasma (Solução Parcial)
+
+Este é o passo mais crucial para a usabilidade da placa. O bug dos "cliques fantasmas" é causado por um conflito de hardware: o pino `GPIO 0`, usado por um dos botões, é um "strapping pin" sensível ao ruído elétrico gerado durante a conexão USB. O firmware interpreta esse ruído como se o botão estivesse sendo pressionado e segurado (`BUTTON_LONG_PRESS_HOLD`), causando um loop de eventos que trava a interface.
+
+Esta solução ameniza o problema ao desativar a funcionalidade de "pressionar e segurar", que é o gatilho do bug.
+
+1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\input\navbtns.inc`.
+2.  **Procure pela diretiva `#if`** no final do arquivo (por volta da linha 84).
+3.  **Modifique a condição** para incluir a verificação `!defined(CONFIG_BOARD_TYPE_TTGO_TDISPLAY)`.
+
+    **Antes:**
+    ```c
+    #if (!defined(CONFIG_BT_ENABLED)) || (!defined(CONFIG_BOARD_TYPE_M5_BLACK_GRAY) && !defined(CONFIG_BOARD_TYPE_M5_FIRE))
+    ```
+
+    **Depois (o jeito certo):**
+    ```c
+    // Also disable for TTGO T-Display due to noise on GPIO0 during USB startup.
+    #if !defined(CONFIG_BOARD_TYPE_TTGO_TDISPLAY) && ((!defined(CONFIG_BT_ENABLED)) || (!defined(CONFIG_BOARD_TYPE_M5_BLACK_GRAY) && !defined(CONFIG_BOARD_TYPE_M5_FIRE)))
+    ```
+
+4.  **Salve e feche** o arquivo.
+
+### 2.4. 🎨 Adicionando a Logo da Blockstream (Cirurgia no Código)
 
 Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. Vamos adicionar a TTGO T-Display na "lista VIP".
 
-#### 2.3.1. Modificando o `CMakeLists.txt`
+#### 2.4.1. Modificando o `CMakeLists.txt`
 
 1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\CMakeLists.txt`.
 2.  **Encontre a linha** (por volta da linha 13) que começa com `if (CONFIG_BOARD_TYPE_JADE...`.
@@ -113,7 +136,7 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
     ```
 4.  **Salve e feche** o arquivo.
 
-#### 2.3.2. Modificando o `gui.c`
+#### 2.4.2. Modificando o `gui.c`
 
 1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\gui.c`.
 2.  **Encontre as DUAS linhas** (por volta das linhas 2594 e 2606) que começam com `#if defined(CONFIG_BOARD_TYPE_JADE)...`.
@@ -125,7 +148,7 @@ Por padrão, o firmware só mostra a logo de splash em placas oficiais da Jade. 
     ```
 4.  **Salve e feche** o arquivo.
 
-### 2.4. 🔋 Remover o Ícone da Bateria (Opcional)
+### 2.5. 🔋 Remover o Ícone da Bateria (Opcional)
 
 Como a TTGO T-Display não tem um circuito preciso para medição de bateria, o ícone na tela não é funcional. Vamos removê-lo para um visual mais limpo.
 
@@ -145,13 +168,13 @@ Como a TTGO T-Display não tem um circuito preciso para medição de bateria, o 
         gui_set_padding(status_parent, GUI_MARGIN_ALL_DIFFERENT, 3, 0, 0, 4);
         gui_set_parent(status_parent, status_bar.root);
 
+    #endif // HOME_SCREEN_DEEP_STATUS_BAR
         // ... (código do logo, nome, usb, ble) ...
-
+    
         // REMOVIDO: Comente ou delete as próximas 3 linhas
         // gui_make_text_font(&status_bar.battery_text, "0", TFT_WHITE, JADE_SYMBOLS_16x32_FONT);
         // gui_set_align(status_bar.battery_text, GUI_ALIGN_RIGHT, GUI_ALIGN_MIDDLE);
         // gui_set_parent(status_bar.battery_text, status_parent);
-    #endif // HOME_SCREEN_DEEP_STATUS_BAR
     // ...
     ```
 3.  **Impeça a atualização do ícone:**
@@ -174,7 +197,7 @@ Como a TTGO T-Display não tem um circuito preciso para medição de bateria, o 
     ```
 4.  **Salve e feche** o arquivo `gui.c`.
 
-### 2.5. Criar o Mapa de Partição para 16MB
+### 2.6. Criar o Mapa de Partição para 16MB
 
 1.  **Copie o arquivo de partição padrão:**
     ```powershell
@@ -184,15 +207,15 @@ Como a TTGO T-Display não tem um circuito preciso para medição de bateria, o 
     ```csv
     # Espressif ESP32 Partition Table - CUSTOM 16MB CaTeIM
     # Name,    Type, SubType, Offset,  Size, Flags
-    nvs,       data, nvs,      0xA000,  0x4000,
-    otadata,   data, ota,      0xE000,  0x2000, encrypted
+    nvs,       data, nvs,     0xA000,  0x4000,
+    otadata,   data, ota,     0xE000,  0x2000, encrypted
     ota_0,     app,  ota_0,   ,         6144K,
     ota_1,     app,  ota_1,   ,         6144K,
     nvs_key,   data, nvs_keys,,         4K, encrypted
     ```
 3.  Salve e feche o arquivo.
 
-### 2.6. Configurar o Projeto (`menuconfig`)
+### 2.7. Configurar o Projeto (`menuconfig`)
 
 1.  **Abra o Menu de Configuração:**
     ```powershell
@@ -211,7 +234,7 @@ Como a TTGO T-Display não tem um circuito preciso para medição de bateria, o 
     * No campo `Custom partition CSV file`, digite: **`partitions_custom.csv`**.
 5.  **Salve e Saia:** Tecle `S`, depois `Enter`, e `Q`.
 
-### 2.7. Compilar e Gravar
+### 2.8. Compilar e Gravar
 
 1.  **Limpe compilações antigas:**
     ```powershell
@@ -264,4 +287,3 @@ Essa jornada foi longa. Veja como isolamos os problemas:
 2.  **Correção do Log:** Ao ver que o log da Jade era corrompido, mas o do `hello_world` não, concluímos que a Jade usava um sistema de log customizado e bugado. A solução foi "operar" o `main.c` e desativá-lo.
 
 *Tutorial criado para o repositório* [*DIY na Prática*](https://github.com/CaTeIM/DIY). *Adaptado e testado para entusiastas de hardware e Bitcoin.* ₿🪙🚀
-
