@@ -70,7 +70,7 @@ Dentro do terminal do **ESP-IDF 5.4 CMD**:
 
 ### 2.2. 🩹 Corrigindo a Lógica dos Botões (Cirurgia no Kconfig)
 
-O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida, o que pode contribuir para o comportamento errático na conexão USB. Vamos corrigir isso na fonte, antes de compilar.
+O perfil padrão da TTGO T-Display vem com a lógica dos botões invertida. Vamos corrigir isso na fonte, antes de compilar.
 
 1.  **Abra o arquivo** `C:\Espressif\frameworks\Jade\main\Kconfig.projbuild` no seu editor de texto.
 2.  **Procure (`Ctrl+F`)** pelo termo `INPUT_BTN_A`.
