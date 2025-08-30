@@ -114,10 +114,8 @@ Esta solução ameniza o problema ao desativar a funcionalidade de "pressionar e
 
     **Depois (o jeito certo):**
     ```c
-    // Also disable for TTGO T-Display due to noise on GPIO0 during USB startup.
     #if !defined(CONFIG_BOARD_TYPE_TTGO_TDISPLAY) && ((!defined(CONFIG_BT_ENABLED)) || (!defined(CONFIG_BOARD_TYPE_M5_BLACK_GRAY) && !defined(CONFIG_BOARD_TYPE_M5_FIRE)))
     ```
-
 4.  **Salve e feche** o arquivo.
 
 ### 2.4. 🎨 Adicionando a Logo da Blockstream (Cirurgia no Código)
@@ -169,8 +167,9 @@ Como a TTGO T-Display não tem um circuito preciso para medição de bateria, o 
         gui_set_parent(status_parent, status_bar.root);
 
     #endif // HOME_SCREEN_DEEP_STATUS_BAR
-        // ... (código do logo, nome, usb, ble) ...
     
+        // ... (código do logo, nome, usb, ble) ...
+
         // REMOVIDO: Comente ou delete as próximas 3 linhas
         // gui_make_text_font(&status_bar.battery_text, "0", TFT_WHITE, JADE_SYMBOLS_16x32_FONT);
         // gui_set_align(status_bar.battery_text, GUI_ALIGN_RIGHT, GUI_ALIGN_MIDDLE);
