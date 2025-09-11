@@ -12,7 +12,6 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 
 | Projeto                                                         | Descrição Resumida                                                                                             | Tecnologias Principais                                           |
 | :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------- |
-| **[🔐 Jade HW com Secure Boot](./jade_secure_boot.md)** | Transforma uma placa TTGO T-Display em uma Hardware Wallet segura, ativando o Secure Boot v2 do ESP32. | `Blockstream Jade`, `ESP-IDF`, `TTGO T-Display`, `Secure Boot v2` |
 | **[🚨 Sirene Ativada por Chamada](./sirene_por_chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
 | **[💧 Bomba d'Água Automática](./bomba_dagua_automatica.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04`, `TP-Link CPE` |
 
