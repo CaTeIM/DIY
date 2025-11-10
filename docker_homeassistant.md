@@ -65,8 +65,6 @@ sudo ufw allow 6052
 sudo ufw reload
 ```
 
------
-
 ## 2. A Stack (Portainer)
 
 No Portainer, vá em **Stacks**, clique em **+ Add Stack**.
@@ -144,8 +142,6 @@ services:
 
 3.  Clique em **Deploy the stack**.
 
------
-
 ## 3. Configuração Pós-Deploy
 
 Após o deploy, a stack estará rodando, mas precisamos configurar a comunicação.
@@ -173,15 +169,12 @@ O container `mosquitto` irá reiniciar automaticamente e ficará saudável.
 8.  **Senha:** `sua_senha`
 9.  Clique em **Próximo**. A conexão deve ser estabelecida com sucesso.
 
------
 
 ## 4. Acessos Finais
 
   * **Home Assistant:** `http://[IP_DO_SERVIDOR]:8123`
   * **Node-RED:** `http://[IP_DO_SERVIDOR]:1880`
   * **ESPHome Dashboard:** `http://[IP_DO_SERVIDOR]:6052`
-
------
 
 ## 5. Configurando um Dispositivo ESPHome (Placa)
 
@@ -227,7 +220,7 @@ api:
 web_server:
   port: 80
   auth:
-    username: "admin"
+    username: "seu_usuario"
     password: "sua_senha"
 ```
 
