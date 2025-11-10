@@ -10,12 +10,13 @@ Se dá pra automatizar com um módulo `low-cost`, um sensor e um pouco de códig
 
 Aqui estão os projetos documentados até agora. Cada link contém um `README` com o passo a passo completo.
 
-| Projeto                                                         | Descrição Resumida                                                                                             | Tecnologias Principais                                           |
-| :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------- |
-| **[🚨 Sirene Ativada por Chamada](./sirene_por_chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
+| Projeto | Descrição Resumida | Tecnologias Principais |
+| :--- | :--- | :--- |
 | **[💧 Bomba d'ÁGua Automática](./bomba_dagua_automatica.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04`, `TP-Link CPE` |
 | **[🐳 Docker + Portainer no Debian](./docker_portainer_debian.md)** | Guia para instalar Docker e Portainer em um Debian (x86/ARM), centralizando dados em `/srv`. | `Docker`, `Portainer`, `Debian`, `Docker Compose` |
 | **[🖥️ RustDesk Headless no Debian](./rustdesk_headless_debian.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
+| **[🚨 Sirene Ativada por Chamada](./sirene_por_chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
+| **[🤖 Stack Home Assistant (Docker)](./docker_homeassistant.md)** | Guia completo para a stack de automação (HA, Mosquitto, Node-RED, ESPHome) no Docker. | `HA`, `Docker`, `Mosquitto`, `Node-RED`, `ESPHome` |
 
 ## 🛠️ Tecnologias no DNA do Repo
 
