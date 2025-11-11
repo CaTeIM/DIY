@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    privileged: true
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /srv/homeassistant:/config
+      - /run/dbus:/run/dbus:ro
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: bridge
+    ports:
+      - "8123:8123"
+      - "4357:4357"
+    hostname: homeassistant
+
+  esphome:
+    container_name: esphome
+    image: ghcr.io/esphome/esphome:latest
+    privileged: true
+    restart: always
+    environment:
+      - USERNAME=seu_usuario # Troque!!!
+      - PASSWORD=sua_senha # Troque!!!
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /srv/esphome:/config
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host
+    hostname: esphome
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:latest
+    restart: unless-stopped
+    user: "1883:1883"
+    volumes:
+      - /srv/mosquitto/config:/mosquitto/config
+      - /srv/mosquitto/data:/mosquitto/data
+      - /srv/mosquitto/log:/mosquitto/log
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: bridge
+    ports:
+      - "1883:1883"
+    hostname: mosquitto
+
+  nodered:
+    container_name: nodered
+    image: nodered/node-red:latest
+    user: root
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /srv/nodered:/data
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host
+    hostname: nodered
+
+  file-editor:
+    container_name: file-editor
+    image: causticlab/hass-configurator-docker:latest
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+      - HC_USERNAME=seu_usuario # Troque!!!
+      - HC_PASSWORD=sua_senha # Troque!!!
+      - HC_HASS_API=http://homeassistant:8123
+      - HC_HASS_TOKEN=COLE_SEU_TOKEN_DE_LONGA_DURAÇÃO_AQUI # Troque!!!
+      - HC_BASEPATH=/config
+      - HC_HASS_SSL=false
+      - HC_DIRSFIRST=true
+      - HC_ENFORCE_BASEPATH=false
+      - HC_GIT=true
+    volumes:
+      - /srv/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: bridge
+    ports:
+      - "3218:3218"
+    hostname: file-editor

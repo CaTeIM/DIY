@@ -19,6 +19,8 @@ sudo mkdir -p /srv/mosquitto/data
 sudo mkdir -p /srv/mosquitto/log
 ```
 
+*(**Nota:** O `file-editor` usa a pasta `/srv/homeassistant`, que já foi criada acima, então não precisamos de uma pasta nova para ele.)*
+
 ### 1.2. Criar Arquivo de Configuração do Mosquitto
 
 Crie o arquivo `mosquitto.conf` com o conteúdo exato.
@@ -61,6 +63,9 @@ sudo ufw allow 1880
 # Porta do ESPHome (Host)
 sudo ufw allow 6052
 
+# Porta do File Editor (Bridge)
+sudo ufw allow 3218
+
 # Recarregar o firewall
 sudo ufw reload
 ```
@@ -101,9 +106,8 @@ services:
     privileged: true
     restart: always
     environment:
-      # Opcional: Adiciona login ao dashboard do ESPHome
-      # - USERNAME=seu_usuario
-      # - PASSWORD=sua_senha
+      - USERNAME=seu_usuario # Troque!!!
+      - PASSWORD=sua_senha # Troque!!!
       - TZ=America/Sao_Paulo
     volumes:
       - /srv/esphome:/config
@@ -138,9 +142,34 @@ services:
       - /etc/localtime:/etc/localtime:ro
     network_mode: host
     hostname: nodered
+
+  file-editor:
+    container_name: file-editor
+    image: causticlab/hass-configurator-docker:latest
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+      - HC_USERNAME=seu_usuario # Troque!!!
+      - HC_PASSWORD=sua_senha # Troque!!!
+      - HC_HASS_API=http://homeassistant:8123
+      - HC_HASS_TOKEN=COLE_SEU_TOKEN_DE_LONGA_DURAÇÃO_AQUI # Troque!!!
+      - HC_BASEPATH=/config
+      - HC_HASS_SSL=false
+      - HC_DIRSFIRST=true
+      - HC_ENFORCE_BASEPATH=false
+      - HC_GIT=true
+    volumes:
+      - /srv/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: bridge
+    ports:
+      - "3218:3218"
+    hostname: file-editor
 ```
 
 3.  Clique em **Deploy the stack**.
+
+*(**Nota:** O `file-editor` vai iniciar, mas pode dar erro nos logs até você completar o Passo 3.3)*
 
 ## 3. Configuração Pós-Deploy
 
@@ -152,7 +181,7 @@ Execute no terminal do servidor (apenas uma vez) para criar o usuário e senha d
 
 ```bash
 # Sintaxe: docker exec [container] mosquitto_passwd -c -b [arquivo] [usuario] [senha]
-docker exec mosquitto mosquitto_passwd -c -b /mosquitto/config/passwd mqtt mqtt.123
+docker exec mosquitto mosquitto_passwd -c -b /mosquitto/config/passwd seu_usuario_mqtt sua_senha_mqtt
 ```
 
 O container `mosquitto` irá reiniciar automaticamente e ficará saudável.
@@ -165,16 +194,34 @@ O container `mosquitto` irá reiniciar automaticamente e ficará saudável.
 4.  No campo **Corretor** (Broker), **NÃO** use `mosquitto`.
 5.  Use o **IP do Servidor Host** (ex: `192.168.68.9`).
 6.  **Porta:** `1883`
-7.  **Usuário:** `seu_usuario`
-8.  **Senha:** `sua_senha`
+7.  **Usuário:** `seu_usuario_mqtt` (o que você criou no passo 3.1)
+8.  **Senha:** `sua_senha_mqtt` (a que você criou no passo 3.1)
 9.  Clique em **Próximo**. A conexão deve ser estabelecida com sucesso.
 
+### 3.3. Configurar o File Editor (Token)
+
+O `file-editor` precisa de um Token (chave) para poder se comunicar com o Home Assistant (e assim poder checar a config e reiniciar o HA).
+
+1.  No Home Assistant, clique no seu nome de usuário (canto inferior esquerdo) para abrir seu **Perfil**.
+2.  Role até o final da página e clique em **"Tokens de Acesso de Longa Duração"**.
+3.  Clique em **"Criar Token"**.
+4.  Dê um nome para ele (ex: `file-editor`) e clique em **OK**.
+5.  O HA vai gerar um token gigante. **Copie esse token imediatamente** (ele só é mostrado uma vez).
+6.  Agora, volte ao **Portainer**.
+7.  Vá em **Stacks** > clique na sua stack `homeassistant` > clique na aba **Editor**.
+8.  Encontre o serviço `file-editor:`.
+9.  Cole o token que você copiou na variável `HC_HASS_TOKEN`, substituindo `COLE_SEU_TOKEN_DE_LONGA_DURAÇÃO_AQUI`.
+10. Aproveite e já troque o `HC_USERNAME` e `HC_PASSWORD` do `file-editor` para algo seguro.
+11. Role para baixo e clique em **"Update the stack"**.
+
+O `file-editor` irá reiniciar e agora terá acesso total ao seu Home Assistant.
 
 ## 4. Acessos Finais
 
   * **Home Assistant:** `http://[IP_DO_SERVIDOR]:8123`
   * **Node-RED:** `http://[IP_DO_SERVIDOR]:1880`
   * **ESPHome Dashboard:** `http://[IP_DO_SERVIDOR]:6052`
+  * **File Editor:** `http://[IP_DO_SERVIDOR]:3218`
 
 ## 5. Configurando um Dispositivo ESPHome (Placa)
 
