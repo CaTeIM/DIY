@@ -51,6 +51,12 @@ sudo chown -R 1883:1883 /srv/mosquitto
 Precisamos liberar as portas para todos os serviços.
 
 ```bash
+# Instala o UFW (Firewall)
+sudo apt install ufw
+
+# Porta do SSH (Verifique em `sudo nano /etc/ssh/sshd_config`)
+sudo ufw allow 22/tcp
+
 # Porta do Home Assistant (Bridge)
 sudo ufw allow 8123
 
@@ -66,7 +72,13 @@ sudo ufw allow 6052
 # Porta do File Editor (Bridge)
 sudo ufw allow 3218
 
-# Recarregar o firewall
+# Habilita o Firewall
+sudo ufw enable
+
+# Verifique o Status do Firewall
+sudo ufw status
+
+# Recarregar o Firewall
 sudo ufw reload
 ```
 

@@ -88,7 +88,7 @@ Agora que o Docker está funcionando, vamos instalar o Portainer para gerenciá-
 Seguindo nosso padrão, vamos criar a pasta de configuração dentro de `/srv`.
 
 ```bash
-mkdir -p /srv/portainer
+sudo mkdir -p /srv/portainer
 ```
 
 ### 2. Iniciar o Container do Portainer
