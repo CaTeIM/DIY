@@ -46,7 +46,24 @@ O container do Mosquitto roda com o usuário `1883`. Precisamos que ele seja o "
 sudo chown -R 1883:1883 /srv/mosquitto
 ```
 
-### 1.4. Configurar o Firewall (UFW)
+### 1.4. Criar Senha do Mosquitto (À Prova de Falhas)
+
+Precisamos criar o arquivo de senha. No entanto, o container `mosquitto` (como configurado no `mosquitto.conf`) não inicia se o arquivo de senha não existir, causando um "crash loop".
+
+Para resolver isso, usamos um **container temporário** para criar o arquivo na pasta correta, antes mesmo de subir a stack.
+
+```bash
+# Rode este comando para criar o arquivo /srv/mosquitto/config/passwd
+# Substitua seu_usuario_mqtt e sua_senha_mqtt
+docker run --rm -u 1883 \
+  -v /srv/mosquitto/config:/mosquitto/config \
+  eclipse-mosquitto:latest \
+  mosquitto_passwd -c -b /mosquitto/config/passwd seu_usuario_mqtt sua_senha_mqtt
+```
+
+*(**Nota:** O `-u 1883` garante que o arquivo seja criado com o "dono" correto, o mesmo do Passo 1.3)*
+
+### 1.5. Configurar o Firewall (UFW)
 
 Precisamos liberar as portas para todos os serviços.
 
@@ -182,24 +199,13 @@ services:
 
 3.  Clique em **Deploy the stack**.
 
-*(**Nota:** O `file-editor` vai iniciar, mas pode dar erro nos logs até você completar o Passo 3.3)*
+*(**Nota:** O `file-editor` vai iniciar, mas pode dar erro nos logs até você completar o Passo 3.2)*
 
 ## 3. Configuração Pós-Deploy
 
 Após o deploy, a stack estará rodando, mas precisamos configurar a comunicação.
 
-### 3.1. Criar Senha do Mosquitto
-
-Execute no terminal do servidor (apenas uma vez) para criar o usuário e senha do MQTT.
-
-```bash
-# Sintaxe: docker exec [container] mosquitto_passwd -c -b [arquivo] [usuario] [senha]
-docker exec mosquitto mosquitto_passwd -c -b /mosquitto/config/passwd seu_usuario_mqtt sua_senha_mqtt
-```
-
-O container `mosquitto` irá reiniciar automaticamente e ficará saudável.
-
-### 3.2. Configurar MQTT no Home Assistant
+### 3.1. Configurar MQTT no Home Assistant
 
 1.  Acesse o Home Assistant (ex: `http://IP_DO_SERVIDOR:8123`).
 2.  Vá em **Configurações** > **Dispositivos e Serviços**.
@@ -207,11 +213,11 @@ O container `mosquitto` irá reiniciar automaticamente e ficará saudável.
 4.  No campo **Corretor** (Broker), **NÃO** use `mosquitto`.
 5.  Use o **IP do Servidor Host** (ex: `192.168.68.9`).
 6.  **Porta:** `1883`
-7.  **Usuário:** `seu_usuario_mqtt` (o que você criou no passo 3.1)
-8.  **Senha:** `sua_senha_mqtt` (a que você criou no passo 3.1)
+7.  **Usuário:** `seu_usuario_mqtt` (o que você criou no passo 1.4)
+8.  **Senha:** `sua_senha_mqtt` (a que você criou no passo 1.4)
 9.  Clique em **Próximo**. A conexão deve ser estabelecida com sucesso.
 
-### 3.3. Configurar o File Editor (Token)
+### 3.2. Configurar o File Editor (Token)
 
 O `file-editor` precisa de um Token (chave) para poder se comunicar com o Home Assistant (e assim poder checar a config e reiniciar o HA).
 
