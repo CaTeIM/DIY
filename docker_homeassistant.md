@@ -54,7 +54,7 @@ Precisamos liberar as portas para todos os serviços.
 # Instala o UFW (Firewall)
 sudo apt install ufw
 
-# Porta do SSH (Verifique em `sudo nano /etc/ssh/sshd_config`)
+# Porta do SSH (Verifique em sudo nano /etc/ssh/sshd_config)
 sudo ufw allow 22/tcp
 
 # Porta do Home Assistant (Bridge)
@@ -75,11 +75,11 @@ sudo ufw allow 3218
 # Habilita o Firewall
 sudo ufw enable
 
+# Recarregar o Firewall (Se UFW já tiver instalado)
+sudo ufw reload
+
 # Verifique o Status do Firewall
 sudo ufw status
-
-# Recarregar o Firewall
-sudo ufw reload
 ```
 
 ## 2. A Stack (Portainer)
@@ -94,6 +94,7 @@ No Portainer, vá em **Stacks**, clique em **+ Add Stack**.
 ```yaml
 version: "3.8"
 
+name: homeassistant
 services:
   homeassistant:
     container_name: homeassistant
