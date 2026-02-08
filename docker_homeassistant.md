@@ -1,8 +1,8 @@
-## 1. Preparação do Servidor (Host)
+## 1. Preparação do Servidor (Host) 🛠️
 
 Execute todos os comandos no terminal SSH do servidor.
 
-### 1.1. Criar Estrutura de Pastas
+### 1.1. Criar Estrutura de Pastas 📂
 
 Criamos todas as pastas necessárias dentro de `/srv/` para persistir os dados.
 
@@ -17,16 +17,18 @@ sudo mkdir -p /srv/nodered
 sudo mkdir -p /srv/mosquitto/config
 sudo mkdir -p /srv/mosquitto/data
 sudo mkdir -p /srv/mosquitto/log
+
 ```
 
 *(**Nota:** O `file-editor` usa a pasta `/srv/homeassistant`, que já foi criada acima, então não precisamos de uma pasta nova para ele.)*
 
-### 1.2. Criar Arquivo de Configuração do Mosquitto
+### 1.2. Criar Arquivo de Configuração do Mosquitto 📝
 
 Crie o arquivo `mosquitto.conf` com o conteúdo exato.
 
 ```bash
 sudo nano /srv/mosquitto/config/mosquitto.conf
+
 ```
 
 Cole o seguinte conteúdo dentro do arquivo:
@@ -36,17 +38,19 @@ persistence true
 allow_anonymous false
 password_file /mosquitto/config/passwd
 listener 1883
+
 ```
 
-### 1.3. Ajustar Permissão do Mosquitto (Crítico)
+### 1.3. Ajustar Permissão do Mosquitto (Crítico) 🔐
 
 O container do Mosquitto roda com o usuário `1883`. Precisamos que ele seja o "dono" da pasta para que possa escrever nela.
 
 ```bash
 sudo chown -R 1883:1883 /srv/mosquitto
+
 ```
 
-### 1.4. Criar Senha do Mosquitto (À Prova de Falhas)
+### 1.4. Criar Senha do Mosquitto (À Prova de Falhas) 🔑
 
 Precisamos criar o arquivo de senha. No entanto, o container `mosquitto` (como configurado no `mosquitto.conf`) não inicia se o arquivo de senha não existir, causando um "crash loop".
 
@@ -59,11 +63,12 @@ docker run --rm -u 1883 \
   -v /srv/mosquitto/config:/mosquitto/config \
   eclipse-mosquitto:latest \
   mosquitto_passwd -c -b /mosquitto/config/passwd seu_usuario_mqtt sua_senha_mqtt
+
 ```
 
 *(**Nota:** O `-u 1883` garante que o arquivo seja criado com o "dono" correto, o mesmo do Passo 1.3)*
 
-### 1.5. Configurar o Firewall (UFW)
+### 1.5. Configurar o Firewall (UFW) 🛡️
 
 Precisamos liberar as portas para todos os serviços.
 
@@ -97,16 +102,19 @@ sudo ufw reload
 
 # Verifique o Status do Firewall
 sudo ufw status
+
 ```
 
-## 2. A Stack (Portainer)
+---
 
-No Portainer, vá em **Stacks**, clique em **+ Add Stack**.
+## 2. As Stacks (Portainer) 📦
 
-1.  **Nome:** `homeassistant`
-2.  **Editor Web:** Cole o código YAML abaixo.
+Vamos criar duas stacks separadas. No Portainer, vá em **Stacks**, clique em **+ Add Stack**.
 
-<!-- end list -->
+### 2.1. Stack Principal: `homeassistant` 🏠
+
+1. **Nome:** `homeassistant`
+2. **Editor Web:** Cole o código YAML abaixo.
 
 ```yaml
 version: "3.8"
@@ -195,54 +203,90 @@ services:
     ports:
       - "3218:3218"
     hostname: file-editor
+
 ```
 
-3.  Clique em **Deploy the stack**.
+3. Clique em **Deploy the stack**.
 
 *(**Nota:** O `file-editor` vai iniciar, mas pode dar erro nos logs até você completar o Passo 3.2)*
 
-## 3. Configuração Pós-Deploy
+### 2.2. Stack de Manutenção: `watchtower` 🧹
+
+Esta stack atualiza os containers automaticamente e limpa imagens velhas.
+
+1. Crie uma **Nova Stack**.
+2. **Nome:** `watchtower`
+3. **Editor Web:** Cole o código abaixo.
+
+```yaml
+version: "3.8"
+
+name: "watchtower"
+services:
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    command: --cleanup --schedule "0 0 3 * * *"
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    network_mode: host
+    hostname: watchtower
+
+```
+
+4. Clique em **Deploy the stack**.
+
+---
+
+## 3. Configuração Pós-Deploy ⚙️
 
 Após o deploy, a stack estará rodando, mas precisamos configurar a comunicação.
 
 ### 3.1. Configurar MQTT no Home Assistant
 
-1.  Acesse o Home Assistant (ex: `http://IP_DO_SERVIDOR:8123`).
-2.  Vá em **Configurações** > **Dispositivos e Serviços**.
-3.  Encontre o **MQTT** e clique em **Configurar**.
-4.  No campo **Corretor** (Broker), **NÃO** use `mosquitto`.
-5.  Use o **IP do Servidor Host** (ex: `192.168.68.9`).
-6.  **Porta:** `1883`
-7.  **Usuário:** `seu_usuario_mqtt` (o que você criou no passo 1.4)
-8.  **Senha:** `sua_senha_mqtt` (a que você criou no passo 1.4)
-9.  Clique em **Próximo**. A conexão deve ser estabelecida com sucesso.
+1. Acesse o Home Assistant (ex: `http://IP_DO_SERVIDOR:8123`).
+2. Vá em **Configurações** > **Dispositivos e Serviços**.
+3. Encontre o **MQTT** e clique em **Configurar**.
+4. No campo **Corretor** (Broker), **NÃO** use `mosquitto`.
+5. Use o **IP do Servidor Host** (ex: `192.168.68.9`).
+6. **Porta:** `1883`
+7. **Usuário:** `seu_usuario_mqtt` (o que você criou no passo 1.4)
+8. **Senha:** `sua_senha_mqtt` (a que você criou no passo 1.4)
+9. Clique em **Próximo**. A conexão deve ser estabelecida com sucesso.
 
 ### 3.2. Configurar o File Editor (Token)
 
 O `file-editor` precisa de um Token (chave) para poder se comunicar com o Home Assistant (e assim poder checar a config e reiniciar o HA).
 
-1.  No Home Assistant, clique no seu nome de usuário (canto inferior esquerdo) para abrir seu **Perfil**.
-2.  Role até o final da página e clique em **"Tokens de Acesso de Longa Duração"**.
-3.  Clique em **"Criar Token"**.
-4.  Dê um nome para ele (ex: `file-editor`) e clique em **OK**.
-5.  O HA vai gerar um token gigante. **Copie esse token imediatamente** (ele só é mostrado uma vez).
-6.  Agora, volte ao **Portainer**.
-7.  Vá em **Stacks** > clique na sua stack `homeassistant` > clique na aba **Editor**.
-8.  Encontre o serviço `file-editor:`.
-9.  Cole o token que você copiou na variável `HC_HASS_TOKEN`, substituindo `COLE_SEU_TOKEN_DE_LONGA_DURAÇÃO_AQUI`.
+1. No Home Assistant, clique no seu nome de usuário (canto inferior esquerdo) para abrir seu **Perfil**.
+2. Role até o final da página e clique em **"Tokens de Acesso de Longa Duração"**.
+3. Clique em **"Criar Token"**.
+4. Dê um nome para ele (ex: `file-editor`) e clique em **OK**.
+5. O HA vai gerar um token gigante. **Copie esse token imediatamente** (ele só é mostrado uma vez).
+6. Agora, volte ao **Portainer**.
+7. Vá em **Stacks** > clique na sua stack `homeassistant` > clique na aba **Editor**.
+8. Encontre o serviço `file-editor:`.
+9. Cole o token que você copiou na variável `HC_HASS_TOKEN`, substituindo `COLE_SEU_TOKEN_DE_LONGA_DURAÇÃO_AQUI`.
 10. Aproveite e já troque o `HC_USERNAME` e `HC_PASSWORD` do `file-editor` para algo seguro.
 11. Role para baixo e clique em **"Update the stack"**.
 
 O `file-editor` irá reiniciar e agora terá acesso total ao seu Home Assistant.
 
-## 4. Acessos Finais
+---
 
-  * **Home Assistant:** `http://[IP_DO_SERVIDOR]:8123`
-  * **Node-RED:** `http://[IP_DO_SERVIDOR]:1880`
-  * **ESPHome Dashboard:** `http://[IP_DO_SERVIDOR]:6052`
-  * **File Editor:** `http://[IP_DO_SERVIDOR]:3218`
+## 4. Acessos Finais 🌐
 
-## 5. Configurando um Dispositivo ESPHome (Placa)
+* **Home Assistant:** `http://[IP_DO_SERVIDOR]:8123`
+* **Node-RED:** `http://[IP_DO_SERVIDOR]:1880`
+* **ESPHome Dashboard:** `http://[IP_DO_SERVIDOR]:6052`
+* **File Editor:** `http://[IP_DO_SERVIDOR]:3218`
+
+---
+
+## 5. Configurando um Dispositivo ESPHome (Placa) 🔌
 
 Esta seção cobre a instalação e segurança de uma placa física (ex: `a16v3`) usando o Dashboard do ESPHome que acabamos de instalar.
 
@@ -250,25 +294,26 @@ Esta seção cobre a instalação e segurança de uma placa física (ex: `a16v3`
 
 O método `password:` está obsoleto. Usaremos `encryption: key:`.
 
-1.  Acesse o Dashboard do ESPHome (`http://[IP_DO_SERVIDOR]:6052`).
-2.  Clique em **+ NEW DEVICE**. Dê um nome temporário (ex: `gerador-de-chave`) e avance.
-3.  Clique em **EDIT** no dispositivo `gerador-de-chave` que apareceu.
-4.  O YAML terá um bloco `api:` com uma chave. **Copie a chave** (o texto longo em Base64).
-    ```yaml
-    api:
-      encryption:
-        key: "ABCDEfghijklmNOPQRSTuvwxyz0123456789/+=ABCD=" # (Algo assim)
-    ```
-5.  Delete o dispositivo `gerador-de-chave`.
+1. Acesse o Dashboard do ESPHome (`http://[IP_DO_SERVIDOR]:6052`).
+2. Clique em **+ NEW DEVICE**. Dê um nome temporário (ex: `gerador-de-chave`) e avance.
+3. Clique em **EDIT** no dispositivo `gerador-de-chave` que apareceu.
+4. O YAML terá um bloco `api:` com uma chave. **Copie a chave** (o texto longo em Base64).
+```yaml
+api:
+  encryption:
+    key: "ABCDEfghijklmNOPQRSTuvwxyz0123456789/+=ABCD=" # (Algo assim)
+
+```
+
+
+5. Delete o dispositivo `gerador-de-chave`.
 
 ### 5.2. Criar o Firmware da Placa
 
-1.  Clique em **+ NEW DEVICE** novamente e crie seu dispositivo real (ex: `a16v3`).
-2.  Clique em **EDIT** no seu dispositivo `a16v3`.
-3.  Cole o YAML da sua placa.
-4.  **Configure a Segurança:** Adicione a chave (do Passo 5.1) e a senha do site (Web Server).
-
-<!-- end list -->
+1. Clique em **+ NEW DEVICE** novamente e crie seu dispositivo real (ex: `a16v3`).
+2. Clique em **EDIT** no seu dispositivo `a16v3`.
+3. Cole o YAML da sua placa.
+4. **Configure a Segurança:** Adicione a chave (do Passo 5.1) e a senha do site (Web Server).
 
 ```yaml
 esphome:
@@ -288,29 +333,30 @@ web_server:
   auth:
     username: "seu_usuario"
     password: "sua_senha"
+
 ```
 
 ### 5.3. Primeira Instalação (Factory Flash)
 
 Como a placa está com o firmware de fábrica (KinCony), a primeira instalação deve ser via USB.
 
-1.  No dashboard, clique em **INSTALL** no dispositivo `a16v3`.
-2.  O servidor irá compilar o firmware. Aguarde o "Preparing download..." terminar (pode demorar vários minutos).
-3.  Um arquivo `.bin` (ex: `a16v3-factory.bin`) será baixado.
-4.  Conecte a placa `a16v3` ao seu computador via **cabo USB**.
-5.  Na mesma tela do ESPHome, clique em **"Open ESPHome Web"**.
-6.  Um site (esphome.io) abrirá. Clique em **CONNECT**, selecione a porta USB da sua placa e clique em **INSTALL**.
-7.  Selecione o arquivo `.bin` que você baixou.
-8.  Aguarde o processo "Flashing..." terminar.
+1. No dashboard, clique em **INSTALL** no dispositivo `a16v3`.
+2. O servidor irá compilar o firmware. Aguarde o "Preparing download..." terminar (pode demorar vários minutos).
+3. Um arquivo `.bin` (ex: `a16v3-factory.bin`) será baixado.
+4. Conecte a placa `a16v3` ao seu computador via **cabo USB**.
+5. Na mesma tela do ESPHome, clique em **"Open ESPHome Web"**.
+6. Um site (esphome.io) abrirá. Clique em **CONNECT**, selecione a porta USB da sua placa e clique em **INSTALL**.
+7. Selecione o arquivo `.bin` que você baixou.
+8. Aguarde o processo "Flashing..." terminar.
 
 ### 5.4. Adicionar Placa ao Home Assistant
 
-1.  Após o flash, a placa irá reiniciar e conectar na rede com o IP estático que você definiu (ex: `192.168.68.30`).
-2.  No Home Assistant, vá em **Configurações > Dispositivos > Adicionar Integração**.
-3.  Procure por **ESPHome**.
-4.  **Host:** Digite o IP da *placa* (ex: `192.168.68.30`).
-5.  **Encryption Key:** Cole a mesma chave de criptografia (do Passo 5.1) que você colocou no YAML.
-6.  A placa será adicionada.
+1. Após o flash, a placa irá reiniciar e conectar na rede com o IP estático que você definiu (ex: `192.168.68.30`).
+2. No Home Assistant, vá em **Configurações > Dispositivos > Adicionar Integração**.
+3. Procure por **ESPHome**.
+4. **Host:** Digite o IP da *placa* (ex: `192.168.68.30`).
+5. **Encryption Key:** Cole a mesma chave de criptografia (do Passo 5.1) que você colocou no YAML.
+6. A placa será adicionada.
 
 ### 5.5. Atualizações Futuras (OTA)
 
