@@ -56,20 +56,25 @@ sudo apt install ./rustdesk-*.deb
     
 Se algo faltar (ex: `mousepad` como editor de texto), você pode instalá-lo da mesma forma.
 
-## Passo 2: Criar o Usuário de Sessão (Opcional, mas recomendado)
+## Passo 2: Identificar o Usuário de Sessão
 
-Embora você possa usar seu usuário principal, é mais limpo e seguro rodar a sessão virtual com um usuário dedicado. Usaremos o usuário `rustdesk` (UID 1000) neste exemplo.
+Vamos usar o usuário que já existe no sistema com UID 1000 (normalmente o primeiro usuário criado durante a instalação do Debian).
 
-**Se seu usuário `rustdesk` já existe e tem o UID 1000, pule para o próximo passo.**
+Execute o comando abaixo para saber o nome desse usuário:
 
 ```bash
-# Cria o usuário 'rustdesk' com UID 1000, com home dir e shell bash
-sudo useradd --uid 1000 --create-home --shell /bin/bash rustdesk
-
-# Verifique o UID do usuário criado
-id -u rustdesk
-# O resultado deve ser '1000'.
+getent passwd 1000 | cut -d: -f1
+# Exemplo de saída: meunome
 ```
+
+**Anote esse nome** — ele será usado nos passos seguintes no lugar de `<usuario>`.
+
+> Se o comando não retornar nada, significa que não há usuário com UID 1000. Nesse caso, crie um:
+> ```bash
+> sudo useradd --uid 1000 --create-home --shell /bin/bash meuusuario
+> ```
+
+
 
 ## Passo 3: Habilitar "Linger" para o Usuário
 
@@ -78,11 +83,11 @@ Este é um passo **crítico**. Por padrão, os serviços de um usuário (`user@1
 "Habilitar o Linger" diz ao systemd para iniciar os serviços desse usuário **durante o boot**, mesmo sem login. Isso é essencial para que nosso XFCE virtual (que depende desses serviços) possa iniciar.
 
 ```bash
-# Habilita o linger para o usuário 'rustdesk'
-sudo loginctl enable-linger rustdesk
+# Substitua <usuario> pelo nome obtido no Passo 2
+sudo loginctl enable-linger <usuario>
 ```
 
--   **Para verificar:** `loginctl show-user rustdesk -p Linger` (deve retornar `Linger=yes`).
+-   **Para verificar:** `loginctl show-user <usuario> -p Linger` (deve retornar `Linger=yes`).
     
 ## Passo 4: Criar o Script de Inicialização da Sessão
 
@@ -137,8 +142,8 @@ Description=Start Virtual XFCE Session (Xvfb) for RustDesk
 After=network.target
 
 [Service]
-# IMPORTANTE: Rode como o usuário que terá o "linger"
-User=rustdesk
+# IMPORTANTE: Rode como o usuário identificado no Passo 2
+User=<usuario>
 Type=simple
 ExecStart=/usr/local/bin/start-virtual-session.sh
 Restart=always
@@ -150,7 +155,7 @@ WantedBy=multi-user.target
 
 ## Passo 6: "Amarrar" o XFCE Virtual ao Serviço de Usuário
 
-Aqui está o **primeiro pulo do gato**. O serviço `xfce-virtual.service` (um serviço de sistema) precisa esperar que os serviços do **usuário** `rustdesk` (UID 1000) estejam prontos. (É por isso que habilitamos o "linger" no Passo 3).
+Aqui está o **primeiro pulo do gato**. O serviço `xfce-virtual.service` (um serviço de sistema) precisa esperar que os serviços do **usuário** identificado no Passo 2 estejam prontos. (É por isso que habilitamos o "linger" no Passo 3).
 
 Vamos criar um _override_ para adicionar essa dependência.
 ```bash
@@ -158,11 +163,10 @@ Vamos criar um _override_ para adicionar essa dependência.
 sudo systemctl edit xfce-virtual.service
 ```
 
-Isso abrirá um editor. Cole o seguinte:
+Isso abrirá um editor. Cole o seguinte — **substituindo `<usuario>` pelo nome obtido no Passo 2**:
 ```ini
 [Unit]
 # Espera o serviço de usuário (user@1000.service) estar pronto
-# Substitua 1000 pelo UID correto se for diferente
 After=user@1000.service
 Requires=user@1000.service
 ```
