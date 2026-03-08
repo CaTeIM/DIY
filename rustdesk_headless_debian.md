@@ -10,7 +10,7 @@ Isso resolve o problema comum em que o RustDesk funciona, mas só exibe uma tela
 
 ## 🛠️ Componentes Utilizados
 
-1.  **Debian (12, 11, etc.)**: O sistema operacional do servidor.
+1.  **Debian (13, 12, etc.)**: O sistema operacional do servidor.
 2.  **RustDesk**: O software de acesso remoto.
 3.  **XFCE4**: Um ambiente de desktop leve.
 4.  **Xvfb (X Virtual Framebuffer)**: Cria um "monitor virtual" na memória.
@@ -29,6 +29,7 @@ sudo apt update
 sudo apt install --no-install-recommends \
     xvfb \
     dbus-x11 \
+    x11-utils \
     x11-xserver-utils \
     xfce4-session \
     xfwm4 \
@@ -37,13 +38,15 @@ sudo apt install --no-install-recommends \
     thunar \
     xfce4-terminal
 
-# Instala o RustDesk (baixe o .deb apropriado no site oficial)
+# Instala o RustDesk (baixe o .deb apropriado no site oficial: https://github.com/rustdesk/rustdesk/releases)
 sudo apt install ./rustdesk-*.deb
 ```
 
 **Nota:** A lista acima inclui o essencial para um desktop funcional:
 
--   `xvfb`, `dbus-x11`, `x11-xserver-utils`: O display virtual e utilitários.
+-   `xvfb`, `dbus-x11`: O display virtual e barramento de sessão.
+-   `x11-utils`: Utilitários X11, inclui `xdpyinfo` (necessário para o script de inicialização).
+-   `x11-xserver-utils`: Utilitários do servidor X (`xrandr`, `xrdb`, etc.).
 -   `xfce4-session`: O gerenciador de login/sessão.
 -   `xfwm4`: O gerenciador de janelas (para mover/fechar janelas).
 -   `xfce4-panel`: A barra de tarefas/menu.
@@ -55,14 +58,17 @@ Se algo faltar (ex: `mousepad` como editor de texto), você pode instalá-lo da 
 
 ## Passo 2: Criar o Usuário de Sessão (Opcional, mas recomendado)
 
-Embora você possa usar seu usuário principal, é mais limpo e seguro rodar a sessão virtual com um usuário dedicado. Usaremos o usuário `debian` (UID 1000) neste exemplo.
+Embora você possa usar seu usuário principal, é mais limpo e seguro rodar a sessão virtual com um usuário dedicado. Usaremos o usuário `rustdesk` (UID 1000) neste exemplo.
 
-**Se seu usuário `debian` já existe e tem o UID 1000, pule para o próximo passo.**
+**Se seu usuário `rustdesk` já existe e tem o UID 1000, pule para o próximo passo.**
 
 ```bash
-# Verifique o UID do seu usuário
-id -u debian
-# O resultado deve ser '1000'. Se for outro, anote-o.
+# Cria o usuário 'rustdesk' com UID 1000, com home dir e shell bash
+sudo useradd --uid 1000 --create-home --shell /bin/bash rustdesk
+
+# Verifique o UID do usuário criado
+id -u rustdesk
+# O resultado deve ser '1000'.
 ```
 
 ## Passo 3: Habilitar "Linger" para o Usuário
@@ -72,11 +78,11 @@ Este é um passo **crítico**. Por padrão, os serviços de um usuário (`user@1
 "Habilitar o Linger" diz ao systemd para iniciar os serviços desse usuário **durante o boot**, mesmo sem login. Isso é essencial para que nosso XFCE virtual (que depende desses serviços) possa iniciar.
 
 ```bash
-# Habilita o linger para o usuário 'debian'
-sudo loginctl enable-linger debian
+# Habilita o linger para o usuário 'rustdesk'
+sudo loginctl enable-linger rustdesk
 ```
 
--   **Para verificar:** `loginctl show-user debian -p Linger` (deve retornar `Linger=yes`).
+-   **Para verificar:** `loginctl show-user rustdesk -p Linger` (deve retornar `Linger=yes`).
     
 ## Passo 4: Criar o Script de Inicialização da Sessão
 
@@ -98,8 +104,10 @@ Xvfb :0 -screen 0 1920x1080x24 -nolisten tcp &
 # saibam onde encontrar o display virtual
 export DISPLAY=:0
 
-# Espera um segundo para o Xvfb ficar pronto
-sleep 1
+# Aguarda o display :0 estar realmente disponível
+until xdpyinfo -display :0 >/dev/null 2>&1; do
+    sleep 0.5
+done
 
 # Inicia a sessão XFCE dentro do display virtual
 exec xfce4-session
@@ -112,7 +120,7 @@ sudo chmod +x /usr/local/bin/start-virtual-session.sh
 
 ## Passo 5: Criar o Serviço systemd para o XFCE Virtual
 
-Agora, criamos um serviço de **sistema** que executará o script acima como o nosso usuário (`debian`).
+Agora, criamos um serviço de **sistema** que executará o script acima como o nosso usuário (`rustdesk`).
 
 Crie o arquivo:
 ```bash
@@ -122,7 +130,7 @@ sudo nano /etc/systemd/system/xfce-virtual.service
 Cole o seguinte conteúdo:
 
 
-```ini, toml
+```ini
 [Unit]
 Description=Start Virtual XFCE Session (Xvfb) for RustDesk
 # Inicia somente após a rede estar pronta
@@ -130,7 +138,7 @@ After=network.target
 
 [Service]
 # IMPORTANTE: Rode como o usuário que terá o "linger"
-User=debian
+User=rustdesk
 Type=simple
 ExecStart=/usr/local/bin/start-virtual-session.sh
 Restart=always
@@ -142,7 +150,7 @@ WantedBy=multi-user.target
 
 ## Passo 6: "Amarrar" o XFCE Virtual ao Serviço de Usuário
 
-Aqui está o **primeiro pulo do gato**. O serviço `xfce-virtual.service` (um serviço de sistema) precisa esperar que os serviços do **usuário** `debian` (UID 1000) estejam prontos. (É por isso que habilitamos o "linger" no Passo 3).
+Aqui está o **primeiro pulo do gato**. O serviço `xfce-virtual.service` (um serviço de sistema) precisa esperar que os serviços do **usuário** `rustdesk` (UID 1000) estejam prontos. (É por isso que habilitamos o "linger" no Passo 3).
 
 Vamos criar um _override_ para adicionar essa dependência.
 ```bash
@@ -151,7 +159,7 @@ sudo systemctl edit xfce-virtual.service
 ```
 
 Isso abrirá um editor. Cole o seguinte:
-```ini, toml
+```ini
 [Unit]
 # Espera o serviço de usuário (user@1000.service) estar pronto
 # Substitua 1000 pelo UID correto se for diferente
@@ -174,7 +182,7 @@ sudo systemctl edit rustdesk.service
 ```
 
 Isso abrirá um editor. Cole o seguinte:
-```ini, toml
+```ini
 [Unit]
 # 1. Faz o RustDesk esperar pelo nosso XFCE
 After=xfce-virtual.service
@@ -238,9 +246,39 @@ systemctl status rustdesk.service
 **3. O que os logs dizem?**
 
 ```bash
-# Logs do serviço XFCE
-journalctl -u xfce-virtual.service
+# Logs do serviço XFCE (últimas 50 linhas)
+journalctl -u xfce-virtual.service -n 50
 
-# Logs do serviço RustDesk
-journalctl -u rustdesk.service
+# Logs do serviço RustDesk (últimas 50 linhas)
+journalctl -u rustdesk.service -n 50
+```
+
+**4. O linger está ativo?**
+
+```bash
+loginctl show-user rustdesk -p Linger
+# Deve retornar: Linger=yes
+# Se retornar 'no', rode: sudo loginctl enable-linger rustdesk
+```
+
+**5. O display `:0` está rodando?**
+
+```bash
+# Verifica se o processo Xvfb está ativo
+pgrep -a Xvfb
+
+# Testa a conexão com o display (rode como usuário rustdesk)
+su -s /bin/bash rustdesk -c 'DISPLAY=:0 xdpyinfo | head -5'
+```
+
+**6. Erro de permissão de display (MIT-MAGIC-COOKIE)?**
+
+Se nos logs aparecer `No protocol specified` ou `cannot open display`, o arquivo `.Xauthority` pode estar com permissão errada:
+
+```bash
+# Verifica o dono do arquivo
+ls -la /home/rustdesk/.Xauthority
+
+# Corrige o dono se necessário
+sudo chown rustdesk:rustdesk /home/rustdesk/.Xauthority
 ```
