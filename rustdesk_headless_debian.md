@@ -155,7 +155,7 @@ WantedBy=multi-user.target
 
 ## Passo 6: "Amarrar" o XFCE Virtual ao Serviço de Usuário
 
-Aqui está o **primeiro pulo do gato**. O serviço `xfce-virtual.service` (um serviço de sistema) precisa esperar que os serviços do **usuário** identificado no Passo 2 estejam prontos. (É por isso que habilitamos o "linger" no Passo 3).
+Aqui está o **primeiro pulo do gato**. O serviço `xfce-virtual.service` (um serviço de sistema) precisa esperar que os serviços do **usuário** com UID 1000 estejam prontos. (É por isso que habilitamos o "linger" no Passo 3).
 
 Vamos criar um _override_ para adicionar essa dependência.
 ```bash
@@ -163,10 +163,10 @@ Vamos criar um _override_ para adicionar essa dependência.
 sudo systemctl edit xfce-virtual.service
 ```
 
-Isso abrirá um editor. Cole o seguinte — **substituindo `<usuario>` pelo nome obtido no Passo 2**:
+Isso abrirá um editor. Cole o seguinte **exatamente assim** — o nome da unit usa o número do UID (`1000`), não o nome do usuário:
 ```ini
 [Unit]
-# Espera o serviço de usuário (user@1000.service) estar pronto
+# Espera o serviço de usuário do UID 1000 estar pronto
 After=user@1000.service
 Requires=user@1000.service
 ```
@@ -260,9 +260,9 @@ journalctl -u rustdesk.service -n 50
 **4. O linger está ativo?**
 
 ```bash
-loginctl show-user rustdesk -p Linger
+loginctl show-user <usuario> -p Linger
 # Deve retornar: Linger=yes
-# Se retornar 'no', rode: sudo loginctl enable-linger rustdesk
+# Se retornar 'no', rode: sudo loginctl enable-linger <usuario>
 ```
 
 **5. O display `:0` está rodando?**
@@ -271,8 +271,8 @@ loginctl show-user rustdesk -p Linger
 # Verifica se o processo Xvfb está ativo
 pgrep -a Xvfb
 
-# Testa a conexão com o display (rode como usuário rustdesk)
-su -s /bin/bash rustdesk -c 'DISPLAY=:0 xdpyinfo | head -5'
+# Testa a conexão com o display (rode como o usuário identificado no Passo 2)
+su -s /bin/bash <usuario> -c 'DISPLAY=:0 xdpyinfo | head -5'
 ```
 
 **6. Erro de permissão de display (MIT-MAGIC-COOKIE)?**
@@ -281,8 +281,8 @@ Se nos logs aparecer `No protocol specified` ou `cannot open display`, o arquivo
 
 ```bash
 # Verifica o dono do arquivo
-ls -la /home/rustdesk/.Xauthority
+ls -la /home/<usuario>/.Xauthority
 
 # Corrige o dono se necessário
-sudo chown rustdesk:rustdesk /home/rustdesk/.Xauthority
+sudo chown <usuario>:<usuario> /home/<usuario>/.Xauthority
 ```
