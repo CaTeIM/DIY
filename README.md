@@ -12,12 +12,13 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 
 | Projeto | Descrição Resumida | Tecnologias Principais |
 | :--- | :--- | :--- |
+| **[⚡ Armadilha de Choque Automática](./armadilha_choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04`, `Home Assistant` |
 | **[💧 Bomba d'ÁGua Automática](./bomba_dagua_automatica.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04`, `TP-Link CPE` |
+| **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./github_actions_cicd_selfhosted.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |
 | **[🐳 Docker + Portainer no Debian](./docker_portainer_debian.md)** | Guia para instalar Docker e Portainer em um Debian (x86/ARM), centralizando dados em `/srv`. | `Docker`, `Portainer`, `Debian`, `Docker Compose` |
 | **[🖥️ RustDesk Headless no Debian](./rustdesk_headless_debian.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
 | **[🚨 Sirene Ativada por Chamada](./sirene_por_chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
 | **[🤖 Stack Home Assistant (Docker)](./docker_homeassistant.md)** | Guia completo para a stack de automação (HA, Mosquitto, Node-RED, ESPHome) no Docker. | `HA`, `Docker`, `Mosquitto`, `Node-RED`, `ESPHome` |
-| **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./github_actions_cicd_selfhosted.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |
 
 ## 🛠️ Tecnologias no DNA do Repo
 
