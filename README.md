@@ -1,4 +1,4 @@
-[![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white)](https://www.android.com/) [![Tasmota](https://img.shields.io/badge/Tasmota-00A6A6?logo=tasmota&logoColor=white)](https://tasmota.github.io/docs/) [![ESP8266](https://img.shields.io/badge/ESP8266-E73525?logo=espressif&logoColor=white)](https://www.espressif.com/en/products/socs/esp8266) [![Wi-Fi](https://img.shields.io/badge/Wi--Fi-0078D4?logo=wifi&logoColor=white)](https://www.wi-fi.org/) [![IoT](https://img.shields.io/badge/IoT-20948B?logo=homeassistantcommunitystore&logoColor=white)](https://en.wikipedia.org/wiki/Internet_of_things) [![DIY](https://img.shields.io/badge/DIY-Faça_Você_Mesmo-orange)](https://en.wikipedia.org/wiki/Do_it_yourself) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![Android](https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white)](https://www.android.com/) [![Tasmota](https://img.shields.io/badge/Tasmota-00A6A6?logo=tasmota&logoColor=white)](https://tasmota.github.io/docs/) [![ESP32](https://img.shields.io/badge/ESP32-E73525?logo=espressif&logoColor=white)](https://www.espressif.com/en/products/socs/esp8266) [![Wi-Fi](https://img.shields.io/badge/Wi--Fi-0078D4?logo=wifi&logoColor=white)](https://www.wi-fi.org/) [![IoT](https://img.shields.io/badge/IoT-20948B?logo=homeassistantcommunitystore&logoColor=white)](https://en.wikipedia.org/wiki/Internet_of_things) [![DIY](https://img.shields.io/badge/DIY-Faça_Você_Mesmo-orange)](https://en.wikipedia.org/wiki/Do_it_yourself) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 # 🚀 Soluções DIY na Prática
 
@@ -17,6 +17,7 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 | **[🖥️ RustDesk Headless no Debian](./rustdesk_headless_debian.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
 | **[🚨 Sirene Ativada por Chamada](./sirene_por_chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
 | **[🤖 Stack Home Assistant (Docker)](./docker_homeassistant.md)** | Guia completo para a stack de automação (HA, Mosquitto, Node-RED, ESPHome) no Docker. | `HA`, `Docker`, `Mosquitto`, `Node-RED`, `ESPHome` |
+| **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./github_actions_cicd_selfhosted.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |
 
 ## 🛠️ Tecnologias no DNA do Repo
 
