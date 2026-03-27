@@ -12,8 +12,8 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 
 | Projeto | Descrição Resumida | Tecnologias Principais |
 | :--- | :--- | :--- |
-| **[⚡ Armadilha de Choque Automática](./armadilha_choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04`, `Home Assistant` |
-| **[💧 Bomba d'ÁGua Automática](./bomba_dagua_automatica.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04`, `TP-Link CPE` |
+| **[⚡ Armadilha de Choque Automática](./armadilha_choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `Home Assistant` |
+| **[💧 Bomba d'ÁGua Automática](./bomba_dagua_automatica.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `TP-Link CPE` |
 | **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./github_actions_cicd_selfhosted.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |
 | **[🐳 Docker + Portainer no Debian](./docker_portainer_debian.md)** | Guia para instalar Docker e Portainer em um Debian (x86/ARM), centralizando dados em `/srv`. | `Docker`, `Portainer`, `Debian`, `Docker Compose` |
 | **[🖥️ RustDesk Headless no Debian](./rustdesk_headless_debian.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
@@ -27,7 +27,7 @@ A maioria dos projetos por aqui gira em torno destas tecnologias:
 -   **Hardware:**
     -   📦 **Sonoff:** Especialmente o versátil `RE5V1C` no modo "faça você mesmo".
     -   🧠 **ESP8266/ESP32:** O cérebro por trás de muitos dispositivos IoT de baixo custo.
-    -   📡 **Sensores:** Como o ultrassônico `HC-SR04` para medir distâncias.
+    -   📡 **Sensores:** Como os ultrassônicos `HC-SR04` e `RCWL-1655` (à prova d'água, série JSN-SR04T) para medir distâncias.
     -   📶 **Rede:** Antenas `TP-Link CPE` para links Wi-Fi de longa distância e equipamentos de rede local.
 -   **Software & Firmware:**
     -   ⚫ **Tasmota:** O firmware open-source que liberta o poder dos dispositivos Sonoff/ESP.
