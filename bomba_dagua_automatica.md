@@ -67,7 +67,7 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 
 - [Driver CH341A](https://wch.cn/downloads/CH341SER_EXE.html)
 - [Tasmotizer](https://github.com/tasmota/tasmotizer/releases)
-- [Firmware Tasmota](https://ota.tasmota.com/tasmota/release/tasmota.bin)
+- [Firmware Tasmota-Sensors](https://ota.tasmota.com/tasmota/release/tasmota-sensors.bin) (⚠️ **Obrigatório:** A versão `tasmota.bin` normal não possui os drivers de sensores)
 
 ## 🔥 Flash do Tasmota
 
@@ -75,7 +75,7 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 2. Selecione a porta COM
 3. Marque: `Erase before flashing`
 4. Marque: `Self-resetting device`
-5. Selecione o `tasmota.bin`
+5. Selecione `tasmota-sensors.bin`
 6. Clique em **Tasmotize!**
 7. Aguarde e desconecte
 
@@ -120,7 +120,11 @@ SetOption65 1
  ```
 
 ### Ponto C (Sensor)
-- Sensor RCWL-1655 ligado nos pinos `RX`/`TX` do Sonoff configurados como `SR04 Trig` e `SR04 Echo` no Tasmota.
+- Ligar o RCWL-1655 aos pinos `RX`/`TX` do Sonoff.
+- Após aplicar o template principal, vá em **Configuration > Configure Module** e defina os pinos no Tasmota:
+  - `GPIO1 (TX)`: `SR04 Ech/Rx` *(O Tasmota trata o RCWL-1655 padronizado como SR04)*
+  - `GPIO3 (RX)`: `SR04 Tri/Tx`
+  *(O GPIO12 de Relay já estará configurado pelo template)*
 
 > [!WARNING]
 > **Modo de Operação do RCWL-1655**

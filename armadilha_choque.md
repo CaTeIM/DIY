@@ -73,7 +73,7 @@ A lâmpada atua como um resistor de proteção. Se a malha fechar curto contínu
 
 - [Driver CH341A](https://wch.cn/downloads/CH341SER_EXE.html)
 - [Tasmotizer](https://github.com/tasmota/tasmotizer/releases)
-- [Firmware Tasmota](https://ota.tasmota.com/tasmota/release/tasmota.bin)
+- [Firmware Tasmota-Sensors](https://ota.tasmota.com/tasmota/release/tasmota-sensors.bin) (⚠️ **Obrigatório:** A versão `tasmota.bin` normal não inclui mais o SR04)
 
 ## 🔥 Flash do Tasmota
 
@@ -81,21 +81,37 @@ A lâmpada atua como um resistor de proteção. Se a malha fechar curto contínu
 2. Selecione a porta COM
 3. Marque: `Erase before flashing`
 4. Marque: `Self-resetting device`
-5. Selecione o `tasmota.bin`
+5. Selecione `tasmota-sensors.bin`
 6. Clique em **Tasmotize!**
 7. Aguarde e desconecte
 
 ## ⚙️ Configuração Tasmota
 
-1. Em **Configuration > Configure Module**:
-   - Module type: `Generic (18)`
-   - `GPIO1 (TX)`: `SR04 Echo` *(Selecione SR04 mesmo sendo o RCWL-1655)*
-   - `GPIO3 (RX)`: `SR04 Trig`
-   - `GPIO12`: `Relay 1`
-2. Em **Configuration > Configure MQTT**:
+1. Ligue o Sonoff
+2. Conecte no Wi-Fi “tasmota-XXXX” e acesse [http://192.168.4.1](http://192.168.4.1)
+3. Configure sua rede Wi-Fi e acesse o IP atribuído pelo roteador.
+4. Vá em **Configuration > Configure Other** e cole o template do Sonoff RE5V1C:
+   ```json
+   {"NAME":"Sonoff RE5V1C","GPIO":[17,255,255,255,255,255,0,0,21,56,0,0,0],"FLAG":0,"BASE":18}
+   ```
+5. Marque **Activate** e salve. 
+6. Coloque **IP estático** acessando o **Console** (ajuste `192.168.68.X` para a sua rede):
+   ```text
+   IPAddress1 192.168.68.X
+   IPAddress2 192.168.68.1
+   IPAddress3 255.255.255.0
+   IPAddress4 8.8.8.8
+   IPAddress5 1.1.1.1
+   Restart 1
+   ```
+7. Em **Configuration > Configure Module**, defina os pinos do sensor para o RE5V1C comunicar com o módulo (ele continua selecionado como Generic):
+   - `GPIO1 (TX)`: `SR04 Ech/Rx` *(Selecione SR04 mesmo sendo o RCWL-1655)*
+   - `GPIO3 (RX)`: `SR04 Tri/Tx`
+   *(O GPIO12 de Relay já estará configurado pelo template acima)*
+8. Em **Configuration > Configure MQTT**:
    - Configure os dados do seu broker Mosquitto (Host, Porta, Usuário, Senha).
    - Topic: `armadilha_choque`
-3. No **Console** (Travas de Segurança):
+9. No **Console** (Travas de Segurança):
    ```text
    PowerOnState 0
    SetOption65 1
