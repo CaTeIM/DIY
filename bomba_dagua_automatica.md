@@ -10,7 +10,7 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 |-----------|----------------------------------------------------------|
 | Ponto A   | Bomba d'água + Sonoff RE5V1C (Tasmota) + RE5V1C (original eWeLink) |
 | Ponto B   | 2x CPE210 (modo AP), uma apontando para A e outra para C |
-| Ponto C   | Caixa d’água + Sonoff RE5V1C (Tasmota) com sensor de nível (HC-SR04) |
+| Ponto C   | Caixa d’água + Sonoff RE5V1C (Tasmota) com sensor de nível impermeável (RCWL-1655 / JSN-SR04T) |
 
 ## 🌐 Conectividade
 
@@ -24,13 +24,60 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 
 ## ⚙️ Funcionamento
 
-- Sensor no Ponto C (HC-SR04) mede a distância da água.
+- Sensor no Ponto C (RCWL-1655) mede a distância da água.
 - Quando a água atinge nível baixo, Sonoff (Tasmota) envia comando WebSend:
 	 ```
 	 WebSend [192.168.3.101] /cm?cmnd=Power1%20On
 	 ```
 - O Sonoff Tasmota do Ponto A simula o botão do Sonoff original (eWeLink), ativando a bomba.
 - Quando enche, o sensor envia comando para desligar.
+
+## ⚡ Preparando o Sonoff para o Flash
+
+### 🔎 Identificação dos Pinos
+
+**Sonoff RE5V1C**
+- GND
+- 3V3 (⚠️ Nunca use 5V durante o flash!)
+- ERX
+- ETX
+
+**CH341A Pro**
+- GND
+- 3.3V
+- TXD
+- RXD
+
+### 🔗 Ligações
+
+| CH341A | Sonoff RE5V1C  |
+|--------|----------------|
+| GND    | GND            |
+| 3.3V   | 3V3            |
+| TXD    | ERX            |
+| RXD    | ETX            |
+
+### 🕹️ Modo Bootloader
+
+1. Mantenha o botão do RE5V1C pressionado
+2. Conecte o USB-TTL ao PC
+3. Aguarde 5s e solte
+
+## 💻 Instalando Drivers e Software
+
+- [Driver CH341A](https://wch.cn/downloads/CH341SER_EXE.html)
+- [Tasmotizer](https://github.com/tasmota/tasmotizer/releases)
+- [Firmware Tasmota](https://ota.tasmota.com/tasmota/release/tasmota.bin)
+
+## 🔥 Flash do Tasmota
+
+1. Abra o Tasmotizer
+2. Selecione a porta COM
+3. Marque: `Erase before flashing`
+4. Marque: `Self-resetting device`
+5. Selecione o `tasmota.bin`
+6. Clique em **Tasmotize!**
+7. Aguarde e desconecte
 
 ## 🔧 Configurações Tasmota
 
@@ -73,10 +120,15 @@ SetOption65 1
  ```
 
 ### Ponto C (Sensor)
-- HC-SR04 ligado nos pinos do Sonoff com Tasmota
-- Regra:
+- Sensor RCWL-1655 ligado nos pinos `RX`/`TX` do Sonoff configurados como `SR04 Trig` e `SR04 Echo` no Tasmota.
+
+> [!WARNING]
+> **Modo de Operação do RCWL-1655**
+> Certifique-se de que o sensor esteja operando no **Modo 0 (GPIO / Ping)**. Se ele não enviar leituras de distância, remova o resistor SMD de seleção de modo (indicado como **R7** ou M1/R27 na placa) para deixá-lo em modo "circuito aberto" (NC), comportando-se igual a um HC-SR04 comum para o Tasmota.
+
+- Regra (O Tasmota trata o RCWL-1655 internamente como SR04):
  ```
- Rule1 ON Tele-HCSR04#Distance>80 DO WebSend [192.168.3.101] /cm?cmnd=Power1%20On ENDON
+ Rule1 ON Tele-SR04#Distance>80 DO WebSend [192.168.3.101] /cm?cmnd=Power1%20On ENDON
  Rule1 1
  ```
 - Coloque **IP estático** no módulo:
@@ -99,7 +151,7 @@ SetOption65 1
 | Switch PoE Passivo 24v       | 1          |
 | Sonoff RE5V1C (original)     | 1          |
 | Sonoff RE5V1C com Tasmota    | 2          |
-| Sensor ultrassônico HC-SR04  | 1          |
+| Sensor RCWL-1655 (JSN-SR04T) | 1          |
 | Caixa hermética              | 1          |
 | Protetor Eletrônico          | 1          |
 | Fontes e cabos               | Conforme necessidade |
