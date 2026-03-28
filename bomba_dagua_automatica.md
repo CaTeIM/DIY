@@ -121,22 +121,75 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
  Restart 1
  ```
 
-### Ponto C (Sensor)
-- Ligar o RCWL-1655 aos pinos `RX`/`TX` do Sonoff.
-- Após aplicar o template principal, vá em **Configuration > Configure Module** e defina os pinos no Tasmota:
-  - `GPIO1 (TX)`: `SR04 Ech/Rx` *(O Tasmota trata o RCWL-1655 padronizado como SR04)*
-  - `GPIO3 (RX)`: `SR04 Tri/Tx`
-  *(O GPIO12 de Relay já estará configurado pelo template)*
+### Ponto C (Sensor de Nível)
+
+#### Hardware: RCWL-1655
+
+O RCWL-1655 suporta 4 modos de operação, selecionados pelo resistor **R7** no verso do módulo:
+
+| Modo | R7 | Protocolo | Compatível com Tasmota SR04? |
+|------|----|-----------|-------------------------------|
+| **GPIO (padrão)** | **NC (vazio)** | HC-SR04 (Trig/Echo) | ✅ **SIM** |
+| UART | 10K | Serial 9600bps | ❌ Não |
+| I2C | 100K | 0x57 | ❌ Não |
+| 1-Wire | 0 ohm | Single bus | ❌ Não |
+
+> [!IMPORTANT]
+> Antes de ligar, vire o módulo e verifique o pad **R7**. Ele deve estar **vazio (NC)**. Se houver um resistor soldado, remova-o para ativar o modo GPIO.
+
+#### Ligação Física (Pino Sonoff RE5V1C)
+
+Pinagem confirmada pela tabela oficial do ESPHome para os pads da borda superior do Sonoff:
+
+| RCWL-1655 | Pino físico Sonoff | GPIO Tasmota | Função Tasmota |
+|-----------|--------------------|--------------|----------------|
+| VCC | `5V` | — | Alimentação |
+| GND | `GND` | — | Terra |
+| **Trig** | pad **`RX`** | **GPIO4** | `SR04 Tri/Tx` |
+| **Echo** | pad **`TX`** | **GPIO5** | `SR04 Ech/Rx` |
+
+> [!NOTE]
+> A zona cega do RCWL-1655 é de **20cm** (muito maior que o HC-SR04 comum de ~2cm). Certifique-se de que o sensor esteja a mais de 20cm da superfície da água, ou as leituras serão inválidas.
+
+#### Configuração Tasmota (Ponto C)
+
+Após aplicar o template principal, defina os pinos em **Configuration » Configure Module**:
+- **D2 GPIO4** → `SR04 Tri/Tx`
+- **D1 GPIO5** → `SR04 Ech/Rx`
+
+No **Console**:
+```text
+PowerOnState 0
+SetOption65 1
+TelePeriod 10
+Timezone -3
+SerialLog 0
+```
+
+Verificar leitura do sensor:
+```text
+Status 10
+```
+Deve retornar algo como `{"SR04":{"Distance":85.3}}`. Se retornar `null` ou não aparecer, revisar a ligação física e o estado do R7.
 
 > [!WARNING]
-> **Modo de Operação do RCWL-1655**
-> Certifique-se de que o sensor esteja operando no **Modo 0 (GPIO / Ping)**. Se ele não enviar leituras de distância, remova o resistor SMD de seleção de modo (indicado como **R7** ou M1/R27 na placa) para deixá-lo em modo "circuito aberto" (NC), comportando-se igual a um HC-SR04 comum para o Tasmota.
+> **🚧 TESTE PENDENTE** — A pinagem GPIO4/GPIO5 ainda não foi validada fisicamente com o RCWL-1655 neste módulo. Realizar os seguintes passos ao conectar:
+> 1. Verificar R7 = NC (vazio)
+> 2. Ligar: Trig → pad `RX` (GPIO4), Echo → pad `TX` (GPIO5)
+> 3. Configurar GPIO4=SR04 Tri/Tx e GPIO5=SR04 Ech/Rx no Tasmota
+> 4. Rodar `Status 10` e confirmar leitura de distância
 
-- Regra (O Tasmota trata o RCWL-1655 internamente como SR04):
- ```
- Rule1 ON Tele-SR04#Distance>80 DO WebSend [192.168.3.101] /cm?cmnd=Power1%20On ENDON
- Rule1 1
- ```
+#### Regras (Ponto C)
+
+A regra envia comando para ligar a bomba quando a distância medida for maior que 80cm (caixa baixa):
+
+```text
+Rule1 ON Tele-SR04#Distance>80 DO WebSend [192.168.3.101] /cm?cmnd=Power1%20On ENDON ON Tele-SR04#Distance<30 DO WebSend [192.168.3.101] /cm?cmnd=Power1%20Off ENDON
+Rule1 1
+```
+
+*Ajuste os valores `80` (nível baixo) e `30` (nível cheio) conforme a altura real da sua caixa d’água.*
+
 - Coloque **IP estático** no módulo:
 
  ```
