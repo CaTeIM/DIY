@@ -97,8 +97,10 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 9. Desabilite o `reset` via ciclos de energia. Acesse **Console**:
 
 ```
-SetOption65 1
-``` 
+ SetOption65 1
+ Timezone -3
+ SerialLog 0
+ ``` 
 
 ### Ponto A (Bomba)
 - Power1 controla um relé que simula o botão do Sonoff original
