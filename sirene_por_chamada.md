@@ -81,6 +81,7 @@ Este projeto permite acionar automaticamente uma sirene conectada ao relé do So
 
 ```
 SetOption65 1
+Timezone -3
 ``` 
 
 10. Coloque **IP estático** no módulo:
