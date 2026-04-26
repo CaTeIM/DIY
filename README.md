@@ -12,6 +12,7 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 
 | Projeto | Descrição Resumida | Tecnologias Principais |
 | :--- | :--- | :--- |
+| **[🛡️ AdGuard Home (Docker + Cloudflare Tunnel)](./docker_adguard.md)** | DNS server com bloqueio de ads e trackers para toda a rede. DoH externo via Cloudflare Tunnel e perfil iOS. | `AdGuard Home`, `Docker`, `Cloudflare Tunnel`, `DNS-over-HTTPS` |
 | **[⚡ Armadilha de Choque Automática](./armadilha_choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `Home Assistant` |
 | **[💧 Bomba d'ÁGua Automática](./bomba_dagua_automatica.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `TP-Link CPE` |
 | **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./github_actions_cicd_selfhosted.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PayloadContent</key>
+    <array>
+        <dict>
+            <key>DNSSettings</key>
+            <dict>
+                <key>DNSProtocol</key>
+                <string>HTTPS</string>
+                <key>ServerURL</key>
+                <string>https://adguard.selflabs.org/dns-query</string>
+            </dict>
+            <key>PayloadDescription</key>
+            <string>Configura DNS-over-HTTPS via AdGuard Home — Self-Labs</string>
+            <key>PayloadDisplayName</key>
+            <string>AdGuard Home — Self-Labs</string>
+            <key>PayloadIdentifier</key>
+            <string>org.selflabs.adguard.doh</string>
+            <key>PayloadType</key>
+            <string>com.apple.dnsSettings.managed</string>
+            <key>PayloadUUID</key>
+            <string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
+            <key>PayloadVersion</key>
+            <integer>1</integer>
+        </dict>
+    </array>
+    <key>PayloadDescription</key>
+    <string>Instala o perfil de DNS-over-HTTPS usando o AdGuard Home do Self-Labs. Todas as consultas DNS serão filtradas e protegidas.</string>
+    <key>PayloadDisplayName</key>
+    <string>AdGuard Home DoH — Self-Labs</string>
+    <key>PayloadIdentifier</key>
+    <string>org.selflabs.adguard.profile</string>
+    <key>PayloadRemovalDisallowed</key>
+    <false/>
+    <key>PayloadType</key>
+    <string>Configuration</string>
+    <key>PayloadUUID</key>
+    <string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
+    <key>PayloadVersion</key>
+    <integer>1</integer>
+</dict>
+</plist>

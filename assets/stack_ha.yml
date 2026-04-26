@@ -1,5 +1,4 @@
-version: "3.8"
-
+name: homeassistant
 services:
   homeassistant:
     container_name: homeassistant
