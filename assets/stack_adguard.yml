@@ -1,0 +1,21 @@
+name: adguard
+services:
+  adguardhome:
+    container_name: adguardhome
+    image: adguard/adguardhome:latest
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /srv/adguard/work:/opt/adguardhome/work
+      - /srv/adguard/conf:/opt/adguardhome/conf
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: bridge
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "53:53/tcp"       # DNS plain (TCP)
+      - "53:53/udp"       # DNS plain (UDP)
+      - "8084:80/tcp"     # Painel Admin + DoH endpoint (/dns-query)
+      - "3004:3000/tcp"   # Setup Wizard (somente na primeira execução)
+    hostname: adguardhome
