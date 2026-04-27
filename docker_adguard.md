@@ -226,6 +226,36 @@ Nossa arquitetura terceiriza o TLS para a Cloudflare. Por causa disso, a interfa
 
 > **Nota sobre redes locais:** Com o perfil ativo, o iPhone usará sempre o DoH externo (`adguard.selflabs.org`), mesmo dentro de casa. O AdGuard vai filtrar normalmente — não é um problema, só uma curiosidade.
 
+> **Nota sobre assinatura:** O perfil é assinado automaticamente pelo GitHub Actions com um certificado self-signed na hora do deploy. O iOS vai exibir "Assinado por Self-Labs DNS Profile" (emissor não verificado pela Apple — esperado para certificados self-signed). Para regenerar o certificado de assinatura, veja a seção [Gerando o Certificado de Assinatura](#gerando-o-certificado-de-assinatura).
+
+---
+
+### Gerando o Certificado de Assinatura
+
+O certificado é gerado uma única vez e armazenado como **GitHub Secret** no repositório. O Actions usa esses secrets para assinar o perfil a cada deploy.
+
+**1. Gerar o certificado (Git Bash no Windows):**
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout sign.key -out sign.crt \
+  -days 3650 -nodes -subj "/CN=Self-Labs DNS Profile/O=Self-Labs/C=BR"
+```
+
+**2. Adicionar ao GitHub:**
+
+Acesse o repositório → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
+
+| Nome | Conteúdo |
+|------|----------|
+| `SIGN_KEY` | conteúdo do arquivo `sign.key` |
+| `SIGN_CRT` | conteúdo do arquivo `sign.crt` |
+
+**3. Apagar os arquivos locais** — nunca commite a chave privada:
+```bash
+rm sign.key sign.crt
+```
+
+Após adicionar os secrets, qualquer disparo do workflow irá assinar o perfil automaticamente antes do deploy.
+
 ---
 
 ### 7.2. Android — DoH via App

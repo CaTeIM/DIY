@@ -33,6 +33,23 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Sign mobileconfig profile
+        env:
+          SIGN_KEY: ${{ secrets.SIGN_KEY }}
+          SIGN_CRT: ${{ secrets.SIGN_CRT }}
+        run: |
+          echo "$SIGN_KEY" > /tmp/sign.key
+          echo "$SIGN_CRT" > /tmp/sign.crt
+          openssl smime -sign \
+            -in assets/adguard_doh_ios.mobileconfig \
+            -out assets/adguard_doh_ios.mobileconfig.signed \
+            -signer /tmp/sign.crt \
+            -inkey /tmp/sign.key \
+            -certfile /tmp/sign.crt \
+            -outform der \
+            -nodetach
+          mv assets/adguard_doh_ios.mobileconfig.signed assets/adguard_doh_ios.mobileconfig
+          rm -f /tmp/sign.key /tmp/sign.crt
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
