@@ -219,8 +219,8 @@ Para o iPhone usar DoH em **qualquer rede** (local, 4G, Wi-Fi externo):
 
 Nossa arquitetura terceiriza o TLS para a Cloudflare. Por causa disso, a interface do AdGuard oculta o gerador automático de perfis da Apple. Você deve usar o perfil pronto fornecido neste repositório:
 
-1. Envie ou acesse o arquivo [`assets/adguard_doh_ios.mobileconfig`](./assets/adguard_doh_ios.mobileconfig) no seu iPhone.
-2. Abra o arquivo **obrigatoriamente pelo Safari** (outros navegadores não acionam a instalação).
+1. Acesse **[cateim.github.io/DIY](https://cateim.github.io/DIY/)** no seu iPhone.
+2. Abra o link **obrigatoriamente pelo Safari** e clique em "Instalar Perfil DNS" (outros navegadores farão o download de um arquivo .txt e não acionarão a instalação).
 3. Vá em **Ajustes** (Settings) > vai aparecer um aviso "Perfil Baixado" no topo > toque nele e instale.
 4. Vá em **Ajustes** > **Geral** > **VPN e Gerenciamento de Dispositivo** > **DNS** e selecione o perfil do AdGuard.
 

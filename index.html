@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Self-Labs DNS — Instalar Perfil iOS</title>
+  <meta name="description" content="Instale o perfil DNS-over-HTTPS do AdGuard Home para proteger seu iPhone contra rastreadores e anúncios." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: rgba(255,255,255,0.08);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.3);
+      --accent-hover: #60a5fa;
+      --green: #10b981;
+      --green-glow: rgba(16,185,129,0.2);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --muted2: #64748b;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      overflow-x: hidden;
+    }
+
+    /* ─── BACKGROUND BLOBS ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(59,130,246,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, rgba(16,185,129,0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent-hover);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.75rem;
+      border-radius: 100px;
+      margin-bottom: 1rem;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 1.25rem;
+    }
+
+    /* ─── FEATURES ─── */
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .feature-text {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .feature-text strong {
+      display: block;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 0.92rem;
+    }
+
+    /* ─── DIVIDER ─── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.5rem 0;
+    }
+
+    /* ─── CTA BUTTON ─── */
+    .btn-install {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 24px rgba(59,130,246,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-install::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-install:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(59,130,246,0.5);
+    }
+
+    .btn-install:hover::before { opacity: 1; }
+    .btn-install:active { transform: translateY(0); }
+
+    /* ─── ALERT ─── */
+    #ios-warning {
+      display: none;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      font-size: 0.85rem;
+      color: #fbbf24;
+      line-height: 1.5;
+    }
+
+    #ios-warning .warn-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* ─── STEPS ─── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .step {
+      display: flex;
+      gap: 0.85rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-hover);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-desc {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .step-desc strong { color: var(--text); font-weight: 500; }
+    .step-desc code {
+      background: var(--surface2);
+      padding: 0.1rem 0.4rem;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      color: var(--accent-hover);
+      font-family: monospace;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted2);
+    }
+
+    .footer a { color: var(--muted); text-decoration: none; }
+    .footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Self-Labs DNS
+    </div>
+    <h1>Proteção DNS<br><span>para seu iPhone</span></h1>
+    <p class="subtitle">
+      Instale o perfil de DNS-over-HTTPS e filtre anúncios, rastreadores e domínios maliciosos em toda a rede — sem app, sem VPN.
+    </p>
+  </div>
+
+  <!-- FEATURES CARD -->
+  <div class="card">
+    <p class="card-title">O que você ganha</p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🛡️</div>
+        <div class="feature-text">
+          <strong>Bloqueio de anúncios e trackers</strong>
+          Listas de bloqueio atualizadas pelo AdGuard Home na rede local.
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-text">
+          <strong>DNS criptografado (DoH)</strong>
+          Todas as consultas DNS trafegam via HTTPS — invisíveis para provedores e roteadores.
+        </div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-text">
+          <strong>Nativo no iOS — sem app</strong>
+          Funciona em nível de sistema operacional, não precisa de VPN ativa.
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- WARNING (shown for non-iOS) -->
+    <div id="ios-warning">
+      <span class="warn-icon">⚠️</span>
+      <span>
+        <strong>Atenção:</strong> abra este link no <strong>Safari do iPhone ou iPad</strong>. Outros navegadores ou dispositivos não acionam a instalação do perfil.
+      </span>
+    </div>
+    <br>
+    <!-- INSTALL BUTTON -->
+    <a id="install-btn" class="btn-install" href="assets/adguard_doh_ios.mobileconfig">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 16V4M8 12l4 4 4-4"/><rect x="3" y="17" width="18" height="4" rx="2"/>
+      </svg>
+      Instalar Perfil DNS
+    </a>
+  </div>
+
+  <!-- STEPS CARD -->
+  <div class="card">
+    <p class="card-title">Como instalar</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-desc">Toque em <strong>Instalar Perfil DNS</strong> acima. O Safari vai mostrar um aviso de download — confirme.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-desc">Vá em <strong>Ajustes</strong>. Um aviso <code>Perfil Baixado</code> aparecerá no topo — toque nele.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-desc">Toque em <strong>Instalar</strong> no canto superior direito e confirme com sua senha ou Face ID.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-desc">Pronto. O perfil está ativo. Verifique em <strong>Ajustes → Geral → VPN e Gerenciamento de Dispositivo → DNS</strong>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Self-Labs &middot;
+    <a href="https://github.com/CaTeIM/DIY" target="_blank" rel="noopener">GitHub</a>
+    &middot; Perfil removível a qualquer momento em Ajustes
+  </div>
+
+</div>
+
+<script>
+  // Detecta se não é iOS/Safari — mostra aviso
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if (!isIOS || !isSafari) {
+    document.getElementById('ios-warning').style.display = 'flex';
+  }
+</script>
+
+</body>
+</html>
