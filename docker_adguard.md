@@ -393,6 +393,38 @@ ipconfig /flushdns
 
 O desktop passará a receber o IP do AdGuard Home via DHCP, igual aos demais dispositivos da rede.
 
+### ⚠️ Troubleshooting: Aviso de permissão no diretório work
+
+Log exibe na inicialização:
+```
+permcheck: warning: found unexpected permissions path=/opt/adguardhome/work perm=0755 want=0700
+```
+
+**Fix** — Rodar no Debian:
+```bash
+chmod 700 /srv/adguard/work
+```
+
+Reiniciar o container após o comando. O aviso desaparece nos logs seguintes.
+
+### ⚠️ Troubleshooting: Upstream DNS falhando (Quad9)
+
+Log exibe repetidamente:
+```
+dnsproxy: exchange failed upstream=https://dns10.quad9.net:443/dns-query
+err="connection reset by peer" / "unexpected EOF"
+```
+
+O container não consegue alcançar o Quad9 via DoH. Isso causa resolução DNS instável com retries.
+
+**Fix** — No painel AdGuard, **Configurações > Configurações de DNS > Servidores DNS primário**, substituir por:
+```
+https://cloudflare-dns.com/dns-query
+https://dns.google/dns-query
+```
+
+Clicar em **Testar DNS primário** para validar e depois em **Aplicar**.
+
 ---
 
 ## 🌐 Acessos
