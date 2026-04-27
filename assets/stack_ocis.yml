@@ -1,0 +1,32 @@
+services:
+  ocis:
+    image: owncloud/ocis:latest
+    container_name: ocis
+    entrypoint:
+      - /bin/sh
+    # Correto quando TLS é terminado externamente pelo Cloudflare Tunnel
+    command: ["-c", "ocis init || true; ocis server"]
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: America/Sao_Paulo
+      # URL pública — DEVE corresponder ao subdomínio no Cloudflare Tunnel
+      OCIS_URL: "https://drive.selflabs.org"
+      # Desabilitar TLS no container (Cloudflare Tunnel faz o TLS termination)
+      PROXY_TLS: "false"
+      # Necessário quando PROXY_TLS=false — desativa validação de cert interno
+      OCIS_INSECURE: "true"
+      # Bind em todas as interfaces do container
+      PROXY_HTTP_ADDR: "0.0.0.0:9200"
+      # Senha do admin (definida no .env do Portainer)
+      IDM_ADMIN_PASSWORD: ${OCIS_ADMIN_PASSWORD}
+      # Log level (warn em produção, info para debug)
+      OCIS_LOG_LEVEL: "warn"
+    volumes:
+      # Configuração (ocis.yaml com secrets gerados no init)
+      - /srv/ocis/config:/etc/ocis
+      # Dados dos usuários (arquivos, metadata, search index)
+      - /srv/ocis/data:/var/lib/ocis
+    ports:
+      - "9200:9200"
