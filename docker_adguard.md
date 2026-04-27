@@ -29,9 +29,11 @@ DNS server com bloqueio de ads e trackers para toda a rede, com suporte a DNS-ov
 | `8084/tcp`   | `80`            | Painel Admin + endpoint DoH       |
 | `3004/tcp`   | `3000`          | Setup Wizard (só na primeira vez) |
 
+> As portas do **host** (`53`, `8084`, `3004`) podem ser alteradas no `stack_adguard.yml` se já estiverem em uso. As portas do **container** (lado direito) são fixas e não devem ser modificadas.
+
 ---
 
-## Parte 1: Preparação do Host (Debian) 🛠️
+## 🛠️ Parte 1: Preparação do Host (Debian)
 
 Execute todos os comandos no terminal SSH do servidor.
 
@@ -63,14 +65,14 @@ sudo ss -lnp | grep ':53 '
 # Não deve aparecer nenhuma linha com 0.0.0.0 ou escuta pública
 ```
 
-### 1.2. Criar Pastas de Persistência 📂
+### 📂 1.2. Criar Pastas de Persistência
 
 ```bash
 sudo mkdir -p /srv/adguard/work
 sudo mkdir -p /srv/adguard/conf
 ```
 
-### 1.3. Liberar Portas no Firewall (se UFW ativo) 🛡️
+### 🛡️ 1.3. Liberar Portas no Firewall (se UFW ativo)
 
 ```bash
 # DNS
@@ -89,7 +91,7 @@ sudo ufw status
 
 ---
 
-## Parte 2: Deploy via Portainer 📦
+## 📦 Parte 2: Deploy via Portainer
 
 ### 2.1. Criar a Stack
 
@@ -102,7 +104,7 @@ Clique em **Deploy the stack**.
 
 ---
 
-## Parte 3: Setup Inicial do AdGuard Home ⚙️
+## ⚙️ Parte 3: Setup Inicial do AdGuard Home
 
 ### 3.1. Acessar o Wizard
 
@@ -121,7 +123,7 @@ Após o wizard, o painel fica disponível em: `http://IP_DA_ORANGEPI:8084`
 
 ---
 
-## Parte 4: Habilitar DoH sem TLS (Cloudflare Tunnel) 🔐
+## 🔐 Parte 4: Habilitar DoH sem TLS (Cloudflare Tunnel)
 
 O AdGuard por padrão só serve o endpoint `/dns-query` quando TLS está configurado nele. Como o Cloudflare Tunnel gerencia o TLS, precisamos ativar o modo "unencrypted DoH" via arquivo de config.
 
@@ -177,7 +179,7 @@ O fato do AdGuard Home responder `Bad Request` prova que o endpoint está ativo 
 
 ---
 
-## Parte 5: Configurar o Cloudflare Tunnel 🌐
+## 🌐 Parte 5: Configurar o Cloudflare Tunnel
 
 No dashboard do Cloudflare Zero Trust, no tunnel existente (`cloudflared`):
 
@@ -194,7 +196,7 @@ O Cloudflare criará o registro DNS automaticamente.
 
 ---
 
-## Parte 6: Configurar o Roteador (Deco S7) 📡
+## 📡 Parte 6: Configurar o Roteador (Deco S7)
 
 Para que TODOS os dispositivos da rede usem o AdGuard automaticamente:
 
@@ -209,11 +211,11 @@ Os dispositivos passam a usar o AdGuard ao renovarem o DHCP (pode forçar descon
 
 ---
 
-## Parte 7: Clientes DNS Externos 📱
+## 📱 Parte 7: Clientes DNS Externos
 
 Para usar o AdGuard fora de casa, configure o DoH nos dispositivos conforme abaixo.
 
-### 7.1. iOS — Perfil .mobileconfig
+### 🍎 7.1. iOS — Perfil .mobileconfig
 
 Para o iPhone usar DoH em **qualquer rede** (local, 4G, Wi-Fi externo):
 
@@ -230,7 +232,7 @@ Nossa arquitetura terceiriza o TLS para a Cloudflare. Por causa disso, a interfa
 
 ---
 
-### Gerando o Certificado de Assinatura
+### 🔐 Gerando o Certificado de Assinatura
 
 O certificado é gerado uma única vez e armazenado como **GitHub Secret** no repositório. O Actions usa esses secrets para assinar o perfil a cada deploy.
 
@@ -260,7 +262,7 @@ Após adicionar os secrets, qualquer disparo do workflow irá assinar o perfil a
 
 ---
 
-### 7.2. Android — DoH via App
+### 🤖 7.2. Android — DoH via App
 
 O Android nativo usa DNS-over-TLS (porta 853), que não está mapeada no nosso setup. A alternativa é usar um app que suporte DoH com servidor customizado.
 
@@ -286,46 +288,43 @@ O Android nativo usa DNS-over-TLS (porta 853), que não está mapeada no nosso s
 
 ---
 
-## Parte 8: Proteção do Painel Admin (Cloudflare Access) 🔒
+## 🔒 Parte 8: Proteção do Painel Admin (Cloudflare Access)
 
 Com o tunnel ativo, `https://adguard.selflabs.org` expõe o painel admin publicamente. O Cloudflare Access permite exigir autenticação para acessar o painel enquanto mantém o endpoint `/dns-query` público (sem bloqueio).
 
-### 8.1. Criar a Aplicação no Zero Trust
+### 8.1. Criar a Aplicação do DNS (Liberar `/dns-query`)
 
-1. Acessar [Cloudflare Zero Trust](https://dash.cloudflare.com/one)
-2. Ir em **Access** > **Applications** > **+ Add an Application**
-3. Selecionar **Self-hosted**
-4. Preencher:
-   - **Application name:** `AdGuard Home`
-   - **Session Duration:** `24 hours` (ou conforme preferir)
-   - **Application domain:** `adguard.selflabs.org`
-5. Avançar para **Policies**
+Como o Cloudflare não permite mais usar `Path` dentro das regras de acesso, precisamos criar **duas aplicações separadas**.
 
-### 8.2. Configurar as Políticas
+1. Acessar [Cloudflare One](https://dash.cloudflare.com/one)
+2. Ir em **Access controls** > **Applications** > **+ Create new application**
+3. Selecionar **Self-hosted and private**
+4. Em **Destinations / Public hostnames**, preencha:
+   - **Subdomain:** `adguard`
+   - **Domain:** `selflabs.org`
+   - **Path:** `/dns-query`
+5. Role até **Access policies** e clique em **Create new policy**:
+   - **Policy Name:** `Allow DNS Query`
+   - **Action:** `Bypass`
+   - Em **Policy rules > Include > Selector is...**, escolha `Everyone`
+6. Role até o final da página e salve a aplicação (botão **Save** ou **Create**).
 
-Precisamos de **duas políticas** — uma para liberar o endpoint DoH sem autenticação, e outra para exigir login no restante.
+### 8.2. Criar a Aplicação do Painel (Exigir Autenticação)
 
-**Política 1 — Bypass (liberar `/dns-query`)**
+1. Vá novamente em **Access controls** > **Applications** e crie uma nova aplicação **Self-hosted and private**.
+2. Em **Destinations / Public hostnames**, preencha:
+   - **Subdomain:** `adguard`
+   - **Domain:** `selflabs.org`
+   - **Path:** *(deixe totalmente em branco)*
+3. Role até **Access policies** e clique em **Create new policy**:
+   - **Policy Name:** `Admin Access`
+   - **Action:** `Allow`
+   - Em **Policy rules > Include > Selector is...**, escolha `Emails` e digite o seu e-mail de acesso (ex: `seu@email.com`).
+4. Em **Authentication** (na mesma página):
+   - Certifique-se de que um provedor de identidade (como **One-time PIN**) está habilitado.
+5. Role até o final e salve a aplicação.
 
-- **Policy name:** `Allow DNS Query`
-- **Action:** `Bypass`
-- **Rules:** Em **Include**, selecionar **Path** e preencher `/dns-query`
-
-**Política 2 — Allow (proteger o painel)**
-
-- **Policy name:** `Admin Access`
-- **Action:** `Allow`
-- **Rules:** Em **Include**, selecionar **Emails** e adicionar seu e-mail
-  > Ou usar **Email domain** com `selflabs.org` se preferir.
-
-> **Ordem importa:** A política de Bypass deve ficar **acima** da política Allow na lista. O Cloudflare avalia as políticas de cima para baixo.
-
-### 8.3. Método de Autenticação
-
-1. Ainda na configuração da aplicação, ir em **Authentication**
-2. Em **Login methods**, confirmar que **One-time PIN** está habilitado
-   - Isso permite login por OTP enviado ao e-mail, sem precisar configurar nenhum IdP externo
-3. Finalizar com **Save**
+> **Nota:** A Cloudflare processa a aplicação mais específica primeiro. Portanto, o acesso ao `/dns-query` cairá na aplicação de Bypass, e qualquer outro acesso ao subdomínio `adguard` exigirá login.
 
 **Resultado:**
 
@@ -334,22 +333,22 @@ Precisamos de **duas políticas** — uma para liberar o endpoint DoH sem autent
 
 ---
 
-## Parte 9: Validação Final ✅
+## ✅ Parte 9: Validação Final
 
 ### No Servidor (Debian)
 
 ```bash
-# 1. Testar DNS plain
+# 1. Testar DNS plain — deve retornar o IP de google.com
 dig @IP_DA_ORANGEPI google.com
 
-# 2. Testar DoH local
-curl -s -H "accept: application/dns-json" \
-  "http://localhost:8084/dns-query?name=google.com&type=A"
+# 2. Testar DoH local — deve retornar "Bad Request" (confirma que o endpoint está ativo)
+curl -s "http://localhost:8084/dns-query"
 
-# 3. Testar DoH externo (após configurar o tunnel)
-curl -s -H "accept: application/dns-json" \
-  "https://adguard.selflabs.org/dns-query?name=google.com&type=A"
+# 3. Testar DoH externo (após configurar o tunnel) — deve retornar "Bad Request"
+curl -s "https://adguard.selflabs.org/dns-query"
 ```
+
+> **Nota:** O `Bad Request` **é o resultado esperado** nos testes DoH (#2 e #3). O AdGuard rejeita a requisição por estar malformada (sem parâmetros DNS válidos), mas o fato de responder prova que o endpoint está ativo e acessível. O formato JSON (`application/dns-json`) não é suportado nesta configuração.
 
 ### No Painel do AdGuard
 
@@ -364,9 +363,39 @@ curl -s -H "accept: application/dns-json" \
 3. Verificar no **Query Log** do AdGuard que as queries aparecem e os domínios bloqueados estão marcados
 4. Testar que o painel admin (`https://adguard.selflabs.org`) exige login, mas `https://adguard.selflabs.org/dns-query` responde sem autenticação
 
+### ⚠️ Troubleshooting: Filtros não funcionam no Desktop
+
+Se celulares na mesma rede Wi-Fi estão sendo filtrados normalmente, mas o desktop ignora os bloqueios, a causa mais comum é **DNS fixo configurado manualmente no adaptador de rede**, sobrescrevendo o DHCP do roteador.
+
+**Como verificar (Windows):**
+
+```powershell
+ipconfig /all
+```
+
+No adaptador Wi-Fi ativo, se aparecer:
+```
+DHCP Habilitado: Não
+Servidores DNS: 8.8.8.8 / 1.1.1.1
+```
+
+O desktop está ignorando o AdGuard completamente.
+
+**Correção:**
+
+`Configurações > Rede e Internet > Wi-Fi > Propriedades de hardware > Editar atribuição de IP`
+
+Mude de **Manual** para **Automático (DHCP)** e após salvar, execute:
+
+```powershell
+ipconfig /flushdns
+```
+
+O desktop passará a receber o IP do AdGuard Home via DHCP, igual aos demais dispositivos da rede.
+
 ---
 
-## Acessos 🌐
+## 🌐 Acessos
 
 | Serviço                | Endereço                                 |
 | :--------------------- | :--------------------------------------- |
