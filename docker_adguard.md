@@ -235,6 +235,7 @@ Nossa arquitetura terceiriza o TLS para a Cloudflare. Por causa disso, a interfa
 O certificado é gerado uma única vez e armazenado como **GitHub Secret** no repositório. O Actions usa esses secrets para assinar o perfil a cada deploy.
 
 **1. Gerar o certificado (Git Bash no Windows):**
+
 ```bash
 openssl req -x509 -newkey rsa:4096 -keyout sign.key -out sign.crt \
   -days 3650 -nodes -subj "/CN=Self-Labs DNS Profile/O=Self-Labs/C=BR"
@@ -244,12 +245,13 @@ openssl req -x509 -newkey rsa:4096 -keyout sign.key -out sign.crt \
 
 Acesse o repositório → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
 
-| Nome | Conteúdo |
-|------|----------|
+| Nome       | Conteúdo                       |
+| ---------- | ------------------------------ |
 | `SIGN_KEY` | conteúdo do arquivo `sign.key` |
 | `SIGN_CRT` | conteúdo do arquivo `sign.crt` |
 
 **3. Apagar os arquivos locais** — nunca commite a chave privada:
+
 ```bash
 rm sign.key sign.crt
 ```
@@ -290,7 +292,7 @@ Com o tunnel ativo, `https://adguard.selflabs.org` expõe o painel admin publica
 
 ### 8.1. Criar a Aplicação no Zero Trust
 
-1. Acessar [Cloudflare Zero Trust](https://dashboard.cloudflare.com/one)
+1. Acessar [Cloudflare Zero Trust](https://dash.cloudflare.com/one)
 2. Ir em **Access** > **Applications** > **+ Add an Application**
 3. Selecionar **Self-hosted**
 4. Preencher:
