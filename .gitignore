@@ -1,2 +1,4 @@
 sign.crt
 sign.key
+.env
+.git
