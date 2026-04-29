@@ -28,5 +28,7 @@ services:
       - /srv/ocis/config:/etc/ocis
       # Dados dos usuários (arquivos, metadata, search index)
       - /srv/ocis/data:/var/lib/ocis
+    network_mode: bridge
     ports:
       - "9200:9200"
+    hostname: ocis

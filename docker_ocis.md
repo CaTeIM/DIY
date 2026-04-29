@@ -114,7 +114,6 @@ O oCIS não funciona acessado por IP direto — o OIDC exige que a URL seja idê
 > [!WARNING]
 > **Não use DNS rewrite no AdGuard** apontando `drive.selflabs.org` para `192.168.68.9`. Isso faz o browser tentar `https://192.168.68.9:443`, mas o oCIS escuta apenas na porta `9200`. O resultado é que **tanto o acesso local quanto o externo param de funcionar**.
 
-
 ---
 
 ## 📱 Parte 4: Apps Mobile e Desktop
