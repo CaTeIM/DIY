@@ -1,6 +1,6 @@
-# Guia de Instalação: Docker (v5.28) + Portainer no Debian 13
+# Guia de Instalação: Docker + Portainer no Debian 13
 
-Este guia mostra os passos para instalar uma versão específica do Docker Engine (v5.28.x) e Docker Compose, compatível com o Portainer CE 2.33.3. A interface de gerenciamento Portainer será instalada em um servidor Debian 13, centralizando os dados de configuração na pasta `/srv`.
+Este guia mostra os passos para instalar o Docker Engine e Docker Compose. A interface de gerenciamento Portainer será instalada em um servidor Debian 13, centralizando os dados de configuração na pasta `/srv`.
 
 **Nota de Arquitetura:** Este guia é universal e funciona tanto para arquiteturas **x86_64** (Intel/AMD) quanto **ARM** (como Raspberry Pi, Orange Pi, etc.), desde que estejam rodando Debian 13. Os scripts de instalação detectarão automaticamente a arquitetura correta.
 
@@ -36,26 +36,18 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
 
-> **Nota de Compatibilidade (Muito Importante):**
-> O **Portainer CE versão 2.33.3** (e possivelmente outras) **não é compatível** com as versões mais recentes do Docker (ex: 5:29.x+).
->
-> Os passos a seguir instalam **especificamente a versão `5:28.5.2`**, que é a última compatível conhecida. Também incluímos um passo para "travar" (hold) essa versão e impedir atualizações automáticas indesejadas.
+### 3. Instalar o Docker Engine (Mais Recente)
 
-### 3. Instalar Versão Específica do Docker
-
-Com o repositório configurado, atualizamos o `apt` e instalamos a versão exata do Docker e seus componentes.
+Com o repositório configurado, atualizamos o `apt` e instalamos a versão mais recente do Docker e seus componentes.
 
 ```bash
 # Atualiza a lista de pacotes após adicionar o repo
 sudo apt-get update
 
-# Define a string da versão exata (baseado no Trixie/Debian 13)
-VERSION_STRING=5:28.5.2-1~debian.13~trixie
-
-# Instala os pacotes com a versão "pinada"
+# Instala os pacotes
 sudo apt-get install \
-  docker-ce=$VERSION_STRING \
-  docker-ce-cli=$VERSION_STRING \
+  docker-ce \
+  docker-ce-cli \
   containerd.io \
   docker-buildx-plugin \
   docker-compose-plugin
@@ -64,15 +56,9 @@ sudo apt-get install \
 sudo docker version
 ```
 
-### 4. (Crítico!) Travar a Versão do Docker
+> **Nota sobre histórico de bugs:** No passado (ex: com Docker 29.x e Portainer 2.33.3), problemas de incompatibilidade exigiam fixar o Docker em uma versão específica (como a 5.28). Atualmente, a versão mais recente ("latest") funciona sem problemas. Se no futuro um bug similar ocorrer e você precisar fazer o downgrade/travar uma versão, consulte o **Anexo B: Instalar e Travar uma Versão Específica do Docker** no final deste guia.
 
-Para evitar que um `sudo apt upgrade` acidental atualize o Docker e quebre a compatibilidade com o Portainer, nós "travamos" (hold) os pacotes na versão instalada.
-
-```bash
-sudo apt-mark hold docker-ce docker-ce-cli
-```
-
-### 5. (Importante!) Adicionar seu Usuário ao Grupo Docker
+### 4. (Importante!) Adicionar seu Usuário ao Grupo Docker
 
 Isso permite que você execute comandos do Docker sem precisar usar `sudo` toda vez.
 
@@ -128,41 +114,46 @@ Após alguns segundos, o Portainer estará no ar e pronto para ser configurado.
 
 Pronto! Seu ambiente Docker e Portainer está 100% operacional. 🚀
 
-## Anexo: Como Atualizar o Docker (Destravando a Versão)
+## Anexo A: Removendo Fixação de Versão Antiga
 
-No futuro, quando o Portainer for atualizado e se tornar compatível com versões mais novas do Docker, siga estes passos para atualizar:
-
-### 1. Destravar os Pacotes
-
-Primeiro, libere os pacotes que você "travou":
+Se você seguiu versões anteriores deste guia e havia "travado" a versão do Docker na 5.28 (devido a um antigo bug de compatibilidade com o Portainer), siga os passos abaixo para destravar e atualizar para a versão mais recente:
 
 ```bash
+# Destrava os pacotes do Docker
 sudo apt-mark unhold docker-ce docker-ce-cli
-```
 
-### 2. Atualizar os Pacotes
-
-Agora, você pode rodar uma atualização normal, que pegará a versão "latest" (mais recente) do repositório:
-
-```bash
+# Atualiza para a versão mais recente
 sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get upgrade docker-ce docker-ce-cli
 ```
 
-*OU*, se você quiser atualizar para *outra versão específica* (ex: `5:29.0.1`), use o mesmo método de instalação pinada:
+## Anexo B: Instalar e Travar uma Versão Específica do Docker (Troubleshooting)
+
+Caso futuros bugs de compatibilidade exijam o uso de uma versão específica do Docker (como ocorria no passado com a versão 5.28), este é o procedimento histórico documentado para consulta:
+
+### 1. Instalar Versão Específica
+
+Atualizamos o `apt` e instalamos a versão exata do Docker:
 
 ```bash
-# Exemplo de atualização para uma versão específica futura
-NEW_VERSION=5:29.0.1-1~debian.13~trixie
+# Atualiza a lista de pacotes
+sudo apt-get update
 
+# Define a string da versão exata (Exemplo baseado no Trixie/Debian 13)
+VERSION_STRING=5:28.5.2-1~debian.13~trixie
+
+# Instala os pacotes com a versão "pinada"
 sudo apt-get install \
-  docker-ce=$NEW_VERSION \
-  docker-ce-cli=$NEW_VERSION
+  docker-ce=$VERSION_STRING \
+  docker-ce-cli=$VERSION_STRING \
+  containerd.io \
+  docker-buildx-plugin \
+  docker-compose-plugin
 ```
 
-### 3. Travar Novamente (Opcional)
+### 2. Travar a Versão do Docker
 
-Se você atualizou para uma nova versão específica e quer *manter* essa versão (e não a "latest"), trave os pacotes novamente:
+Para evitar que um `sudo apt upgrade` acidental atualize o Docker e quebre a compatibilidade, nós "travamos" (hold) os pacotes na versão instalada.
 
 ```bash
 sudo apt-mark hold docker-ce docker-ce-cli
