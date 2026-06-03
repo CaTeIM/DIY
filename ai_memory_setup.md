@@ -31,33 +31,12 @@ docker build -t ai-memory:local -f docker/Dockerfile .
 
 ### Stack no Portainer (docker-compose.yml)
 
-Crie uma nova Stack no Portainer chamada `ai-memory` com o seguinte conteúdo:
+Crie uma nova Stack no Portainer chamada `ai-memory`:
 
-```yaml
-services:
-  ai-memory:
-    image: ai-memory:local
-    container_name: ai-memory
-    restart: unless-stopped
-    user: "1000:1000"
-    volumes:
-      - /srv/ai-memory/data:/data
-    ports:
-      - "49374:49374"
-    environment:
-      - RUST_LOG=ai_memory=info,ai_memory_store=info,ai_memory_wiki=info,ai_memory_mcp=info,tracing_appender=warn
-      - AI_MEMORY_AUTH_TOKEN=${AI_MEMORY_AUTH_TOKEN}
-      - AI_MEMORY_LLM_PROVIDER=gemini
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - AI_MEMORY_EMBEDDING_PROVIDER=gemini
-      - AI_MEMORY_ALLOWED_HOSTS=localhost,127.0.0.1,IP_DO_SERVIDOR
-    healthcheck:
-      test: ["CMD", "/usr/local/bin/ai-memory", "status"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-```
+1. Acesse o Portainer → **Stacks** → **Add Stack**
+2. **Nome:** `ai-memory`
+3. Cole o conteúdo do arquivo [`assets/stack_ai_memory.yml`](./assets/stack_ai_memory.yml) no Editor Web.
+4. Clique em **Deploy the stack**.
 
 _Nota: Substitua `IP_DO_SERVIDOR` pelo IP real do seu servidor onde está rodando `docker-compose.yml`._
 

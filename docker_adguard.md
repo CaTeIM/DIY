@@ -434,3 +434,5 @@ Clicar em **Testar DNS primário** para validar e depois em **Aplicar**.
 | Painel Admin (local)   | `http://IP_DA_ORANGEPI:8084`             |
 | Painel Admin (externo) | `https://adguard.exemplo.com`           |
 | DoH endpoint           | `https://adguard.exemplo.com/dns-query` |
+
+

@@ -18,6 +18,9 @@ sudo mkdir -p /srv/mosquitto/config
 sudo mkdir -p /srv/mosquitto/data
 sudo mkdir -p /srv/mosquitto/log
 
+# Ajustar permissão para o Node-RED (Crítico: não usar root no container)
+sudo chown -R 1000:1000 /srv/nodered
+
 ```
 
 *(**Nota:** O `file-editor` usa a pasta `/srv/homeassistant`, que já foi criada acima, então não precisamos de uma pasta nova para ele.)*
@@ -115,7 +118,13 @@ Vamos criar duas stacks separadas. No Portainer, vá em **Stacks**, clique em **
 
 1. **Nome:** `homeassistant`
 2. **Editor Web:** Copie o conteúdo do arquivo [`assets/stack_ha.yml`](./assets/stack_ha.yml) e cole no editor.
-3. Clique em **Deploy the stack**.
+3. **Environment variables:** Adicione as seguintes variáveis (você precisará criar senhas fortes):
+   * `ESPHOME_USERNAME`: Seu usuário para o painel do ESPHome.
+   * `ESPHOME_PASSWORD`: Sua senha para o painel do ESPHome.
+   * `FILE_EDITOR_USERNAME`: Seu usuário para o File Editor.
+   * `FILE_EDITOR_PASSWORD`: Sua senha para o File Editor.
+   * `FILE_EDITOR_TOKEN`: Deixe vazio por enquanto.
+4. Clique em **Deploy the stack**.
 
 *(**Nota:** O `file-editor` vai iniciar, mas pode dar erro nos logs até você completar o Passo 3.2)*
 
@@ -177,10 +186,9 @@ O `file-editor` precisa de um Token (chave) para poder se comunicar com o Home A
 5. O HA vai gerar um token gigante. **Copie esse token imediatamente** (ele só é mostrado uma vez).
 6. Agora, volte ao **Portainer**.
 7. Vá em **Stacks** > clique na sua stack `homeassistant` > clique na aba **Editor**.
-8. Encontre o serviço `file-editor:`.
-9. Cole o token que você copiou na variável `HC_HASS_TOKEN`, substituindo `COLE_SEU_TOKEN_DE_LONGA_DURAÇÃO_AQUI`.
-10. Aproveite e já troque o `HC_USERNAME` e `HC_PASSWORD` do `file-editor` para algo seguro.
-11. Role para baixo e clique em **"Update the stack"**.
+8. Role para baixo até a seção **Environment variables**.
+9. Cole o token que você copiou no valor da variável `FILE_EDITOR_TOKEN`.
+10. Clique em **Update the stack**.
 
 O `file-editor` irá reiniciar e agora terá acesso total ao seu Home Assistant.
 
@@ -240,10 +248,12 @@ api:
 web_server:
   port: 80
   auth:
-    username: "seu_usuario"
-    password: "sua_senha"
-
+    username: "admin"
+    password: "uma_senha_muito_forte_aqui"
 ```
+
+> [!WARNING]
+> Nunca versione esse arquivo YAML no GitHub com senhas reais se o repositório for público. Para repositórios públicos, use o recurso `!secret` nativo do ESPHome.
 
 ### 5.3. Primeira Instalação (Factory Flash)
 
@@ -270,3 +280,4 @@ Como a placa está com o firmware de fábrica (KinCony), a primeira instalação
 ### 5.5. Atualizações Futuras (OTA)
 
 A partir de agora, você **não precisa mais do cabo**. Para qualquer mudança no YAML, apenas clique em **INSTALL** e escolha **OTA (Over-the-Air)**.
+

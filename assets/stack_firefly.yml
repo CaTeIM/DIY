@@ -1,0 +1,73 @@
+services:
+  firefly-app:
+    image: fireflyiii/core:latest
+    container_name: firefly-app
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - APP_URL=https://firefly.exemplo.com
+      - APP_KEY=${FIREFLY_APP_KEY}
+      - TRUSTED_PROXIES=**
+      - DB_CONNECTION=mysql
+      - DB_HOST=firefly-db
+      - DB_PORT=3306
+      - DB_DATABASE=firefly
+      - DB_USERNAME=firefly
+      - DB_PASSWORD=${FIREFLY_DB_PASSWORD}
+    volumes:
+      - /srv/firefly/upload:/var/www/html/storage/upload
+    networks:
+      - firefly-net
+    ports:
+      - "8080:8080"
+    depends_on:
+      - firefly-db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  firefly-db:
+    image: mariadb:lts
+    container_name: firefly-db
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_USER=firefly
+      - MYSQL_PASSWORD=${FIREFLY_DB_PASSWORD}
+      - MYSQL_DATABASE=firefly
+    volumes:
+      - /srv/firefly/db:/var/lib/mysql
+    networks:
+      - firefly-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  firefly-importer:
+    image: fireflyiii/data-importer:latest
+    container_name: firefly-importer
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+      - FIREFLY_III_URL=http://firefly-app:8080
+      - VANITY_URL=https://firefly.exemplo.com
+      - FIREFLY_III_ACCESS_TOKEN=${FIREFLY_APP_TOKEN}
+    networks:
+      - firefly-net
+    ports:
+      - "8081:8080"
+
+networks:
+  firefly-net:
+    name: firefly-net
+    driver: bridge
+

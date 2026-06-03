@@ -2,3 +2,7 @@ sign.crt
 sign.key
 .env
 .git
+
+# Dados financeiros transitórios (importação Firefly) — não versionar
+import_config_*.json
+RELATORIO_UTF8*.csv

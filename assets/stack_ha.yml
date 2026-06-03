@@ -23,8 +23,8 @@ services:
     privileged: true
     restart: always
     environment:
-      - USERNAME=seu_usuario # Troque!!!
-      - PASSWORD=sua_senha # Troque!!!
+      - USERNAME=${ESPHOME_USERNAME}
+      - PASSWORD=${ESPHOME_PASSWORD}
       - TZ=America/Sao_Paulo
     volumes:
       - /srv/esphome:/config
@@ -50,7 +50,6 @@ services:
   nodered:
     container_name: nodered
     image: nodered/node-red:latest
-    user: root
     restart: unless-stopped
     environment:
       - TZ=America/Sao_Paulo
@@ -66,10 +65,10 @@ services:
     restart: unless-stopped
     environment:
       - TZ=America/Sao_Paulo
-      - HC_USERNAME=seu_usuario # Troque!!!
-      - HC_PASSWORD=sua_senha # Troque!!!
+      - HC_USERNAME=${FILE_EDITOR_USERNAME}
+      - HC_PASSWORD=${FILE_EDITOR_PASSWORD}
       - HC_HASS_API=http://homeassistant:8123
-      - HC_HASS_TOKEN=COLE_SEU_TOKEN_DE_LONGA_DURAÇÃO_AQUI # Troque!!!
+      - HC_HASS_TOKEN=${FILE_EDITOR_TOKEN}
       - HC_BASEPATH=/config
       - HC_HASS_SSL=false
       - HC_DIRSFIRST=true
