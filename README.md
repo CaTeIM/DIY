@@ -12,6 +12,7 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 
 | Projeto | Descrição Resumida | Tecnologias Principais |
 | :--- | :--- | :--- |
+| **[🏦 Actual Budget (Docker)](./docs/actual-budget.md)** | Gerenciador financeiro pessoal self-hosted com envelope budgeting e importação de CSV (Mobills). | `Actual Budget`, `Docker`, `SQLite`, `PowerShell` |
 | **[🛡️ AdGuard Home (Docker + Cloudflare Tunnel)](./docs/adguard.md)** | DNS server com bloqueio de ads e trackers para toda a rede. DoH externo via Cloudflare Tunnel e perfil iOS. | `AdGuard Home`, `Docker`, `Cloudflare Tunnel`, `DNS-over-HTTPS` |
 | **[🧠 AI-Memory (AkitaOnRails)](./docs/ai-memory.md)** | Memória persistente para o Claude Code via arquitetura cliente-servidor: backend Docker no Orange Pi + CLI Rust no Windows interceptando hooks. | `Docker`, `Rust`, `Gemini API`, `MCP`, `PowerShell` |
 | **[⚡ Armadilha de Choque Automática](./docs/armadilha-choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `Home Assistant` |
