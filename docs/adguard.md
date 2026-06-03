@@ -29,7 +29,7 @@ DNS server com bloqueio de ads e trackers para toda a rede, com suporte a DNS-ov
 | `8084/tcp`   | `80`            | Painel Admin + endpoint DoH       |
 | `3004/tcp`   | `3000`          | Setup Wizard (só na primeira vez) |
 
-> As portas do **host** (`53`, `8084`, `3004`) podem ser alteradas no `stack_adguard.yml` se já estiverem em uso. As portas do **container** (lado direito) são fixas e não devem ser modificadas.
+> As portas do **host** (`53`, `8084`, `3004`) podem ser alteradas no `assets/stacks/adguard.yml` se já estiverem em uso. As portas do **container** (lado direito) são fixas e não devem ser modificadas.
 
 ---
 
@@ -98,7 +98,7 @@ sudo ufw status
 No Portainer: **Stacks** > **+ Add Stack**
 
 - **Nome:** `adguard`
-- **Editor Web:** Copie o conteúdo do arquivo [`assets/stack_adguard.yml`](./assets/stack_adguard.yml) e cole no editor.
+- **Editor Web:** Copie o conteúdo do arquivo [`assets/stacks/adguard.yml`](../assets/stacks/adguard.yml) e cole no editor.
 
 Clique em **Deploy the stack**.
 

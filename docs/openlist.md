@@ -57,7 +57,7 @@ Se não retornar nada, estão livres.
 
 1. Acessar o Portainer → **Stacks** → **Add Stack**
 2. Nome: `openlist`
-3. Colar o conteúdo do arquivo [`assets/stack_openlist.yml`](./assets/stack_openlist.yml)
+3. Colar o conteúdo do arquivo [`assets/stacks/openlist.yml`](../assets/stacks/openlist.yml)
 4. Clicar em **Deploy the stack**
 
 ### 2.2. Recuperar a senha do admin
@@ -204,7 +204,7 @@ Verificar se o mount path do volume no container está correto:
 docker exec openlist ls /midia
 ```
 
-Deve listar suas pastas. Se estiver vazio, o volume não foi montado — revisar o `stack_openlist.yml`.
+Deve listar suas pastas. Se estiver vazio, o volume não foi montado — revisar o `assets/stacks/openlist.yml`.
 
 ### Erro 403 no WebDAV
 

@@ -35,7 +35,7 @@ Crie uma nova Stack no Portainer chamada `ai-memory`:
 
 1. Acesse o Portainer → **Stacks** → **Add Stack**
 2. **Nome:** `ai-memory`
-3. Cole o conteúdo do arquivo [`assets/stack_ai_memory.yml`](./assets/stack_ai_memory.yml) no Editor Web.
+3. Cole o conteúdo do arquivo [`assets/stacks/ai-memory.yml`](../assets/stacks/ai-memory.yml) no Editor Web.
 4. Clique em **Deploy the stack**.
 
 _Nota: Substitua `IP_DO_SERVIDOR` pelo IP real do seu servidor onde está rodando `docker-compose.yml`._

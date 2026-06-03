@@ -12,19 +12,19 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 
 | Projeto | Descrição Resumida | Tecnologias Principais |
 | :--- | :--- | :--- |
-| **[🛡️ AdGuard Home (Docker + Cloudflare Tunnel)](./docker_adguard.md)** | DNS server com bloqueio de ads e trackers para toda a rede. DoH externo via Cloudflare Tunnel e perfil iOS. | `AdGuard Home`, `Docker`, `Cloudflare Tunnel`, `DNS-over-HTTPS` |
-| **[🧠 AI-Memory (AkitaOnRails)](./ai_memory_setup.md)** | Memória persistente para o Claude Code via arquitetura cliente-servidor: backend Docker no Orange Pi + CLI Rust no Windows interceptando hooks. | `Docker`, `Rust`, `Gemini API`, `MCP`, `PowerShell` |
-| **[⚡ Armadilha de Choque Automática](./armadilha_choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `Home Assistant` |
-| **[💧 Bomba d'ÁGua Automática](./bomba_dagua_automatica.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `TP-Link CPE` |
-| **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./github_actions_cicd_selfhosted.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |
-| **[🐳 Docker + Portainer no Debian](./docker_portainer_debian.md)** | Guia para instalar Docker e Portainer em um Debian (x86/ARM), centralizando dados em `/srv`. | `Docker`, `Portainer`, `Debian`, `Docker Compose` |
-| **[💰 Firefly III (Docker + Cloudflare Tunnel)](./docker_firefly.md)** | Gerenciador financeiro self-hosted com suporte a migração de CSV (Mobills). | `Firefly III`, `Data Importer`, `Docker`, `MariaDB` |
-| **[🤖 Home Assistant (Docker)](./docker_homeassistant.md)** | Guia completo para a stack de automação (HA, Mosquitto, Node-RED, ESPHome) no Docker. | `HA`, `Docker`, `Mosquitto`, `Node-RED`, `ESPHome` |
-| **[📂 OpenList (Docker + Cloudflare Tunnel)](./docker_openlist.md)** | File manager que serve arquivos existentes do HD diretamente, sem importação. WebDAV para apps mobile e Windows. | `OpenList`, `Docker`, `Cloudflare Tunnel`, `WebDAV` |
-| **[☁️ Oracle Cloud Free Tier VPS (ARM) via Pay-As-You-Go](./vps-oracle-free-tier)** | VPS gratuita da Oracle (4 OCPUs, 24GB RAM) com prioridade máxima e custo zero via conta Pay-As-You-Go. | `Oracle Cloud`, `VPS`, `ARM`, `Ubuntu`, `SSH`, `iptables` |
-| **[☁️ ownCloud oCIS (Docker + Cloudflare Tunnel)](./docker_ocis.md)** | Cloud storage pessoal com sync, compartilhamento e apps mobile. Acesso via Cloudflare Tunnel. | `ownCloud oCIS`, `Docker`, `Cloudflare Tunnel`, `WebDAV` |
-| **[🖥️ RustDesk Headless no Debian](./rustdesk_headless_debian.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
-| **[🚨 Sirene Ativada por Chamada](./sirene_por_chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
+| **[🛡️ AdGuard Home (Docker + Cloudflare Tunnel)](./docs/adguard.md)** | DNS server com bloqueio de ads e trackers para toda a rede. DoH externo via Cloudflare Tunnel e perfil iOS. | `AdGuard Home`, `Docker`, `Cloudflare Tunnel`, `DNS-over-HTTPS` |
+| **[🧠 AI-Memory (AkitaOnRails)](./docs/ai-memory.md)** | Memória persistente para o Claude Code via arquitetura cliente-servidor: backend Docker no Orange Pi + CLI Rust no Windows interceptando hooks. | `Docker`, `Rust`, `Gemini API`, `MCP`, `PowerShell` |
+| **[⚡ Armadilha de Choque Automática](./docs/armadilha-choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `Home Assistant` |
+| **[💧 Bomba d'ÁGua Automática](./docs/bomba-dagua.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `TP-Link CPE` |
+| **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./docs/cicd-github-actions.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |
+| **[🐳 Docker + Portainer no Debian](./docs/portainer-debian.md)** | Guia para instalar Docker e Portainer em um Debian (x86/ARM), centralizando dados em `/srv`. | `Docker`, `Portainer`, `Debian`, `Docker Compose` |
+| **[💰 Firefly III (Docker + Cloudflare Tunnel)](./docs/firefly.md)** | Gerenciador financeiro self-hosted com suporte a migração de CSV (Mobills). | `Firefly III`, `Data Importer`, `Docker`, `MariaDB` |
+| **[🤖 Home Assistant (Docker)](./docs/home-assistant.md)** | Guia completo para a stack de automação (HA, Mosquitto, Node-RED, ESPHome) no Docker. | `HA`, `Docker`, `Mosquitto`, `Node-RED`, `ESPHome` |
+| **[📂 OpenList (Docker + Cloudflare Tunnel)](./docs/openlist.md)** | File manager que serve arquivos existentes do HD diretamente, sem importação. WebDAV para apps mobile e Windows. | `OpenList`, `Docker`, `Cloudflare Tunnel`, `WebDAV` |
+| **[☁️ Oracle Cloud Free Tier VPS (ARM) via Pay-As-You-Go](./docs/vps-oracle.md)** | VPS gratuita da Oracle (4 OCPUs, 24GB RAM) com prioridade máxima e custo zero via conta Pay-As-You-Go. | `Oracle Cloud`, `VPS`, `ARM`, `Ubuntu`, `SSH`, `iptables` |
+| **[☁️ ownCloud oCIS (Docker + Cloudflare Tunnel)](./docs/owncloud-ocis.md)** | Cloud storage pessoal com sync, compartilhamento e apps mobile. Acesso via Cloudflare Tunnel. | `ownCloud oCIS`, `Docker`, `Cloudflare Tunnel`, `WebDAV` |
+| **[🖥️ RustDesk Headless no Debian](./docs/rustdesk-headless.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
+| **[🚨 Sirene Ativada por Chamada](./docs/sirene-por-chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
 
 ## 🛠️ Tecnologias no DNA do Repo
 

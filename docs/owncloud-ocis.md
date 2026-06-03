@@ -56,7 +56,7 @@ Se não retornar nada, está livre.
 
 1. Acessar o Portainer → **Stacks** → **Add Stack**
 2. Nome: `ocis`
-3. Colar o conteúdo do arquivo [`assets/stack_ocis.yml`](./assets/stack_ocis.yml)
+3. Colar o conteúdo do arquivo [`assets/stacks/owncloud-ocis.yml`](../assets/stacks/owncloud-ocis.yml)
 4. Na seção **Environment variables**, adicionar:
 
 | Variável | Valor |

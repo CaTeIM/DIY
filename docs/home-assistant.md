@@ -117,7 +117,7 @@ Vamos criar duas stacks separadas. No Portainer, vá em **Stacks**, clique em **
 ### 2.1. Stack Principal: `homeassistant` 🏠
 
 1. **Nome:** `homeassistant`
-2. **Editor Web:** Copie o conteúdo do arquivo [`assets/stack_ha.yml`](./assets/stack_ha.yml) e cole no editor.
+2. **Editor Web:** Copie o conteúdo do arquivo [`assets/stacks/home-assistant.yml`](../assets/stacks/home-assistant.yml) e cole no editor.
 3. **Environment variables:** Adicione as seguintes variáveis (você precisará criar senhas fortes):
    * `ESPHOME_USERNAME`: Seu usuário para o painel do ESPHome.
    * `ESPHOME_PASSWORD`: Sua senha para o painel do ESPHome.

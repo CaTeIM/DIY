@@ -62,13 +62,23 @@ sudo ufw reload
 
 ## 📦 Parte 2: Deploy via Portainer (Stack)
 
-### 2.1. Criar a Stack
+### 2.1. Gerar a APP_KEY (Obrigatória)
+
+O Firefly exige uma chave mestre de criptografia de exatos 32 caracteres. Para gerar uma chave aleatória e segura direto no terminal SSH, rode:
+
+```bash
+head /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 32 && echo
+```
+
+Guarde o valor gerado. Você vai precisar dele no próximo passo.
+
+### 2.2. Criar a Stack
 
 1. Acessar o Portainer → **Stacks** → **Add Stack**
 2. **Nome:** `firefly`
-3. Colar o conteúdo do arquivo [`assets/stack_firefly.yml`](./assets/stack_firefly.yml) no Editor Web.
+3. Colar o conteúdo do arquivo [`assets/stacks/firefly.yml`](../assets/stacks/firefly.yml) no Editor Web.
 4. Na aba **Environment variables**, adicione manualmente (Add environment variable) ou carregue do seu `.env` as seguintes chaves:
-   - `FIREFLY_APP_KEY`: Senha mestra (string de 32 caracteres exatos, sem caracteres especiais).
+   - `FIREFLY_APP_KEY`: Cole aqui a chave de 32 caracteres gerada no passo anterior.
    - `FIREFLY_DB_PASSWORD`: Senha para o banco de dados.
    - `FIREFLY_APP_TOKEN`: Pode deixar vazio no deploy inicial.
 5. Clicar em **Deploy the stack**.
@@ -86,7 +96,7 @@ No painel do Cloudflare:
 1. Vá em **Scrape Shield** → **Email Address Obfuscation** e desative (**Off**). O Cloudflare ofusca emails como proteção anti-bot, o que quebra a interface do Firefly, substituindo seu email por `[email protected]`.
 
 > [!NOTE]
-> A variável `TRUSTED_PROXIES=**` já está definida na sua stack `assets/stack_firefly.yml`. Ela é obrigatória para resolver o erro "Could not delete" (falha de CSRF no Laravel ao usar túneis).
+> A variável `TRUSTED_PROXIES=**` já está definida na sua stack `assets/stacks/firefly.yml`. Ela é obrigatória para resolver o erro "Could not delete" (falha de CSRF no Laravel ao usar túneis).
 
 ### 3.2. Gerar Token para o Data Importer
 
