@@ -1,6 +1,6 @@
 services:
   ai-memory:
-    image: ai-memory:local
+    image: akitaonrails/ai-memory:latest
     container_name: ai-memory
     restart: unless-stopped
     user: "1000:1000"
