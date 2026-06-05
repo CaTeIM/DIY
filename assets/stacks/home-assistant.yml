@@ -1,4 +1,4 @@
-name: homeassistant
+name: "homeassistant"
 services:
   homeassistant:
     container_name: homeassistant
@@ -11,10 +11,11 @@ services:
       - /srv/homeassistant:/config
       - /run/dbus:/run/dbus:ro
       - /etc/localtime:/etc/localtime:ro
-    network_mode: bridge
+    networks:
+      - homeassistant-net
     ports:
       - "8123:8123"
-      - "4357:4357"
+#      - "4357:4357"
     hostname: homeassistant
 
   esphome:
@@ -23,26 +24,30 @@ services:
     privileged: true
     restart: always
     environment:
+      - TZ=America/Sao_Paulo
       - USERNAME=${ESPHOME_USERNAME}
       - PASSWORD=${ESPHOME_PASSWORD}
-      - TZ=America/Sao_Paulo
     volumes:
       - /srv/esphome:/config
       - /etc/localtime:/etc/localtime:ro
-    network_mode: host
+    networks:
+      - homeassistant-net
     hostname: esphome
 
   mosquitto:
     container_name: mosquitto
     image: eclipse-mosquitto:latest
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     user: "1883:1883"
     volumes:
       - /srv/mosquitto/config:/mosquitto/config
       - /srv/mosquitto/data:/mosquitto/data
       - /srv/mosquitto/log:/mosquitto/log
       - /etc/localtime:/etc/localtime:ro
-    network_mode: bridge
+    networks:
+      - homeassistant-net
     ports:
       - "1883:1883"
     hostname: mosquitto
@@ -57,12 +62,13 @@ services:
       - /srv/nodered:/data
       - /etc/localtime:/etc/localtime:ro
     network_mode: host
-    hostname: nodered
 
   file-editor:
     container_name: file-editor
     image: causticlab/hass-configurator-docker:latest
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       - TZ=America/Sao_Paulo
       - HC_USERNAME=${FILE_EDITOR_USERNAME}
@@ -77,7 +83,34 @@ services:
     volumes:
       - /srv/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
-    network_mode: bridge
+    networks:
+      - homeassistant-net
     ports:
       - "3218:3218"
     hostname: file-editor
+
+  habridge:
+    container_name: habridge
+    image: lscr.io/linuxserver/habridge:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+      - SEC_KEY=${HABRIDGE_SEC_KEY:-}
+    volumes:
+      - /srv/habridge:/config
+      - /etc/localtime:/etc/localtime:ro
+    # Rede do host: o discovery da Alexa usa multicast UPnP/SSDP (UDP 1900), que não
+    # passa pela rede bridge do Docker. A porta web fica em 80 (no ha-bridge.config),
+    # pois a Alexa faz a API Hue na porta 80 fixa. Como o container roda como não-root,
+    # o host precisa de: sysctl net.ipv4.ip_unprivileged_port_start=80.
+    # Detalhes em docs/home-assistant.md (Passos 1.6/1.7 e Seção 6).
+    network_mode: host
+
+networks:
+  homeassistant-net:
+    name: homeassistant-net
+    driver: bridge
