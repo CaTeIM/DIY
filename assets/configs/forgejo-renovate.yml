@@ -1,0 +1,74 @@
+# =============================================================================
+# .forgejo/workflows/renovate.yml — Renovate como workflow AGENDADO (imagem FULL).
+#
+# Como usar: copie para `.forgejo/workflows/renovate.yml` no REPO CENTRAL do bot
+# (o mesmo repo que guarda o config.js). Guia: docs/forgejo.md (Parte 6).
+#
+# IMPORTANTE: para o agendamento (on.schedule) funcionar, este arquivo PRECISA
+# estar na branch PADRÃO do repositório (main/master). Schedules em outras
+# branches ou em pull requests são IGNORADOS pelo Forgejo.
+#
+# Reaproveita o MESMO runner da Parte 5 (label `docker` + Docker-in-Docker) —
+# não precisa registrar runner novo nem mexer no runner-config.yml.
+# =============================================================================
+name: renovate
+
+on:
+  schedule:
+    # Cron POSIX de 5 campos. UTC por padrão. Aqui: todo dia às 03:00 UTC (= 00:00 BRT).
+    # Para outro fuso, adicione `timezone: America/Sao_Paulo` nesta mesma entrada.
+    - cron: '0 3 * * *'
+  # Disparo MANUAL pela UI (Actions → Run workflow) ou via API. Use para testar agora.
+  workflow_dispatch:
+
+jobs:
+  renovate:
+    # `runs-on: docker` seleciona o runner dind pelo label; `container.image` troca
+    # a imagem do job (padrão documentado no Forgejo v15).
+    runs-on: docker
+    container:
+      # Imagem FULL (sufixo -full): já traz os gerenciadores de pacote pré-instalados.
+      # FIXE uma versão — `:full`/`:latest` são mutáveis. Re-pingue para uma versão
+      # atual no deploy (depois o próprio Renovate atualiza esta tag via PR).
+      image: ghcr.io/renovatebot/renovate:43.212.4-full
+    steps:
+      # OBRIGATÓRIO: o checkout traz o config.js deste repo central para o
+      # FORGEJO_WORKSPACE, que é o diretório de trabalho dos steps no container.
+      # O Renovate procura o config no diretório atual (NÃO em /usr/src/app), então
+      # SEM este checkout o config.js nem existe no container e TODA a config dele
+      # (gitAuthor, onboarding, dashboard…) seria silenciosamente ignorada.
+      # Obs.: isto só carrega o config global — os repos-ALVO o Renovate clona
+      # sozinho via API (autodiscover).
+      - name: Checkout (carrega o config.js global)
+        uses: actions/checkout@v6
+
+      - name: Run Renovate
+        env:
+          # Aponta explicitamente para o config.js no workspace (à prova de mudança
+          # no auto-load por CWD). `github.workspace` == FORGEJO_WORKSPACE.
+          RENOVATE_CONFIG_FILE: ${{ github.workspace }}/config.js
+          # Endpoint = URL BASE pública (Cloudflare Tunnel). O Renovate acrescenta
+          # /api/v1 sozinho — NÃO inclua aqui. Os jobs no dind alcançam o Forgejo
+          # só por esta URL pública, nunca pelo nome interno do docker.
+          RENOVATE_ENDPOINT: https://git.exemplo.com/
+          RENOVATE_PLATFORM: forgejo
+          # PAT da conta-bot, guardado como secret do Forgejo Actions:
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          # Descobre e roda em TODO repo que o bot pode acessar:
+          RENOVATE_AUTODISCOVER: 'true'
+          # Cinto-e-suspensório: garante a identidade de commit mesmo que o config.js
+          # falhe em carregar. Deve casar com o Email da conta-bot.
+          RENOVATE_GIT_AUTHOR: 'Renovate Bot <renovate@git.exemplo.com>'
+          # OPCIONAL (recomendado): PAT read-only do github.com p/ ler changelogs das deps.
+          # NÃO é o token do Forgejo. Use o nome de secret GH_TOKEN — 'GITHUB_TOKEN' é
+          # reservado (token automático do run). O env var abaixo é fixo do Renovate.
+          # RENOVATE_GITHUB_COM_TOKEN: ${{ secrets.GH_TOKEN }}
+          # 1ª execução: troque para 'debug' e confirme no log a linha que lista os
+          # repositórios descobertos. Se descobrir 0 repos → o PAT não tem acesso
+          # 'All (public, private, and limited)' ou o bot não tem Write em nenhum
+          # repo (o Renovate sai com código 0 = falha silenciosa).
+          LOG_LEVEL: info
+        # O Forgejo substitui o ENTRYPOINT/CMD da imagem pelo seu runner de steps,
+        # por isso chamamos o binário `renovate` explicitamente (está no PATH).
+        # A imagem roda como uid 12021 (ubuntu), não root — e tudo bem.
+        run: renovate

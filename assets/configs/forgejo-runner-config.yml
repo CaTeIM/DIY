@@ -1,0 +1,33 @@
+# =============================================================================
+# runner-config.yml — configuração do Forgejo Runner.
+#
+# Destino: /srv/forgejo/runner/runner-config.yml  (no host)
+# Guia completo: docs/forgejo.md (seções 5.2 a 5.5).
+#
+# Este é o MÍNIMO funcional. O `forgejo-runner generate-config` gera um arquivo
+# de ~250 linhas, mas só estes dois blocos importam: `labels` e `connections`.
+# Os demais (log, cache, container, timeouts) usam defaults que funcionam.
+# =============================================================================
+
+runner:
+  # (1) LABELS — mapeiam `runs-on` → imagem. OBRIGATÓRIO.
+  #     Estrutura: <nome>:<tipo>://<imagem>   (tipo: docker | lxc | host)
+  labels:
+    - docker:docker://node:24-bookworm
+    - ubuntu-latest:docker://ghcr.io/catthehacker/ubuntu:act-22.04
+
+server:
+  connections:
+    forgejo:
+      # (2) CONEXÃO — cole o UUID e o Token que a UI mostrou ao criar o runner.
+      #     `url`: endereço alcançável TANTO pelo runner QUANTO pelos jobs no dind:
+      #       - homelab (1 host só): IP da LAN do host  → http://192.168.68.10:3000/
+      #       - domínio / Cloudflare Tunnel:             → https://git.exemplo.com/
+      #     NUNCA use http://server:3000 — os jobs no dind não resolvem esse nome.
+      url: https://git.exemplo.com/
+      uuid: <UUID_DA_UI>
+      token: <TOKEN_DA_UI>
+
+# Opcional — se o cache (ligado por padrão) ficar logando avisos no dind, desligue:
+# cache:
+#   enabled: false

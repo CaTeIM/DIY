@@ -1,0 +1,43 @@
+# =============================================================================
+# Workflow CI padrão (Node/npm) para Forgejo Actions.
+#
+# Como usar: copie este arquivo para `.forgejo/workflows/ci.yml` no seu repo.
+# Guia completo: docs/forgejo.md (seção 5.7).
+#
+# Pré-requisitos no repositório:
+#   - package-lock.json              → para `npm ci`
+#   - script "test" no package.json  → para `npm test`
+# Pré-requisito no runner:
+#   - label `docker` = node:24-bookworm (definido no runner-config.yml)
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]   # deixe só o branch que o seu repo usa
+  pull_request:
+
+# Opcional — cancela runs antigos do mesmo branch/PR a cada novo push.
+# (o Forgejo já cancela push/PR superados por padrão; isto só deixa explícito)
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: docker            # casa o label "docker" (= node:24-bookworm) do runner
+    # timeout-minutes: 15      # opcional — trava contra job travado consumindo o runner
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          # cache: 'npm'       # opcional — depende do cache server alcançável de dentro do dind
+      - run: npm ci
+      - run: npm test
+
+      # Ative o check de formatação SÓ depois do primeiro `npm run format` no repo
+      # inteiro — senão a CI fica vermelha por causa de código legado ainda não
+      # formatado pelo prettier.
+      # - run: npm run format:check

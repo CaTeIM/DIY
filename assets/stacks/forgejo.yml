@@ -1,0 +1,84 @@
+services:
+  server:
+    image: codeberg.org/forgejo/forgejo:15.0.2
+    container_name: forgejo
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO__actions__ENABLED=true
+      - FORGEJO__database__DB_TYPE=postgres
+      - FORGEJO__database__HOST=db:5432
+      - FORGEJO__database__NAME=forgejo
+      - FORGEJO__database__USER=forgejo
+      - FORGEJO__database__PASSWD=${FORGEJO_DB_PASSWORD}
+      - FORGEJO__service__DISABLE_REGISTRATION=true
+    restart: always
+    volumes:
+      - /srv/forgejo/data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - forgejo-net
+    ports:
+      - '3000:3000'
+      - '8122:22'
+    hostname: forgejo
+
+  db:
+    image: postgres:15-alpine
+    container_name: forgejo-db
+    restart: always
+    environment:
+      - POSTGRES_USER=forgejo
+      - POSTGRES_PASSWORD=${FORGEJO_DB_PASSWORD}
+      - POSTGRES_DB=forgejo
+    volumes:
+      - /srv/forgejo/db:/var/lib/postgresql/data
+    networks:
+      - forgejo-net
+    hostname: forgejo-db
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U forgejo']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  docker-in-docker:
+    image: docker:dind
+    container_name: forgejo-dind
+    privileged: true
+    command: ['dockerd', '-H', 'tcp://0.0.0.0:2375', '--tls=false']
+    restart: always
+    volumes:
+      - /srv/forgejo/dind:/var/lib/docker
+    networks:
+      - forgejo-net
+    hostname: forgejo-dind
+
+  # Runner que executa os workflows de .forgejo/workflows/*.yml.
+  # PRE-REQUISITO (uma vez): crie o runner na UI do Forgejo e grave
+  # /srv/forgejo/runner/runner-config.yml com a secao `server` (ver guia, Parte 5).
+  # Ate o config existir, o runner reinicia em loop a espera dele.
+  runner:
+    image: data.forgejo.org/forgejo/runner:12
+    container_name: forgejo-runner
+    command: forgejo-runner daemon --config runner-config.yml
+    restart: always
+    environment:
+      - DOCKER_HOST=tcp://docker-in-docker:2375
+    volumes:
+      - /srv/forgejo/runner:/data
+    depends_on:
+      - server
+      - docker-in-docker
+    networks:
+      - forgejo-net
+    hostname: forgejo-runner
+
+networks:
+  forgejo-net:
+    name: forgejo-net
+    driver: bridge
