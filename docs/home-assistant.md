@@ -447,15 +447,25 @@ curl -s http://[IP_DO_SERVIDOR]/api/qualquercoisa/lights | head -c 300; echo
 3. Aguarde os ~45 segundos completos. Os dispositivos entram como luzes Hue.
 4. Teste por voz: _"Alexa, ligar [nome do dispositivo]"_.
 
-### 6.8. (Opcional) Proteger a interface do HA Bridge 🛡️
+### 6.8. (Opcional) Proteger o painel do HA Bridge 🛡️
 
-Por padrão, a UI fica aberta a quem estiver na LAN (por isso o firewall é importante). Para exigir login:
+Por padrão o painel fica aberto na LAN. O login tem **duas peças**:
 
-1. No Portainer, defina a variável **`HABRIDGE_SEC_KEY`** com uma **chave forte** e clique em **Update the stack**.
-2. Na UI, vá em **Bridge Control → Security** e crie um usuário/senha.
+- **`HABRIDGE_SEC_KEY`** → a chave que **criptografa** o usuário/senha dentro do `ha-bridge.config` (a "tranca do cofre").
+- **usuário/senha** → a credencial que você cria na UI para **entrar** no painel.
+
+> [!IMPORTANT]
+> Mantenha **"Use username/password for HUE Api" DESMARCADO** — essa opção protege a API que a Alexa usa e **quebraria a integração**. Aqui protegemos só o painel.
+
+1. **Gere a chave** e guarde-a (é permanente): `openssl rand -hex 24`.
+2. **Portainer** → stack `homeassistant` → **Environment variables** → cole a chave em `HABRIDGE_SEC_KEY` → **Update the stack**. _(No log surge uma vez `Could not get security data ... bad key` — é esperado.)_
+3. Na UI → **Bridge Control → Update Security Settings**:
+   - **Add/Delete User**: digite o usuário (ex.: `admin`).
+   - **Change Password** + **Confirm Password**: digite a **mesma** senha forte → botão **Change Password**.
+4. Recarregue `http://[IP_DO_SERVIDOR]` — o navegador deve **pedir login**.
 
 > [!WARNING]
-> Depois de definida, a `HABRIDGE_SEC_KEY` **não pode mudar** — ela é a chave que descriptografa os usuários salvos. Se você alterá-la, perderá o acesso e precisará apagar o bloco `securityData` do `ha-bridge.config`.
+> A `HABRIDGE_SEC_KEY` **não pode mudar** depois de criar o usuário (é a chave que o descriptografa). Se trocar, você perde o acesso ao painel — recuperável apagando o `securityData` do `ha-bridge.config` (com o container parado).
 
 ### 6.9. Solução de Problemas 🩺
 
