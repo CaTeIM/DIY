@@ -44,15 +44,15 @@ _Nota: No YAML, troque `192.168.x.x` (em `AI_MEMORY_ALLOWED_HOSTS`) pelo IP real
 
 Para gerar os hooks de interceptação e conversar com o servidor, precisamos do CLI `ai-memory` compilado nativamente no Windows.
 
-> ℹ️ **Sobre os hooks (importante):** para o agente **`claude-code`**, o `ai-memory` **não** usa PowerShell — ele gera hooks em shell **`.sh` executados via Git Bash** (`bash -c` com caminhos no estilo `/c/Users/...`). Por isso o **Git for Windows (Git Bash)** é pré-requisito. O bundle traz também versões `.ps1`, mas essas são para *outros* agentes (Codex, Cursor, Gemini CLI...); o Claude Code nativo no Windows usa as `.sh`. Os scripts ficam em `%LOCALAPPDATA%\ai-memory\hooks\claude-code\`.
+> ℹ️ **Sobre os hooks (importante):** para o agente **`claude-code`** no Windows, as versões com suporte nativo (PRs [#83](https://github.com/akitaonrails/ai-memory/pull/83) / [#84](https://github.com/akitaonrails/ai-memory/pull/84)) geram um hook **nativo** — o comando chama o binário `ai-memory.exe` direto (`"…\ai-memory.exe" hook --event …`), sem subir shell, eliminando o overhead do Git Bash a cada tool call (~5× mais rápido). Para voltar ao modo legado (`bash -c` + scripts `.sh` via Git Bash, caminhos `/c/Users/...`), defina `AI_MEMORY_HOOK_PLATFORM=windows-bash` antes do `install-hooks`. O bundle ainda traz os scripts `.sh`/`.ps1` como fallback — e o **Git for Windows (Git Bash)** segue como pré-requisito do modo `windows-bash` e dos outros agentes (Codex, Cursor, Gemini CLI...). Os scripts ficam em `%LOCALAPPDATA%\ai-memory\hooks\claude-code\`.
 
 ### Pré-requisitos
 
-- **Git for Windows** — fornece o Git Bash que executa os hooks `.sh`:
+- **Git for Windows** — **opcional** com o hook nativo (padrão atual): o `claude-code` não usa mais `bash`. Necessário apenas para o modo legado `AI_MEMORY_HOOK_PLATFORM=windows-bash` (hooks `.sh` via Git Bash) e para outros agentes que usam scripts:
   ```powershell
   winget install Git.Git
   ```
-- **Rust / Cargo** — para compilar o CLI (passo abaixo).
+- **Rust / Cargo** — para compilar o CLI (passo abaixo). **Obrigatório.**
 
 ### Instalação do Rust
 
@@ -84,7 +84,7 @@ ai-memory install-mcp --client claude-code --apply --server-url "http://IP_DO_SE
 ```
 
 **2. Instalar os Hooks de ciclo de vida:**
-_Nota: É obrigatório apontar `--hooks-dir` para a pasta original do repositório clonado no Windows._
+_Nota: aponte `--hooks-dir` para a pasta `hooks/` do repositório clonado. Com o hook nativo ele apenas faz o staging dos scripts de fallback (o hook em si chama o binário `ai-memory.exe`); no modo `windows-bash` ele define os `.sh` efetivamente executados._
 
 ```powershell
 ai-memory install-hooks --agent claude-code --apply --hooks-dir "D:\cateim\Google Drive\GitHub\ai-memory\hooks" --server-url "http://IP_DO_SERVIDOR:49374" --auth-token "SUA_SENHA_AQUI"
@@ -156,6 +156,8 @@ ai-memory install-hooks --agent  claude-code --apply --hooks-dir "D:\cateim\Goog
 
 > Reabra o terminal do Antigravity IDE após atualizar, para recarregar o binário e os hooks.
 
+> 🆕 **Melhorias no Windows (PRs [#83](https://github.com/akitaonrails/ai-memory/pull/83) / [#84](https://github.com/akitaonrails/ai-memory/pull/84)):** com elas, no Windows o `install-hooks` passa a (a) gerar o hook **nativo** (binário direto, ~5× mais rápido que `bash -c`) e (b) **preservar hooks de outros plugins** no mesmo evento. Antes, o `install-hooks --apply` sobrescrevia o array do evento inteiro — removendo, p.ex., um hook `SessionStart` do context-mode (era preciso re-adicionar manualmente após cada update). Enquanto os PRs não forem mergeados no upstream, compile de uma branch local que os inclua.
+
 ### 4.3. Manter as versões em sincronia
 
 Confirme que cliente e servidor batem:
@@ -168,6 +170,8 @@ Após cada atualização, rode o teste da [seção 3](#-3-verificação-e-teste)
 ## 🩺 5. Troubleshooting
 
 ### Hooks pararam de gravar memória no Windows (`bash` errado)
+
+> ⚠️ **Só se aplica ao modo legado `windows-bash`.** Com o hook **nativo** (padrão atual, PR #84) o `claude-code` não invoca `bash` — então esse problema não acontece. Se você não definiu `AI_MEMORY_HOOK_PLATFORM=windows-bash`, pode ignorar esta seção.
 
 **Sintoma:** de repente (geralmente após uma atualização do Windows ou a instalação do WSL) a memória deixa de ser gravada e os hooks falham com algo como `No such file or directory` ou `cannot find path`.
 
