@@ -22,8 +22,6 @@ services:
       - WEBHOOK_URL=https://${N8N_HOST}/
       - N8N_EDITOR_BASE_URL=https://${N8N_HOST}/
       - N8N_PROXY_HOPS=1
-      # --- Execucao (task runners ligados; modo internal por padrao) ---
-      - N8N_RUNNERS_ENABLED=true
       # --- Fuso horario (cron/agendamentos usam GENERIC_TIMEZONE) ---
       - GENERIC_TIMEZONE=America/Sao_Paulo
       - TZ=America/Sao_Paulo

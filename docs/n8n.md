@@ -71,7 +71,7 @@ openssl rand -base64 32
 
 O arquivo [`n8n.yml`](../assets/stacks/n8n.yml) define **dois serviços**:
 
-- **`n8n`** → imagem oficial `docker.n8n.io/n8nio/n8n`, roda como UID/GID `1000`, conecta no Postgres via `n8n-db:5432` e expõe a porta `5678` (Web UI + API + Webhooks). Já vem com `N8N_RUNNERS_ENABLED=true` (task runners — a forma recomendada de executar nós de código, no modo `internal`) e as variáveis de URL pública/proxy preenchidas para o Cloudflare Tunnel.
+- **`n8n`** → imagem oficial `docker.n8n.io/n8nio/n8n`, roda como UID/GID `1000`, conecta no Postgres via `n8n-db:5432` e expõe a porta `5678` (Web UI + API + Webhooks). Na **v2.x os task runners já vêm ligados por padrão** (executam os nós de código isolados — não precisa de env; o n8n inclusive pede para *remover* `N8N_RUNNERS_ENABLED` se você setar). Traz também as variáveis de URL pública/proxy preenchidas para o Cloudflare Tunnel.
 - **`n8n-db`** → PostgreSQL `16-alpine`, dados em `/srv/n8n/db`. Tem `healthcheck` (`pg_isready`) — o `n8n` só inicia depois que o banco está pronto, evitando erro de conexão no primeiro boot.
 
 > ✏️ **Domínio parametrizado:** você não edita o YAML para o domínio — define `N8N_HOST` uma vez (no `.env` ou nas env vars do Portainer) e o compose o reaproveita em `WEBHOOK_URL`/`N8N_EDITOR_BASE_URL`. No YAML, só confira o fuso em `GENERIC_TIMEZONE`/`TZ`.
@@ -124,7 +124,7 @@ Os webhooks do n8n só funcionam de verdade quando serviços externos (Telegram,
 
 ## Parte 6: Escala — Instância Única vs Queue Mode (opcional)
 
-Esta stack roda em **instância única** (regular mode): um processo n8n cuida de tudo (UI, API, triggers, webhooks **e** executa os workflows). Com **task runners** ligados (já está, `N8N_RUNNERS_ENABLED=true`), os nós de código (JS/Python) rodam num processo isolado — isso é **estabilidade/segurança**, não escala. Para o radar e a grande maioria dos casos de home lab, **isto basta**.
+Esta stack roda em **instância única** (regular mode): um processo n8n cuida de tudo (UI, API, triggers, webhooks **e** executa os workflows). Com os **task runners** (ligados por padrão na v2.x), os nós de código (JS/Python) rodam num processo isolado — isso é **estabilidade/segurança**, não escala. Para o radar e a grande maioria dos casos de home lab, **isto basta**.
 
 Considere **Queue mode** apenas quando a instância única não der conta do volume/picos de execuções, ou você quiser paralelismo real entre processos. Aí o `main` enfileira execuções no **Redis** e processos **worker** (`n8n worker`) as executam:
 
@@ -202,6 +202,7 @@ Três coisas precisam ir junto no backup — perder qualquer uma quebra a restau
 | Execuções não atualizam ao vivo na UI              | O proxy não faz upgrade de WebSocket. Adicione `N8N_PUSH_BACKEND=sse` ao `environment:` e atualize a stack.        |
 | Credenciais "não descriptografam" após restaurar   | A `N8N_ENCRYPTION_KEY` não bate com a do backup. Restaure **a mesma** chave de antes (Parte 8).                    |
 | `n8n` reinicia / não conecta no banco no 1º boot   | Normal por alguns segundos: o `depends_on: service_healthy` segura o n8n até o `pg_isready` passar.                |
+| `Failed to start Python task runner ... Python 3 is missing` | **Inofensivo** — a imagem não traz Python 3, então só o runner de **JS** sobe (`Registered runner "JS Task Runner"`). Ignore, a menos que use nós de **Código em Python**; nesse caso use o runner em modo `external` (imagem `n8nio/runners`, ver Notas Importantes). |
 
 ---
 
