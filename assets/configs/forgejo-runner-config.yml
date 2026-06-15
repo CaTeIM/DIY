@@ -24,6 +24,10 @@ server:
       #       - homelab (1 host só): IP da LAN do host  → http://192.168.68.10:3000/
       #       - domínio / Cloudflare Tunnel:             → https://git.exemplo.com/
       #     NUNCA use http://server:3000 — os jobs no dind não resolvem esse nome.
+      #     EXCEÇÃO .onion / VPS c/ firewall restritivo: o IP do host falha
+      #     (no route to host) e o .onion precisa de Tor → troque dind por DOOD
+      #     e use o nome interno http://forgejo:3000/ com `container.network:
+      #     forgejo-net` (ver docs/forgejo.md §5.9).
       url: https://git.exemplo.com/
       uuid: <UUID_DA_UI>
       token: <TOKEN_DA_UI>

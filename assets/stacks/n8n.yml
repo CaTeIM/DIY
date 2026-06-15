@@ -31,6 +31,7 @@ services:
       - /srv/n8n/data:/home/node/.n8n
     networks:
       - n8n-net
+      - radar-net
     ports:
       - '5678:5678'
     depends_on:
@@ -71,3 +72,7 @@ networks:
   n8n-net:
     name: n8n-net
     driver: bridge
+  # radar-net e criada pela stack do radar; o n8n entra nela p/ alcancar evo-postgres + radar-backend.
+  radar-net:
+    name: radar-net
+    external: true

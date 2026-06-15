@@ -148,7 +148,7 @@ O `runner` usa o `docker-in-docker` (`DOCKER_HOST=tcp://docker-in-docker:2375`),
 
 Cada job roda num container efêmero **dentro do dind**, numa rede isolada (`FORGEJO-ACTIONS-TASK-...`). O `url` em `server.connections.*.url` precisa ser alcançável **tanto pelo runner quanto pelos containers dos jobs** — senão o `actions/checkout` falha ao clonar. Escolha conforme seu cenário:
 
-- ✅ **Homelab (tudo num host só) — mais confiável:** use o **IP da LAN do host** + porta, ex.: `http://192.168.68.10:3000/`. Funciona do runner E de dentro dos jobs (ambos roteiam pra fora até o host), sem depender de DNS público.
+- ✅ **Homelab (tudo num host só) — mais confiável:** use o **IP da LAN do host** + porta, ex.: `http://192.168.68.10:3000/`. Funciona do runner E de dentro dos jobs (ambos roteiam pra fora até o host), sem depender de DNS público. ⚠️ Em **VPS com firewall restritivo** (Oracle/Hetzner) isso pode dar `no route to host` (o INPUT do host rejeita container→host:porta) — aí vá de **DOOD + nome interno** (5.9).
 - ✅ **Domínio público:** `https://git.exemplo.com/` — só se o próprio servidor consegue se acessar por esse nome (hairpin NAT/split-DNS, ou via Cloudflare Tunnel). Ideal definir a **Base URL** (Parte 4) com o mesmo endereço.
 - ❌ **Nunca use o nome interno** `http://server:3000` / `http://forgejo:3000`: o runner até alcança, mas os jobs dentro do dind **não resolvem** esse nome e o checkout quebra.
 - 🔁 **Alternativa só-interna (sem IP/domínio alcançável):** use o **modo socket (DOOD)** em vez do dind e ponha os jobs na `forgejo-net` (`container.network`) para resolver `server` internamente — ver 5.6.
@@ -202,8 +202,66 @@ concurrency:
 | `actions/checkout` falha (não acha o host)    | registre a conexão com a **URL pública** da instância (5.5)                                         |
 | `Cannot connect to the Docker daemon` num job | falta dind/`container.docker_host` para `docker build` (5.6)                                        |
 | Job sem internet (não baixa actions/imagens)  | o `uses:` resolve via `DEFAULT_ACTIONS_URL=https://data.forgejo.org`; garanta saída de rede do dind |
+| Runner **Offline** / runs "Canceled" em 0s após trocar domínio ou ir pra **.onion** | o `url` do runner aponta pro domínio aposentado ou pro `.onion` (sem Tor nos containers) — ver **5.9** |
 
 > O conceito de runner self-hosted é o mesmo do guia [CI/CD com GitHub Actions + Self-Hosted Runner](./cicd-github-actions.md) — a diferença é que aqui o runner é o `forgejo-runner`, registrado via `runner-config.yml`, e os workflows vivem em `.github/workflows/`.
+
+### 5.9 — Migrei pro `.onion` (ou troquei o domínio) e o CI parou
+
+**Sintoma:** depois de trocar o `ROOT_URL`/domínio da instância (ex.: ir pra `.onion`), o runner fica **Offline** e os runs aparecem **"Canceled" em 0s** (não rodam nenhum step). Conforme você corrige cada camada, o `docker logs forgejo-runner` revela a próxima:
+
+- `dial tcp <domínio-antigo>: no such host` / recusado → o `url` do runner ainda aponta pro domínio que você **aposentou**;
+- `dial tcp <IP-do-host>:3000: no route to host` → o **IP do host não serve** (ver abaixo);
+- `permission denied ... /var/run/docker.sock` → modo **DOOD** sem acesso ao socket.
+
+> ⚠️ O `url` do runner vive em **`/srv/forgejo/runner/runner-config.yml`** (`server.connections.*.url`) — **não** no compose. Redeploy da stack **não** edita esse arquivo: altere à mão e reinicie o `runner`.
+
+**Por que o IP do host falha** quando runner/jobs estão na **mesma bridge** do Forgejo: o tráfego container→`IP-do-host:3000` ou bate no **firewall do host** (VPS tipo Oracle têm `INPUT ... REJECT` → `no route to host`) ou não passa pelo DNAT da porta publicada (o Docker exclui a própria bridge — sem _hairpin_). E o `.onion` exige **Tor**, que os containers não têm. Sobra o **nome interno `forgejo:3000`** — que só resolve dentro dos jobs se eles estiverem na `forgejo-net`, o que **o dind não permite** (rede isolada). A saída é trocar o dind por **DOOD**.
+
+**Solução (DOOD + nome interno):**
+
+1. **Stack — `server`:** aponte o endereço interno pro checkout/links internos (mantém o `.onion` só na UI):
+
+   ```yaml
+   - FORGEJO__server__ROOT_URL=http://<seu-endereco>.onion/
+   - FORGEJO__server__LOCAL_ROOT_URL=http://forgejo:3000/
+   ```
+
+2. **Stack — troque dind por DOOD:** remova o serviço `docker-in-docker` e ajuste o `runner` (sem `DOCKER_HOST`; monta o socket do host; entra no grupo `docker`):
+
+   ```yaml
+   runner:
+     image: data.forgejo.org/forgejo/runner:12
+     command: forgejo-runner daemon --config runner-config.yml
+     restart: always
+     group_add:
+       - '989' # GID do `getent group docker` no host (3º campo)
+     volumes:
+       - /srv/forgejo/runner:/data
+       - /var/run/docker.sock:/var/run/docker.sock
+     depends_on: [server]
+     networks: [forgejo-net]
+   ```
+
+   > Sem o `group_add`, o runner (não-root) leva `permission denied` no socket. Alternativa GID-independente: `user: "0:0"` (root). Como o DOOD já dá controle do Docker do host, rodar como root não aumenta o risco de forma relevante.
+
+3. **`runner-config.yml`:** url interna + jobs na `forgejo-net`:
+
+   ```yaml
+   container:
+     network: forgejo-net # jobs entram na forgejo-net e resolvem "forgejo"
+
+   server:
+     connections:
+       forgejo:
+         url: http://forgejo:3000/
+         uuid: <seu>
+         token: <seu>
+   ```
+
+4. Redeploy e `sudo docker logs -f forgejo-runner` → deve logar `declared successfully` + `[poller] launched`, e o runner vira **Idle**. (Alguns `connection refused` no boot são só a corrida de subida do `server` — o `restart: always` reconecta.)
+
+> **Tradeoff:** DOOD dá ao runner controle do Docker do **host** (menos isolamento que o dind). Aceitável para CI de **repositórios privados próprios**; evite num runner que execute PRs de terceiros.
 
 ---
 

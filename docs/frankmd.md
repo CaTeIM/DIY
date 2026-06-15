@@ -12,18 +12,18 @@ A stack pronta está em [`assets/stacks/frankmd.yml`](../assets/stacks/frankmd.y
 ## Arquitetura
 
 ```
-┌─ INTERNET ─────────────────────────────────────────────────────────┐
-│                                                                    │
-│  Navegador                                                         │
-│  ──► https://notas.exemplo.com                                     │
-│  ──► Cloudflare Edge (termina o TLS)                               │
+┌─ INTERNET ────────────────────────────────────────────────────────┐
+│                                                                   │
+│  Navegador                                                        │
+│  ──► https://notas.exemplo.com                                    │
+│  ──► Cloudflare Edge (termina o TLS)                              │
 │  ──► Cloudflare Access (login/OTP — a "senha" do app)             │
-│  ──► Tunnel (cloudflared bare metal no host)                       │
+│  ──► Tunnel (cloudflared bare metal no host)                      │
 │  ──► localhost:7591 ──► FrankMD (Thruster :80 -> Puma, HTTP puro) │
-│         │                                                          │
-│         └──► /srv/frankmd/notes (.md)  +  /srv/frankmd/images      │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
+│         │                                                         │
+│         └──► /srv/frankmd/notes (.md)  +  /srv/frankmd/images     │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
 **Portas no host:**
@@ -68,7 +68,7 @@ openssl rand -hex 64
 
 ### 2.2 — IA: `GEMINI_API_KEY` (correção gramatical / geração de imagem)
 
-A stack já vem com `AI_PROVIDER=gemini` e `GEMINI_MODEL=gemini-flash-latest`. Só falta a chave:
+A stack já vem com `AI_PROVIDER=gemini` e `GEMINI_MODEL=gemini-3.1-flash-lite`. Só falta a chave:
 
 1. Acesse o **Google AI Studio** → [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey).
 2. **Create API key** e copie o valor para `GEMINI_API_KEY`.
