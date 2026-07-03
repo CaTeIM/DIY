@@ -16,11 +16,13 @@ A ideia é simples: a cada push no branch `master`, o GitHub roda os testes e ve
 
 ### 1. Criar a Pasta do Runner
 
-O runner é uma aplicação independente. Instale-o em uma pasta separada do projeto.
+O runner é uma aplicação independente. Instale-o em uma pasta separada do projeto. Seguindo o padrão deste repo (dados sempre em `/srv/<serviço>`), use `/srv/actions-runner`:
 
 ```bash
-mkdir ~/actions-runner && cd ~/actions-runner
+sudo mkdir -p /srv/actions-runner && cd /srv/actions-runner
 ```
+
+> **Nota:** o runner costuma rodar como **root** em OrangePi bare-metal, então `/srv/actions-runner` é coerente com o restante da infra. Se você já tem um runner em `~/actions-runner` ou `/root/actions-runner`, veja [Mover o Runner](#mover-o-runner-para-outra-pasta-sem-re-registrar) para realocá-lo **sem perder o registro**.
 
 ### 2. Baixar o Runner
 
@@ -234,6 +236,97 @@ O servidor deve aparecer com o status **Idle** (aguardando jobs) ou **Active** (
 
 ---
 
+## Mover o Runner para Outra Pasta (sem re-registrar)
+
+Se o runner foi instalado em `~/actions-runner` ou `/root/actions-runner` e você quer movê-lo (ex.: padronizar em `/srv/actions-runner`), **não precisa do token nem re-registrar**. As credenciais persistentes ficam nos arquivos ocultos da pasta (`.credentials`, `.credentials_rsaparams`, `.runner`) — mover a pasta preserva o registro e o runner reconecta sozinho com o mesmo nome e labels.
+
+> ⚠️ **A pegadinha:** os symlinks `bin` e `externals` dentro da pasta são **absolutos** (apontam para o caminho antigo). Depois do `mv` eles quebram e precisam ser recriados — senão o serviço não inicia.
+
+```bash
+# 1. Parar e DESINSTALAR o serviço (não desregistra do GitHub — só mexe no systemd)
+cd /root/actions-runner   # ou ~/actions-runner
+sudo ./svc.sh stop
+sudo ./svc.sh uninstall
+
+# 2. Mover a pasta inteira (preserva credenciais, permissões e arquivos ocultos)
+sudo mv /root/actions-runner /srv/actions-runner
+
+# 3. Recriar os symlinks que apontavam para o caminho antigo
+cd /srv/actions-runner
+for link in bin externals; do
+  base=$(basename "$(readlink "$link")")          # ex.: bin.2.335.1
+  sudo ln -sfn "/srv/actions-runner/$base" "$link"
+done
+
+# 4. Conferir se sobrou referência ao caminho antigo (fora de logs) — deve voltar VAZIO
+grep -rlI "/root/actions-runner" /srv/actions-runner \
+  --exclude-dir=_diag --exclude-dir=_work 2>/dev/null
+
+# 5. Reinstalar o serviço a partir do novo local e iniciar
+sudo ./svc.sh install root
+sudo ./svc.sh start
+sudo ./svc.sh status
+```
+
+Confirme que o serviço aponta para o novo caminho e que o runner reconectou:
+
+```bash
+grep -E 'WorkingDirectory|ExecStart' /etc/systemd/system/actions.runner.*.service   # deve mostrar /srv/actions-runner
+journalctl -u 'actions.runner.*' --no-pager | tail -5   # procure "√ Connected to GitHub" e "Listening for Jobs"
+```
+
+Na página **Settings → Actions → Runners** o runner fica alguns segundos offline e volta para **Idle** 🟢.
+
+> ℹ️ **Rollback:** `sudo ./svc.sh uninstall` → `sudo mv /srv/actions-runner /root/actions-runner` → recriar os symlinks apontando de volta para `/root/...` → `sudo ./svc.sh install root && sudo ./svc.sh start`.
+
+> 💾 **Limpeza opcional:** após a migração dá pra apagar o tarball do instalador (`actions-runner-linux-arm64-*.tar.gz`) e versões antigas de `bin.*`/`externals.*` que sobram dos auto-updates.
+
+---
+
+## Build Nativo ARM64 (evitar emulação QEMU)
+
+Quando o CI **builda imagens Docker arm64** (para rodar em OrangePi/Raspberry), buildar num runner hospedado x86 (`ubuntu-latest`) exige **emulação QEMU** — cada compilação nativa (gcc, deps de Python/Node) roda 10-30x mais lenta, e um build simples passa fácil de **30 minutos**. Como o próprio runner self-hosted é ARM64, a solução é buildar **nativo nele**.
+
+No job que constrói as imagens, troque o runner e **remova o QEMU**:
+
+```yaml
+    build-push:
+        runs-on: [self-hosted, ARM64]   # nativo na OrangePi (antes: ubuntu-latest + QEMU)
+        needs: [backend, frontend]
+
+        steps:
+            - uses: actions/checkout@v4
+
+            # (NÃO usar docker/setup-qemu-action — o build é nativo)
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build & Push
+              uses: docker/build-push-action@v6
+              with:
+                  context: ./backend
+                  push: true
+                  platforms: linux/arm64
+                  tags: ghcr.io/ORG/IMAGEM:latest
+                  cache-from: type=gha,scope=backend
+                  cache-to: type=gha,mode=max,scope=backend
+```
+
+Resultado: **~30 min → poucos minutos** (e segundos quando o cache pega, desde que o Dockerfile copie as dependências **antes** do código-fonte).
+
+> ℹ️ **Repo privado:** runners ARM64 **hospedados** do GitHub são grátis só em repos **públicos**. Em repo privado, o self-hosted ARM (esta OrangePi) é o que dá build nativo sem custo.
+
+> ⚠️ **Docker no runner:** o build executa `docker` na máquina do runner. Como ele roda como **root**, já tem acesso ao socket. Se rodar como usuário comum, adicione-o ao grupo `docker` (`usermod -aG docker <user>`).
+
+---
+
 ## Referência: Comandos do Runner
 
 ```bash
@@ -268,3 +361,5 @@ Um único runner atende todos os repositórios que precisarem. Para cada novo pr
 1. Adicione `runs-on: self-hosted` ao job de deploy
 2. Crie o secret `DEPLOY_DIR` no novo repositório com o caminho correto
 3. O mesmo runner vai escutar e processar os jobs dos dois projetos
+
+Para compartilhar o runner entre **todos os repos de uma organização** de uma vez, registre-o no nível da **organização** (`--url https://github.com/ORG`, em vez do repo) em **Org → Settings → Actions → Runners**. Ele aparece com a tag `Organization` e fica disponível para os repositórios do grupo escolhido — foi assim que o `orangepi5` foi registrado para a org `Self-Labs`.
