@@ -165,6 +165,63 @@ sudo tar czf stirling-pdf-backup-$(date +%F).tar.gz -C /srv pdf
 
 > 💾 O diretório **crítico** é `/srv/pdf/config` (contém `settings.yml` e o banco de usuários SQLite). Guardá-lo já restaura logins, ferramentas e preferências. Os idiomas de OCR (`tessdata`) são recriáveis via [Parte 2](#parte-2-baixar-os-idiomas-do-ocr-tessdata) caso queira um backup mais enxuto.
 
+## Parte 9: (Opcional) E-mail via Resend (SMTP) e Reset de Senha pelo Admin
+
+Com o **login nativo ligado** (imagem oficial), o Stirling pode **enviar e-mails** — o que habilita:
+
+- **Reset de senha pelo admin:** você reseta a senha de um usuário em **Admin → People** e o Stirling envia a **senha temporária** por e-mail.
+- **Convites por e-mail** (`MAIL_ENABLEINVITES`): convida um usuário por e-mail, que recebe um link/senha para criar a conta.
+
+> ⚠️ **Não existe "Esqueci minha senha" self-service.** O envio é sempre **iniciado pelo admin** — não há link público de reset na tela de login. Para a **sua própria** conta admin, a recuperação é via `SECURITY_INITIALLOGIN_*` ou reset do banco em `/srv/pdf/config` (ver [Troubleshooting](#troubleshooting)).
+
+> ℹ️ Isso vale **só na imagem oficial** (o e-mail faz parte do módulo de login). Numa variante `core`/MIT sem login, esse recurso não existe — a autenticação iria para uma camada externa (ex.: Cloudflare Access).
+
+### 9.1 — Provedor: Resend (SMTP)
+
+O Stirling fala **SMTP** (não a API do Resend), mas o Resend oferece um relay SMTP:
+
+| Campo   | Valor                                                                       |
+| :------ | :-------------------------------------------------------------------------- |
+| Host    | `smtp.resend.com`                                                           |
+| Porta   | `587` (STARTTLS)                                                            |
+| Usuário | `resend` *(literalmente esta palavra)*                                      |
+| Senha   | sua **API key** do Resend (`re_...`)                                        |
+| From    | remetente num **domínio verificado** no Resend (ex.: `no-reply@selflabs.org`) |
+
+> ⚠️ O `From` **precisa** ser de um domínio **verificado (verde)** no painel do Resend → *Domains*. Remetente de domínio não verificado é recusado — **não** use um `@gmail.com` aqui.
+
+### 9.2 — As variáveis `MAIL_*` (o pulo do gato)
+
+> ⚠️ **As `MAIL_*` têm de estar no bloco `environment:` do compose, não só na aba _Environment variables_ do Portainer.** A aba (`stack.env`) serve **apenas para interpolação `${VAR}`** — o container só recebe o que o `environment:` referencia. A stack deste repo já faz essa ponte (`MAIL_ENABLED: "${MAIL_ENABLED:-false}"`, etc.), com tudo **desligado por padrão**. Se `docker exec stirling-pdf printenv MAIL_ENABLED` vier **vazio**, é exatamente isso que está faltando.
+
+Na aba **Environment variables** do Portainer, defina (a senha é segredo → vai aqui, não no arquivo):
+
+| Name                  | Value                                  |
+| :-------------------- | :------------------------------------- |
+| `MAIL_ENABLED`        | `true`                                 |
+| `MAIL_HOST`           | `smtp.resend.com`                      |
+| `MAIL_PORT`           | `587`                                  |
+| `MAIL_USERNAME`       | `resend`                               |
+| `MAIL_PASSWORD`       | *(sua API key `re_...` do Resend)*     |
+| `MAIL_FROM`           | `no-reply@selflabs.org` *(domínio verificado)* |
+| `MAIL_STARTTLSENABLE` | `true`                                 |
+| `MAIL_SSLENABLE`      | `false`                                |
+| `MAIL_ENABLEINVITES`  | `true` *(opcional — liga os convites)* |
+
+Depois: **Update the stack** (redeploy).
+
+### 9.3 — Validar
+
+```bash
+# 1) as vars chegaram ao container?
+docker exec stirling-pdf printenv MAIL_ENABLED MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_FROM
+
+# 2) o SMTP subiu? (deve logar "SMTP authentication enabled")
+docker logs stirling-pdf 2>&1 | grep -i -E 'mail|smtp'
+```
+
+Logado como admin → **People** → resete a senha de um usuário de teste (ou **Add Members** para um convite) → confira a **caixa de entrada** _e_ o painel do **Resend → Emails** (status `Delivered`, ótimo para depurar).
+
 ---
 
 ## Troubleshooting
@@ -179,6 +236,10 @@ sudo tar czf stirling-pdf-backup-$(date +%F).tar.gz -C /srv pdf
 | Falha ao subir com `no-new-privileges` (permissão)  | Raro. Se o drop de privilégios falhar, remova temporariamente `security_opt: [no-new-privileges:true]` ou os `PUID/PGID` (roda como root) e reporte.                 |
 | Conversão de Office (docx/xlsx) falha ou trava      | Depende do LibreOffice embutido (RAM). Dê mais memória ao container/host, ou use a imagem `:latest-fat` para o conjunto completo de fontes/ferramentas.              |
 | Upload grande é rejeitado                            | Aumente `SYSTEM_MAXFILESIZE` (em MB) na stack e redeploy. Atenção também a limites do Cloudflare Tunnel para arquivos muito grandes.                                 |
+| **E-mail não sai** e `printenv MAIL_ENABLED` vem vazio | As `MAIL_*` não chegaram ao container — estão só no `stack.env`, não no `environment:` do compose. A stack do repo já corrige isso; confira que colou a versão atual e redeploy (Parte 9.2).                          |
+| E-mail falha com `403` / `domain is not verified`   | O `MAIL_FROM` não é de um domínio **verificado** no Resend. Verifique em Resend → *Domains* (tem que estar verde) e use um remetente desse domínio (Parte 9.1).      |
+| E-mail falha com `535` / authentication failed      | `MAIL_USERNAME` tem de ser literalmente `resend` e `MAIL_PASSWORD` a **API key** (`re_...`) correta do Resend.                                                       |
+| Reset "ok" mas o usuário não recebe                 | O usuário pode não ter e-mail cadastrado. Teste com um **convite** (`Add Members`) informando um e-mail explícito, e confira o painel do Resend → *Emails*.          |
 
 ---
 
@@ -191,6 +252,7 @@ sudo tar czf stirling-pdf-backup-$(date +%F).tar.gz -C /srv pdf
 - **Variantes da imagem:** `:latest` (padrão, equilibrado, com OCR), `:latest-fat` (tudo + fontes/ferramentas extras), `:latest-ultra-lite` (mínimo). Trocar é só mudar a tag e redeploy.
 - **Privacidade:** os arquivos são processados **localmente** no container e não saem para serviços externos — é o principal motivo de rodar self-hosted.
 - **Pipelines:** o volume `/srv/pdf/pipeline` guarda automações (ex.: OCR → comprimir → carimbar em lote) criadas pela própria UI, sem código.
+- **E-mail (opcional):** com SMTP configurado (ex.: Resend), o admin consegue **resetar senha por e-mail** e **convidar usuários** ([Parte 9](#parte-9-opcional-e-mail-via-resend-smtp-e-reset-de-senha-pelo-admin)). Não há "esqueci minha senha" self-service, e o recurso só existe na imagem oficial (com login). Lembre: as `MAIL_*` precisam estar no `environment:` do compose, não só no `stack.env`.
 
 ---
 
