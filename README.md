@@ -29,6 +29,7 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 | **[☁️ ownCloud oCIS (Docker + Cloudflare Tunnel)](./docs/owncloud-ocis.md)** | Cloud storage pessoal com sync, compartilhamento e apps mobile. Acesso via Cloudflare Tunnel. | `ownCloud oCIS`, `Docker`, `Cloudflare Tunnel`, `WebDAV` |
 | **[🖥️ RustDesk Headless no Debian](./docs/rustdesk-headless.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
 | **[🚨 Sirene Ativada por Chamada](./docs/sirene-por-chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
+| **[📄 Stirling-PDF (Docker + Cloudflare Tunnel)](./docs/stirling-pdf.md)** | Editor de PDF self-hosted com 50+ ferramentas (juntar, dividir, converter, OCR em pt-BR, assinar, comprimir). Container único, sem banco externo, login nativo. | `Stirling-PDF`, `Docker`, `Spring Boot`, `Cloudflare Tunnel`, `OCR` |
 
 ## 🛠️ Tecnologias no DNA do Repo
 

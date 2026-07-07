@@ -1,0 +1,72 @@
+services:
+  stirling-pdf:
+    # Tag padrão: todas as features de PDF (inclui OCR). Para trocar de variante:
+    #   latest-fat        -> tudo + fontes/ferramentas extras (imagem grande)
+    #   latest-ultra-lite -> só o essencial, sem OCR/conversões pesadas (hardware fraco)
+    image: stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: America/Sao_Paulo
+      # A imagem sobe como root e dropa privilégios para este UID/GID.
+      # Faça `sudo chown -R 1000:1000 /srv/pdf` ANTES do 1º boot (evita EACCES).
+      PUID: "${STIRLING_UID:-1000}"
+      PGID: "${STIRLING_GID:-1000}"
+      UMASK: "022"
+      # --- Interface ---
+      SYSTEM_DEFAULTLOCALE: pt-BR
+      UI_APPNAME: Stirling-PDF
+      SYSTEM_MAXFILESIZE: "100"                 # tamanho máximo por upload, em MB
+      METRICS_ENABLED: "true"
+      # --- Login nativo (habilitado) ---
+      DISABLE_ADDITIONAL_FEATURES: "false"      # mantém o módulo de login/usuários ativo
+      SECURITY_ENABLELOGIN: "true"              # login ligado (padrão do Stirling)
+      # Admin forte já no 1º boot (opcional): descomente as 2 linhas e defina os valores
+      # na aba Environment variables do Portainer. Se deixar comentado, o Stirling cria
+      # o admin padrão `admin` / `stirling` (troque a senha logo no 1º acesso).
+      # SECURITY_INITIALLOGIN_USERNAME: "${STIRLING_ADMIN_USER}"
+      # SECURITY_INITIALLOGIN_PASSWORD: "${STIRLING_ADMIN_PASSWORD}"
+      # --- E-mail / SMTP (opcional) ---
+      # Liga o envio de e-mail (convites + reset de senha feito pelo admin). Os valores
+      # vêm das Environment variables do Portainer (ou do .env via SSH) — precisam estar
+      # declarados aqui, senão NÃO chegam ao container. Ficam desligados por padrão.
+      # Ex.: relay SMTP do Resend -> host smtp.resend.com, username "resend",
+      # password = API key (re_...), from num domínio verificado no Resend.
+      MAIL_ENABLED: "${MAIL_ENABLED:-false}"
+      MAIL_HOST: "${MAIL_HOST:-}"
+      MAIL_PORT: "${MAIL_PORT:-587}"
+      MAIL_USERNAME: "${MAIL_USERNAME:-}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+      MAIL_FROM: "${MAIL_FROM:-}"
+      MAIL_STARTTLSENABLE: "${MAIL_STARTTLSENABLE:-true}"
+      MAIL_SSLENABLE: "${MAIL_SSLENABLE:-false}"
+      MAIL_ENABLEINVITES: "${MAIL_ENABLEINVITES:-false}"
+    volumes:
+      # settings.yml + banco de usuários (SQLite) + heap dumps -> é o dado crítico p/ backup
+      - /srv/pdf/config:/configs
+      # idiomas do OCR: precisa conter eng + por + osd (ver guia) senão o OCR perde o inglês
+      - /srv/pdf/tessdata:/usr/share/tessdata
+      # logs da aplicação
+      - /srv/pdf/logs:/logs
+      # pipelines de automação (opcional)
+      - /srv/pdf/pipeline:/pipeline
+      # arquivos custom (logo/CSS/termos) — opcional, descomente se for usar
+      # - /srv/pdf/customFiles:/customFiles
+    network_mode: bridge
+    ports:
+      - "8080:8080"                             # Web UI + API
+    hostname: stirling-pdf
+    healthcheck:
+      # endpoint público de status do Stirling-PDF (retorna "UP" quando pronto)
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s                         # Java + LibreOffice demoram a subir
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
