@@ -6,6 +6,17 @@ Este guia sobe o **[Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF
 
 A stack pronta está em [`assets/stacks/stirling-pdf.yml`](../assets/stacks/stirling-pdf.yml).
 
+> [!IMPORTANT]
+> **Autenticação mudou para o Authelia (usuários ilimitados).** A stack usa a **imagem oficial
+> completa** (`stirlingtools/stirling-pdf:latest-fat`) com o **módulo de login DESATIVADO**
+> (`DISABLE_ADDITIONAL_FEATURES=true`) — assim o app fica **aberto e SEM o limite de 5 usuários**,
+> sem precisar buildar nada. Quem autentica é o **[Authelia + lldap](./authelia.md)** por trás do
+> **[Reverse Proxy (Caddy)](./reverse-proxy.md)**, e o app entra na rede `caddy-net` sem publicar porta.
+> A tela de configurações fica **escondida** (`SYSTEM_SHOWSETTINGSWHENNOLOGIN=false`) — você
+> administra pelo `settings.yml`/Portainer no host. As seções abaixo sobre **login nativo /
+> `SECURITY_*` / SMTP / convites** ficam **obsoletas** neste modelo. No cloudflared, aponte
+> `pdf.selflabs.org` para o **Caddy** (`http://localhost:8080`), não mais para a porta do Stirling.
+
 > ℹ️ **Sem banco de dados externo.** O Stirling-PDF é um app **Spring Boot (Java)** que persiste tudo (configuração + banco de usuários SQLite) dentro de `/configs`. Não há Postgres/MariaDB para gerenciar — o backup é só copiar `/srv/pdf`.
 
 ## Arquitetura
