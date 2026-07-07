@@ -1,0 +1,65 @@
+# ============================================================================
+# Caddyfile — reverse proxy compartilhado + forward-auth do Authelia.
+# Guia: ../../docs/reverse-proxy.md   Stack: ../stacks/reverse-proxy.yml
+#
+# Grave em /srv/reverse-proxy/Caddyfile no host.
+# O cloudflared (bare-metal) aponta TODOS os hostnames para http://localhost:8080.
+# ============================================================================
+
+{
+	# O TLS termina no Cloudflare; o cloudflared entrega HTTP puro ao Caddy.
+	# Então o Caddy NÃO provisiona certificados e só serve HTTP na 8080.
+	auto_https off
+	http_port 8080
+	admin off
+
+	# Atrás do cloudflared: confiar nos proxies internos faz o Caddy PRESERVAR
+	# o X-Forwarded-Proto: https (senão o Authelia monta redirect http:// e cai
+	# em loop de redirect / cookie secure descartado).
+	servers {
+		trusted_proxies static private_ranges
+		client_ip_headers X-Forwarded-For
+		trusted_proxies_strict
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# --- Snippet de forward-auth do Authelia (importe em cada host protegido) ----
+# Em 2xx o Caddy copia os headers de identidade antes do proxy; em 302 devolve
+# o redirect do portal ao browser.
+(authelia) {
+	forward_auth authelia:9091 {
+		uri /api/authz/forward-auth
+		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+	}
+}
+
+# --- Portal do Authelia (público; NÃO passa pelo forward_auth) ---------------
+http://auth.selflabs.org {
+	reverse_proxy authelia:9091
+}
+
+# --- UI web do lldap (protegida) --------------------------------------------
+http://users.selflabs.org {
+	import authelia
+	reverse_proxy lldap:17170
+}
+
+# --- Stirling-PDF core (protegido) ------------------------------------------
+# Alcançado pelo nome do container via rede externa `caddy-net` (sem porta no host).
+http://pdf.selflabs.org {
+	import authelia
+	reverse_proxy stirling-pdf:8080
+}
+
+# --- Modelo para adicionar um app novo --------------------------------------
+# 1) o app entra na rede externa `caddy-net`; 2) copie o bloco abaixo; 3) no
+#    cloudflared publique novo.selflabs.org -> http://localhost:8080.
+# http://novo.selflabs.org {
+# 	import authelia
+# 	reverse_proxy nome-do-container:porta
+# }
