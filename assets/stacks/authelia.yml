@@ -1,0 +1,91 @@
+# ============================================================================
+# authelia — IdP (Authelia + lldap) para o forward-auth do reverse-proxy.
+# Guia: ../../docs/authelia.md
+#
+# Pré-requisitos (uma vez, via SSH no Orange Pi):
+#   docker network create auth-net           # rede Caddy <-> Authelia <-> lldap
+#   sudo mkdir -p /srv/authelia/{config,lldap}
+#   sudo chown -R 1000:1000 /srv/authelia
+#   # grave o configuration.yml em /srv/authelia/config/configuration.yml
+#   # preencha os segredos na aba Environment variables do Portainer (ou .env)
+#
+# lldap e authelia NÃO entram na rede `caddy-net` dos apps — só o Caddy cruza as
+# redes. Assim a UI/LDAP do lldap não fica exposta aos containers de app.
+# ============================================================================
+
+services:
+  # ------------------------------------------------------------------- lldap
+  lldap:
+    image: lldap/lldap:stable                 # multi-arch (inclui arm64)
+    container_name: lldap
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: America/Sao_Paulo
+      UID: "1000"
+      GID: "1000"
+      LLDAP_LDAP_BASE_DN: "dc=selflabs,dc=org"
+      LLDAP_LDAP_USER_DN: "admin"             # super-admin do lldap (NÃO usar no Authelia)
+      LLDAP_LDAP_USER_EMAIL: "admin@selflabs.org"
+      LLDAP_LDAP_USER_PASS: "${LLDAP_LDAP_ADMIN_PASSWORD}"
+      LLDAP_JWT_SECRET: "${LLDAP_JWT_SECRET}"
+      LLDAP_KEY_SEED: "${LLDAP_KEY_SEED}"
+      LLDAP_HTTP_URL: "https://users.selflabs.org"
+      LLDAP_DATABASE_URL: "sqlite:///data/users.db?mode=rwc"
+      LLDAP_LDAP_PORT: "3890"                 # LDAP interno (Authelia)
+      LLDAP_HTTP_PORT: "17170"                # UI/GraphQL interno (Caddy)
+    volumes:
+      - /srv/authelia/lldap:/data             # users.db + material de criptografia
+    expose:
+      - "3890"                                # NÃO publicar no host
+      - "17170"
+    healthcheck:
+      test: ["CMD", "/app/lldap", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - auth-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------- authelia
+  authelia:
+    image: ghcr.io/authelia/authelia:4.39     # multi-arch (inclui arm64)
+    container_name: authelia
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      lldap:
+        condition: service_healthy
+    environment:
+      TZ: America/Sao_Paulo
+      # Segredos injetados pelo mecanismo NATIVO do Authelia (sem filtro template).
+      AUTHELIA_SESSION_SECRET: "${AUTHELIA_SESSION_SECRET}"
+      AUTHELIA_STORAGE_ENCRYPTION_KEY: "${AUTHELIA_STORAGE_ENCRYPTION_KEY}"
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET: "${AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET}"
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD: "${AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD}"
+    volumes:
+      # /config guarda configuration.yml + db.sqlite3 + notification.txt
+      - /srv/authelia/config:/config
+    expose:
+      - "9091"                                # NÃO publicar no host
+    # Usa o HEALTHCHECK embutido da imagem (/api/health).
+    networks:
+      - auth-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  auth-net:
+    name: auth-net
+    external: true                            # criada antes: docker network create auth-net
