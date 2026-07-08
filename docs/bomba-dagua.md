@@ -6,11 +6,11 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 
 ## 🧱 Estrutura Física
 
-| Local     | O que tem                                                |
-|-----------|----------------------------------------------------------|
-| Ponto A   | Bomba d'água + Sonoff RE5V1C (Tasmota) + RE5V1C (original eWeLink) |
-| Ponto B   | 2x CPE210 (modo AP), uma apontando para A e outra para C |
-| Ponto C   | Caixa d’água + Sonoff RE5V1C (Tasmota) com sensor de nível impermeável (RCWL-1655 / JSN-SR04T) |
+| Local   | O que tem                                                                                      |
+| ------- | ---------------------------------------------------------------------------------------------- |
+| Ponto A | Bomba d'água + Sonoff RE5V1C (Tasmota) + RE5V1C (original eWeLink)                             |
+| Ponto B | 2x CPE210 (modo AP), uma apontando para A e outra para C                                       |
+| Ponto C | Caixa d’água + Sonoff RE5V1C (Tasmota) com sensor de nível impermeável (RCWL-1655 / JSN-SR04T) |
 
 ## 🌐 Conectividade
 
@@ -26,9 +26,9 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 
 - Sensor no Ponto C (RCWL-1655) mede a distância da água.
 - Quando a água atinge nível baixo, Sonoff (Tasmota) envia comando WebSend:
-	 ```
-	 WebSend [192.168.3.101] /cm?cmnd=Power1%20On
-	 ```
+  ```
+  WebSend [192.168.3.101] /cm?cmnd=Power1%20On
+  ```
 - O Sonoff Tasmota do Ponto A simula o botão do Sonoff original (eWeLink), ativando a bomba.
 - Quando enche, o sensor envia comando para desligar.
 
@@ -37,12 +37,14 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 ### 🔎 Identificação dos Pinos
 
 **Sonoff RE5V1C**
+
 - GND
 - 3V3 (⚠️ Nunca use 5V durante o flash!)
 - ERX
 - ETX
 
 **CH341A Pro**
+
 - GND
 - 3.3V
 - TXD
@@ -50,12 +52,12 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 
 ### 🔗 Ligações
 
-| CH341A | Sonoff RE5V1C  |
-|--------|----------------|
-| GND    | GND            |
-| 3.3V   | 3V3            |
-| TXD    | ERX            |
-| RXD    | ETX            |
+| CH341A | Sonoff RE5V1C |
+| ------ | ------------- |
+| GND    | GND           |
+| 3.3V   | 3V3           |
+| TXD    | ERX           |
+| RXD    | ETX           |
 
 ### 🕹️ Modo Bootloader
 
@@ -100,26 +102,28 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
  SetOption65 1
  Timezone -3
  SerialLog 0
- ``` 
+```
 
 ### Ponto A (Bomba)
+
 - Power1 controla um relé que simula o botão do Sonoff original
 - `PulseTime1 10` (para clique curto)
 - Exemplo:
- ```
- Power1 ON
- ```
+
+```
+Power1 ON
+```
 
 - Coloque **IP estático** no módulo:
 
- ```
- IPAddress1 192.168.3.101
- IPAddress2 192.168.3.1
- IPAddress3 255.255.255.0
- IPAddress4 8.8.8.8
- IPAddress5 1.1.1.1
- Restart 1
- ```
+```
+IPAddress1 192.168.3.101
+IPAddress2 192.168.3.1
+IPAddress3 255.255.255.0
+IPAddress4 8.8.8.8
+IPAddress5 1.1.1.1
+Restart 1
+```
 
 ### Ponto C (Sensor de Nível)
 
@@ -127,12 +131,12 @@ Sistema automatizado para acionamento remoto de uma bomba d’água em local sem
 
 O RCWL-1655 suporta 4 modos de operação, selecionados pelo resistor **R7** no verso do módulo:
 
-| Modo | R7 | Protocolo | Compatível com Tasmota SR04? |
-|------|----|-----------|-------------------------------|
-| **GPIO (padrão)** | **NC (vazio)** | HC-SR04 (Trig/Echo) | ✅ **SIM** |
-| UART | 10K | Serial 9600bps | ❌ Não |
-| I2C | 100K | 0x57 | ❌ Não |
-| 1-Wire | 0 ohm | Single bus | ❌ Não |
+| Modo              | R7             | Protocolo           | Compatível com Tasmota SR04? |
+| ----------------- | -------------- | ------------------- | ---------------------------- |
+| **GPIO (padrão)** | **NC (vazio)** | HC-SR04 (Trig/Echo) | ✅ **SIM**                   |
+| UART              | 10K            | Serial 9600bps      | ❌ Não                       |
+| I2C               | 100K           | 0x57                | ❌ Não                       |
+| 1-Wire            | 0 ohm          | Single bus          | ❌ Não                       |
 
 > [!IMPORTANT]
 > Antes de ligar, vire o módulo e verifique o pad **R7**. Ele deve estar **vazio (NC)**. Se houver um resistor soldado, remova-o para ativar o modo GPIO.
@@ -142,11 +146,11 @@ O RCWL-1655 suporta 4 modos de operação, selecionados pelo resistor **R7** no 
 Pinagem confirmada pela tabela oficial do ESPHome para os pads da borda superior do Sonoff:
 
 | RCWL-1655 | Pino físico Sonoff | GPIO Tasmota | Função Tasmota |
-|-----------|--------------------|--------------|----------------|
-| VCC | `5V` | — | Alimentação |
-| GND | `GND` | — | Terra |
-| **Trig** | pad **`RX`** | **GPIO4** | `SR04 Tri/Tx` |
-| **Echo** | pad **`TX`** | **GPIO5** | `SR04 Ech/Rx` |
+| --------- | ------------------ | ------------ | -------------- |
+| VCC       | `5V`               | —            | Alimentação    |
+| GND       | `GND`              | —            | Terra          |
+| **Trig**  | pad **`RX`**       | **GPIO4**    | `SR04 Tri/Tx`  |
+| **Echo**  | pad **`TX`**       | **GPIO5**    | `SR04 Ech/Rx`  |
 
 > [!NOTE]
 > A zona cega do RCWL-1655 é de **20cm** (muito maior que o HC-SR04 comum de ~2cm). Certifique-se de que o sensor esteja a mais de 20cm da superfície da água, ou as leituras serão inválidas.
@@ -154,10 +158,12 @@ Pinagem confirmada pela tabela oficial do ESPHome para os pads da borda superior
 #### Configuração Tasmota (Ponto C)
 
 Após aplicar o template principal, defina os pinos em **Configuration » Configure Module**:
+
 - **D2 GPIO4** → `SR04 Tri/Tx`
 - **D1 GPIO5** → `SR04 Ech/Rx`
 
 No **Console**:
+
 ```text
 PowerOnState 0
 SetOption65 1
@@ -167,13 +173,16 @@ SerialLog 0
 ```
 
 Verificar leitura do sensor:
+
 ```text
 Status 10
 ```
+
 Deve retornar algo como `{"SR04":{"Distance":85.3}}`. Se retornar `null` ou não aparecer, revisar a ligação física e o estado do R7.
 
 > [!WARNING]
 > **🚧 TESTE PENDENTE** — A pinagem GPIO4/GPIO5 ainda não foi validada fisicamente com o RCWL-1655 neste módulo. Realizar os seguintes passos ao conectar:
+>
 > 1. Verificar R7 = NC (vazio)
 > 2. Ligar: Trig → pad `RX` (GPIO4), Echo → pad `TX` (GPIO5)
 > 3. Configurar GPIO4=SR04 Tri/Tx e GPIO5=SR04 Ech/Rx no Tasmota
@@ -188,31 +197,31 @@ Rule1 ON Tele-SR04#Distance>80 DO WebSend [192.168.3.101] /cm?cmnd=Power1%20On E
 Rule1 1
 ```
 
-*Ajuste os valores `80` (nível baixo) e `30` (nível cheio) conforme a altura real da sua caixa d’água.*
+_Ajuste os valores `80` (nível baixo) e `30` (nível cheio) conforme a altura real da sua caixa d’água._
 
 - Coloque **IP estático** no módulo:
 
- ```
- IPAddress1 192.168.3.102
- IPAddress2 192.168.3.1
- IPAddress3 255.255.255.0
- IPAddress4 8.8.8.8
- IPAddress5 1.1.1.1
- Restart 1
- ```
+```
+IPAddress1 192.168.3.102
+IPAddress2 192.168.3.1
+IPAddress3 255.255.255.0
+IPAddress4 8.8.8.8
+IPAddress5 1.1.1.1
+Restart 1
+```
 
 ## 🛠️ Equipamentos
 
-| Item                         | Quantidade |
-|------------------------------|------------|
-| TP-Link CPE210               | 2          |
-| Injetor PoE 24V              | 2          |
-| Switch PoE Passivo 24v       | 1          |
-| Sonoff RE5V1C (original)     | 1          |
-| Sonoff RE5V1C com Tasmota    | 2          |
-| Sensor RCWL-1655 (JSN-SR04T) | 1          |
-| Caixa hermética              | 1          |
-| Protetor Eletrônico          | 1          |
+| Item                         | Quantidade           |
+| ---------------------------- | -------------------- |
+| TP-Link CPE210               | 2                    |
+| Injetor PoE 24V              | 2                    |
+| Switch PoE Passivo 24v       | 1                    |
+| Sonoff RE5V1C (original)     | 1                    |
+| Sonoff RE5V1C com Tasmota    | 2                    |
+| Sensor RCWL-1655 (JSN-SR04T) | 1                    |
+| Caixa hermética              | 1                    |
+| Protetor Eletrônico          | 1                    |
 | Fontes e cabos               | Conforme necessidade |
 
 ## ✅ Resultado Esperado

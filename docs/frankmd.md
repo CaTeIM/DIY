@@ -188,7 +188,7 @@ sudo tar czf frankmd-backup-$(date +%F).tar.gz -C /srv frankmd
 | **502 / Bad Gateway** no domínio do túnel        | Public Hostname apontando para serviço/porta errados. Use `HTTP` → `localhost:7591` (Parte 4).                                                                                  |
 | Qualquer um abre e edita as notas                | Falta a política do **Cloudflare Access**. Configure a Application em Zero Trust (Parte 4) ou restrinja à LAN.                                                                  |
 | Correção gramatical/IA não funciona              | `GEMINI_API_KEY` ausente/errada ou modelo inválido. Use a chave do **AI Studio** (não a do Cloud Console) e confira `GEMINI_MODEL`.                                             |
-| Busca de **vídeos** (YouTube) vem vazia          | `YOUTUBE_API_KEY` ausente ou *YouTube Data API v3* não habilitada no **Cloud Console** (Parte 2.3). A busca de **imagens** usa DuckDuckGo/Pinterest e **não** precisa de chave. |
+| Busca de **vídeos** (YouTube) vem vazia          | `YOUTUBE_API_KEY` ausente ou _YouTube Data API v3_ não habilitada no **Cloud Console** (Parte 2.3). A busca de **imagens** usa DuckDuckGo/Pinterest e **não** precisa de chave. |
 | Preferências de UI somem a cada redeploy         | `SECRET_KEY_BASE` está sendo autogerada. Fixe `FRANKMD_SECRET_KEY_BASE` (Parte 2.1).                                                                                            |
 
 ---

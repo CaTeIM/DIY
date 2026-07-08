@@ -8,21 +8,21 @@ File manager self-hosted que serve arquivos existentes do HD diretamente na inte
 ## Arquitetura
 
 ```
-┌─ REDE LOCAL / EXTERNA ────────────────────────────────────────┐
-│                                                               │
-│  Dispositivo ──► https://files.exemplo.com                   │
-│  ──► Cloudflare Edge (TLS) ──► Tunnel ──► localhost:5244      │
-│  ──► OpenList ──► /srv/midia (HD 1TB)                         │
-└───────────────────────────────────────────────────────────────┘
+┌─ REDE LOCAL / EXTERNA ────────────────────────────────────┐
+│                                                           │
+│  Dispositivo ──► https://files.exemplo.com                │
+│  ──► Cloudflare Edge (TLS) ──► Tunnel ──► localhost:5244  │
+│  ──► OpenList ──► /srv/midia (HD 1TB)                     │
+└───────────────────────────────────────────────────────────┘
 ```
 
 > **Diferencial do OpenList:** os arquivos em `/srv/midia` aparecem imediatamente na interface, com a estrutura de pastas original preservada. Não há processo de importação, não há reindexação e **nenhum arquivo da sua pasta é modificado**.
 
 **Portas no host:**
 
-| Porta Host | Porta Container | Uso                                                   |
-| :--------- | :-------------- | :---------------------------------------------------- |
-| `5244/tcp` | `5244`          | Web UI + WebDAV + API (HTTP)                          |
+| Porta Host | Porta Container | Uso                                                    |
+| :--------- | :-------------- | :----------------------------------------------------- |
+| `5244/tcp` | `5244`          | Web UI + WebDAV + API (HTTP)                           |
 | `5245/tcp` | `5245`          | HTTPS interno (opcional, se TLS for ativado no painel) |
 
 ---
@@ -69,6 +69,7 @@ docker logs openlist 2>&1 | grep -i password
 ```
 
 O output será algo como:
+
 ```
 INFO  Successfully created the admin user and the initial password is: xxxxxxxx
 ```
@@ -82,19 +83,19 @@ INFO  Successfully created the admin user and the initial password is: xxxxxxxx
 3. Menu lateral → **Storages** → **Add**
 4. Preencher conforme a tabela abaixo:
 
-| Campo | Valor | Observação |
-| :---- | :---- | :--------- |
-| **Driver** | `Local` | Tipo de storage |
-| **Mount Path** | `/midia` | Caminho virtual no OpenList (aparece na URL) |
-| **WebDAV Policy** | `Native proxy` | Correto para uso com Cloudflare Tunnel |
-| **Root folder path** | `/midia` | ⚠️ **Crítico** — caminho real dentro do container. Deixar `/` expõe o filesystem inteiro. |
-| **Disable index** | OFF | Mantém a busca funcionando |
-| **Enable sign** | OFF | Sem token extra — login já protege o acesso |
-| **Directory size** | OFF | Calcular tamanho de pastas é pesado no Orange Pi |
-| **Thumbnail** | ON | Gera previews de imagem/vídeo |
-| **Thumb cache folder** | *(vazio)* | Usa `/opt/openlist/data` por padrão — já é volume persistente. Não preencher para não misturar cache com mídias. |
-| **Show hidden** | ON | Exibe arquivos e pastas ocultos (`.` prefixados) |
-| **Recycle bin path** | `delete permanently` | Deletes são permanentes, sem lixeira |
+| Campo                  | Valor                | Observação                                                                                                       |
+| :--------------------- | :------------------- | :--------------------------------------------------------------------------------------------------------------- |
+| **Driver**             | `Local`              | Tipo de storage                                                                                                  |
+| **Mount Path**         | `/midia`             | Caminho virtual no OpenList (aparece na URL)                                                                     |
+| **WebDAV Policy**      | `Native proxy`       | Correto para uso com Cloudflare Tunnel                                                                           |
+| **Root folder path**   | `/midia`             | ⚠️ **Crítico** — caminho real dentro do container. Deixar `/` expõe o filesystem inteiro.                        |
+| **Disable index**      | OFF                  | Mantém a busca funcionando                                                                                       |
+| **Enable sign**        | OFF                  | Sem token extra — login já protege o acesso                                                                      |
+| **Directory size**     | OFF                  | Calcular tamanho de pastas é pesado no Orange Pi                                                                 |
+| **Thumbnail**          | ON                   | Gera previews de imagem/vídeo                                                                                    |
+| **Thumb cache folder** | _(vazio)_            | Usa `/opt/openlist/data` por padrão — já é volume persistente. Não preencher para não misturar cache com mídias. |
+| **Show hidden**        | ON                   | Exibe arquivos e pastas ocultos (`.` prefixados)                                                                 |
+| **Recycle bin path**   | `delete permanently` | Deletes são permanentes, sem lixeira                                                                             |
 
 > Todos os demais campos (Order, Remark, Download Proxy URL, Order By, etc.) podem ser deixados como padrão.
 
@@ -132,11 +133,11 @@ O OpenList expõe seus arquivos via WebDAV no caminho `/dav`. Use qualquer clien
 
 **Dados de conexão:**
 
-| Campo      | Valor                                |
-| :--------- | :----------------------------------- |
-| **URL**    | `https://files.exemplo.com/dav`     |
-| **Usuário** | `admin`                             |
-| **Senha**  | sua senha definida no painel         |
+| Campo       | Valor                           |
+| :---------- | :------------------------------ |
+| **URL**     | `https://files.exemplo.com/dav` |
+| **Usuário** | `admin`                         |
+| **Senha**   | sua senha definida no painel    |
 
 ### Apps recomendados por plataforma
 
@@ -235,12 +236,12 @@ ls -la /srv/midia
 
 ## 🌐 Acessos
 
-| Recurso       | URL                              |
-| :------------ | :------------------------------- |
+| Recurso       | URL                             |
+| :------------ | :------------------------------ |
 | **Web UI**    | `https://files.exemplo.com`     |
 | **WebDAV**    | `https://files.exemplo.com/dav` |
 | **Local**     | `http://192.168.x.x:5244`       |
-| **Portainer** | Stack `openlist`                 |
+| **Portainer** | Stack `openlist`                |
 
 ---
 
@@ -252,5 +253,3 @@ ls -la /srv/midia
 - [Solid Explorer (Android)](https://play.google.com/store/apps/details?id=pl.solidexplorer2)
 - [RaiDrive (Windows)](https://www.raidrive.com/)
 - [Infuse (iOS)](https://apps.apple.com/app/infuse-7/id1136220934)
-
-

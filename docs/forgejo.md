@@ -195,13 +195,13 @@ concurrency:
 
 ### 5.8 — Troubleshooting
 
-| Sintoma                                       | Causa provável / Correção                                                                           |
-| :-------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
-| Runner não pega o job ("no matching runner")  | `runs-on` não casa nenhum label — confira `runner.labels` no config                                 |
-| Runner reiniciando em loop                    | falta o `runner-config.yml` com a seção `server` (registre — 5.2/5.3)                               |
-| `actions/checkout` falha (não acha o host)    | registre a conexão com a **URL pública** da instância (5.5)                                         |
-| `Cannot connect to the Docker daemon` num job | falta dind/`container.docker_host` para `docker build` (5.6)                                        |
-| Job sem internet (não baixa actions/imagens)  | o `uses:` resolve via `DEFAULT_ACTIONS_URL=https://data.forgejo.org`; garanta saída de rede do dind |
+| Sintoma                                                                             | Causa provável / Correção                                                                              |
+| :---------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------- |
+| Runner não pega o job ("no matching runner")                                        | `runs-on` não casa nenhum label — confira `runner.labels` no config                                    |
+| Runner reiniciando em loop                                                          | falta o `runner-config.yml` com a seção `server` (registre — 5.2/5.3)                                  |
+| `actions/checkout` falha (não acha o host)                                          | registre a conexão com a **URL pública** da instância (5.5)                                            |
+| `Cannot connect to the Docker daemon` num job                                       | falta dind/`container.docker_host` para `docker build` (5.6)                                           |
+| Job sem internet (não baixa actions/imagens)                                        | o `uses:` resolve via `DEFAULT_ACTIONS_URL=https://data.forgejo.org`; garanta saída de rede do dind    |
 | Runner **Offline** / runs "Canceled" em 0s após trocar domínio ou ir pra **.onion** | o `url` do runner aponta pro domínio aposentado ou pro `.onion` (sem Tor nos containers) — ver **5.9** |
 
 > O conceito de runner self-hosted é o mesmo do guia [CI/CD com GitHub Actions + Self-Hosted Runner](./cicd-github-actions.md) — a diferença é que aqui o runner é o `forgejo-runner`, registrado via `runner-config.yml`, e os workflows vivem em `.github/workflows/`.
@@ -235,7 +235,7 @@ concurrency:
      command: forgejo-runner daemon --config runner-config.yml
      restart: always
      group_add:
-       - '989' # GID do `getent group docker` no host (3º campo)
+       - "989" # GID do `getent group docker` no host (3º campo)
      volumes:
        - /srv/forgejo/runner:/data
        - /var/run/docker.sock:/var/run/docker.sock

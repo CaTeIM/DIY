@@ -9,21 +9,21 @@ A stack pronta está em [`assets/stacks/n8n.yml`](../assets/stacks/n8n.yml).
 ## Arquitetura
 
 ```
-┌─ INTERNET / SERVIÇOS EXTERNOS ─────────────────────────────────────┐
-│                                                                    │
-│  Navegador / Webhook (Telegram, GitHub, Stripe…)                   │
-│  ──► https://n8n.exemplo.com                                       │
-│  ──► Cloudflare Edge (termina o TLS)                               │
-│  ──► Tunnel (cloudflared bare metal no host)                       │
-│  ──► localhost:5678 ──► n8n (HTTP puro) ──► PostgreSQL (n8n-db)    │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
+┌─ INTERNET / SERVIÇOS EXTERNOS ───────────────────────────────────┐
+│                                                                  │
+│  Navegador / Webhook (Telegram, GitHub, Stripe…)                 │
+│  ──► https://n8n.exemplo.com                                     │
+│  ──► Cloudflare Edge (termina o TLS)                             │
+│  ──► Tunnel (cloudflared bare metal no host)                     │
+│  ──► localhost:5678 ──► n8n (HTTP puro) ──► PostgreSQL (n8n-db)  │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 **Portas no host:**
 
-| Porta Host | Porta Container | Uso                                                 |
-| :--------- | :-------------- | :-------------------------------------------------- |
+| Porta Host | Porta Container | Uso                                                            |
+| :--------- | :-------------- | :------------------------------------------------------------- |
 | `5678/tcp` | `5678`          | n8n (Web UI + API + Webhooks) — alvo do `cloudflared` e da LAN |
 
 > O PostgreSQL **não** expõe porta no host (só conversa com o n8n pela rede interna `n8n-net`), reduzindo a superfície de ataque.
@@ -71,7 +71,7 @@ openssl rand -base64 32
 
 O arquivo [`n8n.yml`](../assets/stacks/n8n.yml) define **dois serviços**:
 
-- **`n8n`** → imagem oficial `docker.n8n.io/n8nio/n8n`, roda como UID/GID `1000`, conecta no Postgres via `n8n-db:5432` e expõe a porta `5678` (Web UI + API + Webhooks). Na **v2.x os task runners já vêm ligados por padrão** (executam os nós de código isolados — não precisa de env; o n8n inclusive pede para *remover* `N8N_RUNNERS_ENABLED` se você setar). Traz também as variáveis de URL pública/proxy preenchidas para o Cloudflare Tunnel.
+- **`n8n`** → imagem oficial `docker.n8n.io/n8nio/n8n`, roda como UID/GID `1000`, conecta no Postgres via `n8n-db:5432` e expõe a porta `5678` (Web UI + API + Webhooks). Na **v2.x os task runners já vêm ligados por padrão** (executam os nós de código isolados — não precisa de env; o n8n inclusive pede para _remover_ `N8N_RUNNERS_ENABLED` se você setar). Traz também as variáveis de URL pública/proxy preenchidas para o Cloudflare Tunnel.
 - **`n8n-db`** → PostgreSQL `16-alpine`, dados em `/srv/n8n/db`. Tem `healthcheck` (`pg_isready`) — o `n8n` só inicia depois que o banco está pronto, evitando erro de conexão no primeiro boot.
 
 > ✏️ **Domínio parametrizado:** você não edita o YAML para o domínio — define `N8N_HOST` uma vez (no `.env` ou nas env vars do Portainer) e o compose o reaproveita em `WEBHOOK_URL`/`N8N_EDITOR_BASE_URL`. No YAML, só confira o fuso em `GENERIC_TIMEZONE`/`TZ`.
@@ -102,13 +102,13 @@ Os webhooks do n8n só funcionam de verdade quando serviços externos (Telegram,
 
 **Por que as variáveis de URL no compose importam:** o n8n monta a URL dos webhooks combinando `N8N_PROTOCOL` + `N8N_HOST` + `N8N_PORT`. Atrás de um túnel isso quebraria (ele registraria `http://localhost:5678/...`), então fixamos a URL pública à mão:
 
-| Variável                | Valor                                  | Para quê                                                        |
-| :---------------------- | :------------------------------------- | :-------------------------------------------------------------- |
-| `N8N_HOST`              | `${N8N_HOST}` (ex.: `n8n.exemplo.com`) | Hostname público. Definido **uma vez** (env var); as duas URLs abaixo o reaproveitam. |
-| `N8N_PROTOCOL`          | `http`                                 | O **container** fala HTTP (quem faz HTTPS é o Cloudflare). Não use `https` aqui — o container não tem certificado e quebra. |
-| `WEBHOOK_URL`           | `https://${N8N_HOST}/`                 | URL pública registrada nos webhooks dos serviços externos.      |
-| `N8N_EDITOR_BASE_URL`   | `https://${N8N_HOST}/`                 | Links que o editor gera (ex.: URL de webhook exibida na tela).  |
-| `N8N_PROXY_HOPS`        | `1`                                    | Nº de proxies à frente (1 = o Cloudflare Tunnel). Faz o n8n confiar nos headers `X-Forwarded-*` (IP real, rate limiting). |
+| Variável              | Valor                                  | Para quê                                                                                                                    |
+| :-------------------- | :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
+| `N8N_HOST`            | `${N8N_HOST}` (ex.: `n8n.exemplo.com`) | Hostname público. Definido **uma vez** (env var); as duas URLs abaixo o reaproveitam.                                       |
+| `N8N_PROTOCOL`        | `http`                                 | O **container** fala HTTP (quem faz HTTPS é o Cloudflare). Não use `https` aqui — o container não tem certificado e quebra. |
+| `WEBHOOK_URL`         | `https://${N8N_HOST}/`                 | URL pública registrada nos webhooks dos serviços externos.                                                                  |
+| `N8N_EDITOR_BASE_URL` | `https://${N8N_HOST}/`                 | Links que o editor gera (ex.: URL de webhook exibida na tela).                                                              |
+| `N8N_PROXY_HOPS`      | `1`                                    | Nº de proxies à frente (1 = o Cloudflare Tunnel). Faz o n8n confiar nos headers `X-Forwarded-*` (IP real, rate limiting).   |
 
 > ⏱️ **Limite de ~100 s do Cloudflare:** webhooks **síncronos** que demoram mais de ~100 s para responder retornam **erro 524**. Para fluxos longos, responda cedo com o nó **"Respond to Webhook"** (modo assíncrono) em vez de segurar a conexão até o fim do workflow.
 
@@ -118,7 +118,7 @@ Os webhooks do n8n só funcionam de verdade quando serviços externos (Telegram,
 2. Na primeira vez, o n8n pede para criar a **conta Owner** (e-mail + senha). É a conta de dono da instância; o gerenciamento de usuários já vem habilitado.
 3. Pronto! Comece a montar workflows. 🚀
 
-> 🔐 **Pegadinha do login (`N8N_SECURE_COOKIE`):** o default é `true`, ou seja, o cookie de sessão **só trafega por HTTPS**. Acessar via `http://IP_DO_HOST:5678` faz o **login falhar silenciosamente** (a sessão nunca persiste). Faça a configuração inicial pelo **domínio HTTPS do túnel**. Se você *precisar* acessar direto por HTTP/IP na LAN, adicione `N8N_SECURE_COOKIE=false` ao `environment:` (menos seguro — evite em produção) e atualize a stack.
+> 🔐 **Pegadinha do login (`N8N_SECURE_COOKIE`):** o default é `true`, ou seja, o cookie de sessão **só trafega por HTTPS**. Acessar via `http://IP_DO_HOST:5678` faz o **login falhar silenciosamente** (a sessão nunca persiste). Faça a configuração inicial pelo **domínio HTTPS do túnel**. Se você _precisar_ acessar direto por HTTP/IP na LAN, adicione `N8N_SECURE_COOKIE=false` ao `environment:` (menos seguro — evite em produção) e atualize a stack.
 
 ---
 
@@ -193,15 +193,15 @@ Três coisas precisam ir junto no backup — perder qualquer uma quebra a restau
 
 ## Troubleshooting
 
-| Sintoma                                            | Causa provável / Correção                                                                                          |
-| :------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------- |
-| `EACCES: permission denied, open /home/node/.n8n/config` | A pasta de dados é de `root`. Pare a stack e rode `sudo chown -R 1000:1000 /srv/n8n/data` (Parte 1).          |
-| Login não persiste / volta pra tela de login       | `N8N_SECURE_COOKIE=true` + acesso por **HTTP/IP**. Acesse via `https://n8n.exemplo.com` (túnel) ou sete `N8N_SECURE_COOKIE=false` (Parte 5). |
-| Webhook chega como `http://localhost:5678/...`     | `WEBHOOK_URL` não foi setada/ajustada. Confira `WEBHOOK_URL` e `N8N_EDITOR_BASE_URL` com o domínio real (Parte 4). |
-| Erro **524** em webhook síncrono longo             | Limite de ~100 s do Cloudflare. Use o nó **"Respond to Webhook"** (resposta antecipada/assíncrona) (Parte 4).      |
-| Execuções não atualizam ao vivo na UI              | O proxy não faz upgrade de WebSocket. Adicione `N8N_PUSH_BACKEND=sse` ao `environment:` e atualize a stack.        |
-| Credenciais "não descriptografam" após restaurar   | A `N8N_ENCRYPTION_KEY` não bate com a do backup. Restaure **a mesma** chave de antes (Parte 8).                    |
-| `n8n` reinicia / não conecta no banco no 1º boot   | Normal por alguns segundos: o `depends_on: service_healthy` segura o n8n até o `pg_isready` passar.                |
+| Sintoma                                                      | Causa provável / Correção                                                                                                                                                                                                                                              |
+| :----------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EACCES: permission denied, open /home/node/.n8n/config`     | A pasta de dados é de `root`. Pare a stack e rode `sudo chown -R 1000:1000 /srv/n8n/data` (Parte 1).                                                                                                                                                                   |
+| Login não persiste / volta pra tela de login                 | `N8N_SECURE_COOKIE=true` + acesso por **HTTP/IP**. Acesse via `https://n8n.exemplo.com` (túnel) ou sete `N8N_SECURE_COOKIE=false` (Parte 5).                                                                                                                           |
+| Webhook chega como `http://localhost:5678/...`               | `WEBHOOK_URL` não foi setada/ajustada. Confira `WEBHOOK_URL` e `N8N_EDITOR_BASE_URL` com o domínio real (Parte 4).                                                                                                                                                     |
+| Erro **524** em webhook síncrono longo                       | Limite de ~100 s do Cloudflare. Use o nó **"Respond to Webhook"** (resposta antecipada/assíncrona) (Parte 4).                                                                                                                                                          |
+| Execuções não atualizam ao vivo na UI                        | O proxy não faz upgrade de WebSocket. Adicione `N8N_PUSH_BACKEND=sse` ao `environment:` e atualize a stack.                                                                                                                                                            |
+| Credenciais "não descriptografam" após restaurar             | A `N8N_ENCRYPTION_KEY` não bate com a do backup. Restaure **a mesma** chave de antes (Parte 8).                                                                                                                                                                        |
+| `n8n` reinicia / não conecta no banco no 1º boot             | Normal por alguns segundos: o `depends_on: service_healthy` segura o n8n até o `pg_isready` passar.                                                                                                                                                                    |
 | `Failed to start Python task runner ... Python 3 is missing` | **Inofensivo** — a imagem não traz Python 3, então só o runner de **JS** sobe (`Registered runner "JS Task Runner"`). Ignore, a menos que use nós de **Código em Python**; nesse caso use o runner em modo `external` (imagem `n8nio/runners`, ver Notas Importantes). |
 
 ---
@@ -217,11 +217,11 @@ Três coisas precisam ir junto no backup — perder qualquer uma quebra a restau
 
 ## Acessos
 
-| Recurso              | URL / Local                          |
-| :------------------- | :----------------------------------- |
-| **Web UI (público)** | `https://n8n.exemplo.com`            |
-| **Local (LAN)**      | `http://IP_DO_HOST:5678`             |
-| **Portainer**        | Stack `n8n`                          |
+| Recurso              | URL / Local               |
+| :------------------- | :------------------------ |
+| **Web UI (público)** | `https://n8n.exemplo.com` |
+| **Local (LAN)**      | `http://IP_DO_HOST:5678`  |
+| **Portainer**        | Stack `n8n`               |
 
 ---
 

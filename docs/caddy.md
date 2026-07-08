@@ -1,6 +1,6 @@
 # 🔀 Caddy (Reverse Proxy + forward-auth do Authelia)
 
-Um **Caddy compartilhado** que fica na frente dos seus apps: roteia por hostname e, nos hosts protegidos, exige login no **[Authelia](./authelia.md)** antes de deixar passar (padrão *forward-auth*). É **uma stack só para todos os projetos** — cada app novo só entra na rede `caddy-net` e ganha um bloco no Caddyfile.
+Um **Caddy compartilhado** que fica na frente dos seus apps: roteia por hostname e, nos hosts protegidos, exige login no **[Authelia](./authelia.md)** antes de deixar passar (padrão _forward-auth_). É **uma stack só para todos os projetos** — cada app novo só entra na rede `caddy-net` e ganha um bloco no Caddyfile.
 
 O `cloudflared` (bare-metal) passa a apontar **todos** os hostnames para este Caddy (`http://localhost:8080`), que decide para onde vai cada Host.
 
@@ -56,11 +56,11 @@ Navegador (https://pdf.selflabs.org)
 
 No painel **Cloudflare Zero Trust → Tunnels → Public Hostname**, aponte **todos** os hostnames para o Caddy (ao criar, o Cloudflare cria o registro DNS sozinho):
 
-| Hostname | Service |
-| :--- | :--- |
-| `auth.selflabs.org` | `http://localhost:8080` |
+| Hostname             | Service                 |
+| :------------------- | :---------------------- |
+| `auth.selflabs.org`  | `http://localhost:8080` |
 | `users.selflabs.org` | `http://localhost:8080` |
-| `pdf.selflabs.org` | `http://localhost:8080` |
+| `pdf.selflabs.org`   | `http://localhost:8080` |
 
 O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-Forwarded-Proto: https` chega ao Caddy (essencial para o Authelia não cair em loop de redirect).
 
@@ -97,13 +97,13 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
 
 ## Troubleshooting
 
-| Sintoma | Causa provável | Correção |
-| :--- | :--- | :--- |
-| Loop de redirect no login | Caddy mandando `X-Forwarded-Proto: http` ao Authelia | O bloco global já tem `trusted_proxies static private_ranges`; confirme que o Cloudflare força HTTPS |
-| `502 Bad Gateway` num app | App fora da rede `caddy-net` ou nome de container errado | Ponha o app na `caddy-net`; o `reverse_proxy` usa o `container_name` exato |
-| `network caddy-net/auth-net not found` | Rede externa não criada | `docker network create caddy-net` / `auth-net` antes do deploy |
-| UI do lldap abre sem pedir login | Faltou `import authelia` no bloco `users.` | Adicione `import authelia` e recarregue |
-| Mudou o Caddyfile e não aplicou | Redeploy reusa cache | `docker exec caddy caddy reload ...` ou Re-pull |
+| Sintoma                                | Causa provável                                           | Correção                                                                                             |
+| :------------------------------------- | :------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| Loop de redirect no login              | Caddy mandando `X-Forwarded-Proto: http` ao Authelia     | O bloco global já tem `trusted_proxies static private_ranges`; confirme que o Cloudflare força HTTPS |
+| `502 Bad Gateway` num app              | App fora da rede `caddy-net` ou nome de container errado | Ponha o app na `caddy-net`; o `reverse_proxy` usa o `container_name` exato                           |
+| `network caddy-net/auth-net not found` | Rede externa não criada                                  | `docker network create caddy-net` / `auth-net` antes do deploy                                       |
+| UI do lldap abre sem pedir login       | Faltou `import authelia` no bloco `users.`               | Adicione `import authelia` e recarregue                                                              |
+| Mudou o Caddyfile e não aplicou        | Redeploy reusa cache                                     | `docker exec caddy caddy reload ...` ou Re-pull                                                      |
 
 ## Notas Importantes
 
@@ -113,12 +113,12 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
 
 ## Acessos
 
-| O quê | Onde |
-| :--- | :--- |
-| Portal de login | `https://auth.selflabs.org` |
+| O quê                  | Onde                         |
+| :--------------------- | :--------------------------- |
+| Portal de login        | `https://auth.selflabs.org`  |
 | UI de usuários (lldap) | `https://users.selflabs.org` |
-| App exemplo | `https://pdf.selflabs.org` |
-| Porta local (só host) | `127.0.0.1:8080` |
+| App exemplo            | `https://pdf.selflabs.org`   |
+| Porta local (só host)  | `127.0.0.1:8080`             |
 
 ## Referências
 

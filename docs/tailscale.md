@@ -13,16 +13,16 @@ A stack pronta está em [`assets/stacks/tailscale.yml`](../assets/stacks/tailsca
 ```
    Seus devices (na tailnet)                          Host / VPS
    ┌────────────────────────┐                ┌──────────────────────────────┐
-   │ App / navegador         │                │  stack "tailscale" (hub)     │
-   │ https://selflabs        │   tailnet      │  ┌────────────────────────┐  │
-   │   .<tailnet>.ts.net      │──(WireGuard)───┼─►│ container tailscale      │  │
-   │   :443  -> Stirling      │  criptografado │  │ serve HTTPS por porta:   │  │
-   │   :8443 -> (futuro)      │                │  │  443  -> stirling-pdf     │  │
-   └────────────────────────┘                │  │  8443 -> (outro app)     │  │
+   │ App / navegador        │                │  stack "tailscale" (hub)     │
+   │ https://selflabs       │   tailnet      │  ┌────────────────────────┐  │
+   │   .<tailnet>.ts.net    │──(WireGuard)───┼─►│ container tailscale    │  │
+   │   :443  -> Stirling    │  criptografado │  │ serve HTTPS por porta: │  │
+   │   :8443 -> (futuro)    │                │  │  443  -> stirling-pdf  │  │
+   └────────────────────────┘                │  │  8443 -> (outro app)   │  │
                                              │  └───────────┬────────────┘  │
-                                             │      caddy-net│ proxy         │
-                                             │               ▼               │
-                                             │      stirling-pdf:8080 (aberto)│
+                                             │      caddy-net│ proxy        │
+                                             │               ▼              │
+                                             │  stirling-pdf:8080 (aberto)  │
                                              └──────────────────────────────┘
         NÃO passa pelo Authelia nem pelo Cloudflare — rota privada direta.
 ```
@@ -103,7 +103,7 @@ No **admin console → [Machines](https://login.tailscale.com/admin/machines)** 
 - **Tag de servidor** (`tag:server`): evita expiry e não conta como device pessoal. Requer:
   1. Admin console → **Access controls**, no bloco `tagOwners` adicione `"tag:server": ["autogroup:admin"]`.
   2. Regere a auth key marcando a tag, **ou** adicione `TS_EXTRA_ARGS: "--advertise-tags=tag:server"` na stack e redeploy.
-- **ACL restritiva:** por padrão a tailnet é *allow-all* entre os seus devices. Para limitar quem alcança o hub, edite as **Access controls**.
+- **ACL restritiva:** por padrão a tailnet é _allow-all_ entre os seus devices. Para limitar quem alcança o hub, edite as **Access controls**.
 - **Nunca ligue o Funnel** neste node — ele exporia os serviços na **internet pública**. Este guia usa só `serve` (tailnet).
 
 ## Parte 7: Somar outro serviço ao hub (➕)
@@ -115,8 +115,12 @@ O mesmo node serve vários projetos, um por **porta**. Para expor, digamos, um G
    {
      "TCP": { "443": { "HTTPS": true }, "8443": { "HTTPS": true } },
      "Web": {
-       "${TS_CERT_DOMAIN}:443":  { "Handlers": { "/": { "Proxy": "http://stirling-pdf:8080" } } },
-       "${TS_CERT_DOMAIN}:8443": { "Handlers": { "/": { "Proxy": "http://grafana:3000" } } }
+       "${TS_CERT_DOMAIN}:443": {
+         "Handlers": { "/": { "Proxy": "http://stirling-pdf:8080" } }
+       },
+       "${TS_CERT_DOMAIN}:8443": {
+         "Handlers": { "/": { "Proxy": "http://grafana:3000" } }
+       }
      }
    }
    ```
@@ -132,14 +136,14 @@ O mesmo node serve vários projetos, um por **porta**. Para expor, digamos, um G
 
 ## Troubleshooting
 
-| Sintoma | Causa provável | Correção |
-| :--- | :--- | :--- |
-| App ainda dá `Failed to fetch` | Apontando para `pdf.selflabs.org` (Authelia) | Use a URL da tailnet: `https://selflabs.<tailnet>.ts.net` |
-| `https://selflabs…ts.net` não resolve no PC | MagicDNS off, ou Tailscale não está rodando no PC | Ligue MagicDNS (Parte 1); confirme o Tailscale ativo no PC (ícone na bandeja) |
-| Erro de **certificado** ao abrir a URL | HTTPS Certificates off na tailnet | Ligue **HTTPS Certificates** (Parte 1) e redeploy o container |
-| `502`/página em branco na URL da tailnet | `serve.json` com backend errado, ou container fora da rede do serviço | `Proxy` = `http://<container>:porta`; confirme o `tailscale` na rede do alvo |
-| Node não aparece em Machines | `TS_AUTHKEY` inválida/expirada | Gere nova auth key (Parte 2) e redeploy |
-| Node sumiu depois de meses | Key expiry do node (180 dias) | **Disable key expiry** (Parte 6) ou use `tag:server` |
+| Sintoma                                     | Causa provável                                                        | Correção                                                                      |
+| :------------------------------------------ | :-------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| App ainda dá `Failed to fetch`              | Apontando para `pdf.selflabs.org` (Authelia)                          | Use a URL da tailnet: `https://selflabs.<tailnet>.ts.net`                     |
+| `https://selflabs…ts.net` não resolve no PC | MagicDNS off, ou Tailscale não está rodando no PC                     | Ligue MagicDNS (Parte 1); confirme o Tailscale ativo no PC (ícone na bandeja) |
+| Erro de **certificado** ao abrir a URL      | HTTPS Certificates off na tailnet                                     | Ligue **HTTPS Certificates** (Parte 1) e redeploy o container                 |
+| `502`/página em branco na URL da tailnet    | `serve.json` com backend errado, ou container fora da rede do serviço | `Proxy` = `http://<container>:porta`; confirme o `tailscale` na rede do alvo  |
+| Node não aparece em Machines                | `TS_AUTHKEY` inválida/expirada                                        | Gere nova auth key (Parte 2) e redeploy                                       |
+| Node sumiu depois de meses                  | Key expiry do node (180 dias)                                         | **Disable key expiry** (Parte 6) ou use `tag:server`                          |
 
 ## Notas Importantes
 
@@ -150,11 +154,11 @@ O mesmo node serve vários projetos, um por **porta**. Para expor, digamos, um G
 
 ## Acessos
 
-| O quê | Onde | Proteção |
-| :--- | :--- | :--- |
-| Serviços via tailnet (app) | `https://selflabs.<sua-tailnet>.ts.net[:porta]` | tailnet (seus devices) |
-| Stirling via web (browser) | `https://pdf.selflabs.org` | Authelia |
-| Admin da tailnet | [login.tailscale.com/admin](https://login.tailscale.com/admin) | conta Tailscale |
+| O quê                      | Onde                                                           | Proteção               |
+| :------------------------- | :------------------------------------------------------------- | :--------------------- |
+| Serviços via tailnet (app) | `https://selflabs.<sua-tailnet>.ts.net[:porta]`                | tailnet (seus devices) |
+| Stirling via web (browser) | `https://pdf.selflabs.org`                                     | Authelia               |
+| Admin da tailnet           | [login.tailscale.com/admin](https://login.tailscale.com/admin) | conta Tailscale        |
 
 ## Referências
 

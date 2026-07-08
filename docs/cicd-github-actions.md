@@ -5,6 +5,7 @@ Este guia documenta como configurar um pipeline de **integração e entrega cont
 A ideia é simples: a cada push no branch `master`, o GitHub roda os testes e verificações automaticamente na nuvem (CI). Se tudo passar, o servidor recebe o comando de atualização e faz o deploy de forma automatizada (CD), sem nenhuma intervenção manual.
 
 **Arquitetura:**
+
 - **CI (testes, lint, build)** → roda nos servidores do GitHub (`ubuntu-latest`)
 - **CD (deploy)** → roda no seu servidor via self-hosted runner
 
@@ -35,6 +36,7 @@ github.com/SEU_USUARIO/SEU_REPO → Settings → Actions → Runners → New sel
 > **Dica de navegação:** a aba **Settings** fica na barra horizontal do repositório, ao lado de Insights. Se não aparecer, você precisa ser admin do repositório.
 
 Selecione **Linux** e a arquitetura do seu servidor:
+
 - `ARM64` → OrangePi 5, Raspberry Pi 4/5
 - `x64` → Intel/AMD
 
@@ -63,6 +65,7 @@ RUNNER_ALLOW_RUNASROOT=1 ./config.sh \
 ```
 
 Durante a configuração interativa, pressione Enter para aceitar os padrões:
+
 - **Runner group:** Default
 - **Runner name:** nome do servidor (ex: `orangepi5`)
 - **Labels:** `self-hosted, Linux, ARM64` (gerado automaticamente)
@@ -107,89 +110,90 @@ Crie o arquivo `.github/workflows/ci.yml` na raiz do repositório:
 name: CI/CD
 
 on:
-    push:
-        branches: ["master", "main"]
-    pull_request:
-        branches: ["master", "main"]
+  push:
+    branches: ["master", "main"]
+  pull_request:
+    branches: ["master", "main"]
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    # --- CI: roda na nuvem do GitHub ---
+  # --- CI: roda na nuvem do GitHub ---
 
-    backend:
-        name: Backend — Tests & SAST
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: backend
+  backend:
+    name: Backend — Tests & SAST
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up Python
-              uses: actions/setup-python@v5
-              with:
-                  python-version: "3.12"
-                  cache: "pip"
-                  cache-dependency-path: backend/requirements.txt
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
 
-            - name: Install Dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -r requirements.txt bandit
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt bandit
 
-            - name: Run Tests
-              env:
-                  SECRET_KEY: "test-secret-key-for-ci-only"
-                  # ... outras env vars de teste
-              run: python manage.py test --settings=setup.test_settings
+      - name: Run Tests
+        env:
+          SECRET_KEY: "test-secret-key-for-ci-only"
+          # ... outras env vars de teste
+        run: python manage.py test --settings=setup.test_settings
 
-            - name: Security Scan (Bandit)
-              run: bandit -r . -ll -x ./tests
+      - name: Security Scan (Bandit)
+        run: bandit -r . -ll -x ./tests
 
-    frontend:
-        name: Frontend — Lint & Build
-        runs-on: ubuntu-latest
-        needs: backend          # só roda se backend passar
-        defaults:
-            run:
-                working-directory: frontend
+  frontend:
+    name: Frontend — Lint & Build
+    runs-on: ubuntu-latest
+    needs: backend # só roda se backend passar
+    defaults:
+      run:
+        working-directory: frontend
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "22"
-                  cache: "npm"
-                  cache-dependency-path: frontend/package-lock.json
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
-            - name: Install Dependencies
-              run: npm ci
+      - name: Install Dependencies
+        run: npm ci
 
-            - name: Lint
-              run: npm run lint
+      - name: Lint
+        run: npm run lint
 
-            - name: Build
-              run: npm run build
+      - name: Build
+        run: npm run build
 
-    # --- CD: roda no seu servidor via self-hosted runner ---
+  # --- CD: roda no seu servidor via self-hosted runner ---
 
-    deploy:
-        name: Deploy — Production
-        runs-on: self-hosted
-        needs: [backend, frontend]   # só deploya se CI passar 100%
-        if: github.event_name == 'push'  # não deploya em PRs
+  deploy:
+    name: Deploy — Production
+    runs-on: self-hosted
+    needs: [backend, frontend] # só deploya se CI passar 100%
+    if: github.event_name == 'push' # não deploya em PRs
 
-        steps:
-            - name: Run deploy script
-              run: cd "${{ secrets.DEPLOY_DIR }}" && ./update.sh
+    steps:
+      - name: Run deploy script
+        run: cd "${{ secrets.DEPLOY_DIR }}" && ./update.sh
 ```
 
 **Fluxo resultante:**
+
 ```
 push → [backend] → [frontend] → [deploy no servidor]
 PR   → [backend] → [frontend]  (sem deploy)
@@ -209,9 +213,9 @@ github.com/SEU_USUARIO/SEU_REPO → Settings → Security → Secrets and variab
 
 > **Dica de navegação:** no menu lateral esquerdo da página de Settings, procure a seção **Security** e depois **Secrets and variables**. Clique em **Actions** e depois no botão verde **New repository secret**.
 
-| Campo | Valor |
-|-------|-------|
-| Name | `DEPLOY_DIR` |
+| Campo  | Valor                                                        |
+| ------ | ------------------------------------------------------------ |
+| Name   | `DEPLOY_DIR`                                                 |
 | Secret | Caminho absoluto do projeto no servidor (ex: `/srv/projeto`) |
 
 > **Importante:** Use **repository secrets** (Settings do repositório), não organization secrets. No plano gratuito do GitHub, secrets de organização não funcionam com repositórios privados.
@@ -290,33 +294,33 @@ Quando o CI **builda imagens Docker arm64** (para rodar em OrangePi/Raspberry), 
 No job que constrói as imagens, troque o runner e **remova o QEMU**:
 
 ```yaml
-    build-push:
-        runs-on: [self-hosted, ARM64]   # nativo na OrangePi (antes: ubuntu-latest + QEMU)
-        needs: [backend, frontend]
+build-push:
+  runs-on: [self-hosted, ARM64] # nativo na OrangePi (antes: ubuntu-latest + QEMU)
+  needs: [backend, frontend]
 
-        steps:
-            - uses: actions/checkout@v4
+  steps:
+    - uses: actions/checkout@v4
 
-            # (NÃO usar docker/setup-qemu-action — o build é nativo)
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
+    # (NÃO usar docker/setup-qemu-action — o build é nativo)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build & Push
-              uses: docker/build-push-action@v6
-              with:
-                  context: ./backend
-                  push: true
-                  platforms: linux/arm64
-                  tags: ghcr.io/ORG/IMAGEM:latest
-                  cache-from: type=gha,scope=backend
-                  cache-to: type=gha,mode=max,scope=backend
+    - name: Build & Push
+      uses: docker/build-push-action@v6
+      with:
+        context: ./backend
+        push: true
+        platforms: linux/arm64
+        tags: ghcr.io/ORG/IMAGEM:latest
+        cache-from: type=gha,scope=backend
+        cache-to: type=gha,mode=max,scope=backend
 ```
 
 Resultado: **~30 min → poucos minutos** (e segundos quando o cache pega, desde que o Dockerfile copie as dependências **antes** do código-fonte).
@@ -358,6 +362,7 @@ O job de deploy apenas executa o script de atualização do projeto (`./update.s
 
 **Múltiplos projetos no mesmo servidor**
 Um único runner atende todos os repositórios que precisarem. Para cada novo projeto:
+
 1. Adicione `runs-on: self-hosted` ao job de deploy
 2. Crie o secret `DEPLOY_DIR` no novo repositório com o caminho correto
 3. O mesmo runner vai escutar e processar os jobs dos dois projetos

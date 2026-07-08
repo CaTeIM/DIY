@@ -5,23 +5,23 @@ Gerenciador financeiro self-hosted avançado com suporte a importação de extra
 ## Arquitetura
 
 ```
-┌─ REDE LOCAL / EXTERNA ────────────────────────────────────────┐
-│                                                               │
-│  Dispositivo ──► https://firefly.exemplo.com                 │
-│  ──► Cloudflare Edge (TLS) ──► Tunnel ──► localhost:8080      │
-│  ──► Firefly App (App) ──► Banco de Dados MariaDB (DB)        │
-│                                                               │
-│  Importação de CSV ──► http://IP_DO_SERVIDOR:8081             │
-│  ──► Data Importer ──► Firefly App (API)                      │
-└───────────────────────────────────────────────────────────────┘
+┌─ REDE LOCAL / EXTERNA ────────────────────────────────────┐
+│                                                           │
+│  Dispositivo ──► https://firefly.exemplo.com              │
+│  ──► Cloudflare Edge (TLS) ──► Tunnel ──► localhost:8080  │
+│  ──► Firefly App (App) ──► Banco de Dados MariaDB (DB)    │
+│                                                           │
+│  Importação de CSV ──► http://IP_DO_SERVIDOR:8081         │
+│  ──► Data Importer ──► Firefly App (API)                  │
+└───────────────────────────────────────────────────────────┘
 ```
 
 **Portas no host:**
 
-| Porta Host | Porta Container | Uso                                         |
-| :--------- | :-------------- | :------------------------------------------ |
-| `8080/tcp` | `8080`          | App Principal (Web UI + API)                |
-| `8081/tcp` | `8080`          | Data Importer (Conversão e Envio via API)   |
+| Porta Host | Porta Container | Uso                                       |
+| :--------- | :-------------- | :---------------------------------------- |
+| `8080/tcp` | `8080`          | App Principal (Web UI + API)              |
+| `8081/tcp` | `8080`          | Data Importer (Conversão e Envio via API) |
 
 ---
 
@@ -93,6 +93,7 @@ Guarde o valor gerado. Você vai precisar dele no próximo passo.
 > O Firefly é muito sensível a proxies reversos e proteções HTTP. Faça a configuração abaixo no painel do Cloudflare para evitar falhas graves na interface, como o mascaramento do seu login.
 
 No painel do Cloudflare:
+
 1. Vá em **Scrape Shield** → **Email Address Obfuscation** e desative (**Off**). O Cloudflare ofusca emails como proteção anti-bot, o que quebra a interface do Firefly, substituindo seu email por `[email protected]`.
 
 > [!NOTE]
@@ -100,7 +101,7 @@ No painel do Cloudflare:
 
 ### 3.2. Gerar Token para o Data Importer
 
-O `firefly-importer` acessa a API do app principal para realizar a inserção de dados em massa. Ele precisa de um *Personal Access Token*.
+O `firefly-importer` acessa a API do app principal para realizar a inserção de dados em massa. Ele precisa de um _Personal Access Token_.
 
 1. Acesse o Firefly (`http://192.168.x.x:8080` ou via Domínio) e crie sua conta admin.
 2. Menu lateral → **Opções** → **Perfil**.
@@ -129,8 +130,8 @@ Get-Content "RELATORIO_TRANSACOES.csv" -Encoding Unicode | Set-Content "RELATORI
 
 ### 4.2. Cadastro Prévio de Contas
 
-O Data Importer **não cria contas automaticamente**. 
-Abra o CSV, verifique as contas financeiras presentes (ex: *Nubank, Carteira, Sicoob*) e crie cada uma manualmente no Firefly em **Contas** → **Contas de Ativo (Asset accounts)**.
+O Data Importer **não cria contas automaticamente**.
+Abra o CSV, verifique as contas financeiras presentes (ex: _Nubank, Carteira, Sicoob_) e crie cada uma manualmente no Firefly em **Contas** → **Contas de Ativo (Asset accounts)**.
 
 ### 4.3. Dividindo CSV Gigante (Evitando 504 Gateway Timeout)
 
@@ -180,9 +181,11 @@ $reader.Close()
 ### Aviso de "valor precisa ser maior do que zero"
 
 Log exibe:
+
 ```text
 Line #384: [a117]: transactions.0.amount: O valor precisa ser maior do que zero. (original value: "0.00")
 ```
+
 **Causa:** O Mobills e outros apps aceitam transações zeradas (como rascunhos, estornos ou marcações). O Firefly exige que toda transação tenha um valor financeiro real.
 **Fix:** Nenhuma ação necessária. O importador ignora a linha infratora com segurança e prossegue com sucesso para o restante do lote.
 
@@ -194,18 +197,18 @@ Line #384: [a117]: transactions.0.amount: O valor precisa ser maior do que zero.
 ### Erro "There is no import job with identifier"
 
 **Causa:** Ocorre após a tela de erro 504 no Data Importer. O tempo de execução excedeu o limite do PHP/Nginx e o container web perdeu o contexto temporário do processamento em andamento.
-**Fix:** Aplique a solução descrita na etapa *4.3. Dividindo CSV Gigante*.
+**Fix:** Aplique a solução descrita na etapa _4.3. Dividindo CSV Gigante_.
 
 ---
 
 ## 🌐 Acessos
 
-| Recurso                 | URL                                   |
-| :---------------------- | :------------------------------------ |
-| **Web UI (App)**        | `https://firefly.exemplo.com`        |
-| **Local (App)**         | `http://IP_DO_SERVIDOR:8080`          |
-| **Data Importer**       | `http://IP_DO_SERVIDOR:8081`          |
-| **Portainer**           | Stack `firefly`                       |
+| Recurso           | URL                           |
+| :---------------- | :---------------------------- |
+| **Web UI (App)**  | `https://firefly.exemplo.com` |
+| **Local (App)**   | `http://IP_DO_SERVIDOR:8080`  |
+| **Data Importer** | `http://IP_DO_SERVIDOR:8081`  |
+| **Portainer**     | Stack `firefly`               |
 
 ---
 
@@ -214,5 +217,3 @@ Line #384: [a117]: transactions.0.amount: O valor precisa ser maior do que zero.
 - [Firefly III Documentação Oficial](https://docs.firefly-iii.org/)
 - [Firefly III Data Importer Oficial](https://github.com/firefly-iii/data-importer)
 - [Configurando Trusted Proxies no Laravel](https://laravel.com/docs/11.x/requests#configuring-trusted-proxies)
-
-

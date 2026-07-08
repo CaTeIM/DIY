@@ -15,32 +15,36 @@ Antes de criar a máquina, você precisa de uma rede configurada com acesso à i
 5. Deixe todos os blocos de IP (CIDR) padrão e as configurações do compartimento como estão.
 6. Clique em **Next** (Próximo) no final da página e, na tela de revisão, clique em **Create** (Criar).
 
-*Isso vai gerar automaticamente a sua `vcn-principal`, a `public subnet-vcn-principal` (sub-rede pública) e as tabelas de rotas necessárias.*
+_Isso vai gerar automaticamente a sua `vcn-principal`, a `public subnet-vcn-principal` (sub-rede pública) e as tabelas de rotas necessárias._
 
 ## 🛠️ Passo 1: Criação da Instância no Painel
 
 No menu lateral, vá em **Compute** > **Instances** e clique em **Create instance**.
 
 ### 1.1. Imagem e Forma (Shape)
-* **Imagem:** Clique em *Alterar imagem*, escolha **Canonical Ubuntu 24.04 Minimal aarch64** (versão ARM).
-* **Forma (Shape):** Clique em *Alterar forma*, selecione a aba **Ampere** e marque a caixa **VM.Standard.A1.Flex**.
-* **Recursos:** Aloque o limite máximo gratuito: **4 OCPUs** e **24 GB** de memória RAM.
+
+- **Imagem:** Clique em _Alterar imagem_, escolha **Canonical Ubuntu 24.04 Minimal aarch64** (versão ARM).
+- **Forma (Shape):** Clique em _Alterar forma_, selecione a aba **Ampere** e marque a caixa **VM.Standard.A1.Flex**.
+- **Recursos:** Aloque o limite máximo gratuito: **4 OCPUs** e **24 GB** de memória RAM.
 
 ### 1.2. Configuração de Rede (Networking)
-* **Rede:** Selecione sua Rede Virtual existente (ex: `vcn-principal`).
-* **Sub-rede:** Selecione a sub-rede pública regional.
-* **IP Público:** Certifique-se de marcar a opção **Atribuir um endereço IPv4 público automaticamente**.
+
+- **Rede:** Selecione sua Rede Virtual existente (ex: `vcn-principal`).
+- **Sub-rede:** Selecione a sub-rede pública regional.
+- **IP Público:** Certifique-se de marcar a opção **Atribuir um endereço IPv4 público automaticamente**.
 
 ### 1.3. Chaves SSH (Crucial)
-* Selecione **Gerar um par de chaves para mim** (ou faça o upload da sua pública se preferir).
-* ⚠️ **Obrigatório:** Clique no botão **Fazer download da chave privada** e salve o arquivo `.key` no seu computador. Sem ele, você perderá o acesso definitivo à VPS.
+
+- Selecione **Gerar um par de chaves para mim** (ou faça o upload da sua pública se preferir).
+- ⚠️ **Obrigatório:** Clique no botão **Fazer download da chave privada** e salve o arquivo `.key` no seu computador. Sem ele, você perderá o acesso definitivo à VPS.
 
 ### 1.4. Armazenamento (Boot Volume)
-* Ative a opção **Especifique um tamanho do volume de inicialização personalizado**.
-* Altere o tamanho padrão de 46.6 GB para **200 GB** (limite máximo do Free Tier).
-* Deixe o desempenho (VPU) em **10** (Balanceado).
 
-*Role até o fim da página de Revisão e clique em **Criar**. Com a conta PAYG, a instância será criada imediatamente.*
+- Ative a opção **Especifique um tamanho do volume de inicialização personalizado**.
+- Altere o tamanho padrão de 46.6 GB para **200 GB** (limite máximo do Free Tier).
+- Deixe o desempenho (VPU) em **10** (Balanceado).
+
+_Role até o fim da página de Revisão e clique em **Criar**. Com a conta PAYG, a instância será criada imediatamente._
 
 ## 💻 Passo 2: Permissões da Chave no Windows (PowerShell)
 
@@ -54,13 +58,15 @@ O OpenSSH do Windows recusa conexões se o arquivo da chave privada estiver expo
 6. Marque a caixa **Controle total** e salve todas as janelas.
 
 ### 2.1. Primeiro Acesso SSH
+
 Abra o PowerShell e execute:
+
 ```powershell
 ssh -i "C:\Users\SEU_USUARIO\.ssh\oracle.key" ubuntu@IP_PUBLICO_DA_VPS
 
 ```
 
-*Digite `yes` quando o terminal perguntar se confia no host.*
+_Digite `yes` quando o terminal perguntar se confia no host._
 
 ## 🧱 Passo 3: Configuração do Firewall Duplo
 
@@ -71,11 +77,11 @@ A imagem padrão da Oracle vem com bloqueio total de tráfego de entrada. É obr
 1. No menu da instância, clique na aba **Rede** e acesse o link da sua sub-rede pública.
 2. Na aba **Regras de segurança**, clique em **Adicionar Regras de Entrada**.
 3. Configure a regra:
-* **Tipo de Origem:** CIDR
-* **CIDR de Origem:** `0.0.0.0/0` (Qualquer IP da internet)
-* **Protocolo IP:** TCP
-* **Intervalo de Portas de Destino:** `80,443`
 
+- **Tipo de Origem:** CIDR
+- **CIDR de Origem:** `0.0.0.0/0` (Qualquer IP da internet)
+- **Protocolo IP:** TCP
+- **Intervalo de Portas de Destino:** `80,443`
 
 4. Clique em **Adicionar Regras de Entrada**.
 

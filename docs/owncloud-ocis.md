@@ -5,21 +5,21 @@ Cloud storage pessoal com sync de arquivos, compartilhamento e acesso via apps m
 ## Arquitetura
 
 ```
-┌─ REDE LOCAL / EXTERNA ────────────────────────────────────────┐
-│                                                               │
-│  Dispositivo ──► https://drive.exemplo.com                   │
-│  ──► Cloudflare Edge (TLS) ──► Tunnel ──► localhost:9200      │
-│  ──► oCIS                                                     │
-└───────────────────────────────────────────────────────────────┘
+┌─ REDE LOCAL / EXTERNA ────────────────────────────────────┐
+│                                                           │
+│  Dispositivo ──► https://drive.exemplo.com                │
+│  ──► Cloudflare Edge (TLS) ──► Tunnel ──► localhost:9200  │
+│  ──► oCIS                                                 │
+└───────────────────────────────────────────────────────────┘
 ```
 
 > **Por design**, o oCIS não funciona acessado por IP direto (`192.168.x.x:9200`). O OIDC requer que a URL de acesso seja exatamente igual ao `OCIS_URL`. O acesso (mesmo local) deve ser feito sempre via domínio para garantir o HTTPS e a autenticação correta.
 
 **Porta no host:**
 
-| Porta Host   | Porta Container | Uso                          |
-| :----------- | :-------------- | :--------------------------- |
-| `9200/tcp`   | `9200`          | Web UI + API (WebDAV, OIDC)  |
+| Porta Host | Porta Container | Uso                         |
+| :--------- | :-------------- | :-------------------------- |
+| `9200/tcp` | `9200`          | Web UI + API (WebDAV, OIDC) |
 
 > A porta `9200` é a única necessária. O oCIS é um binário Go que inclui tudo: web server, autenticação (OIDC), storage, search engine. Sem PHP, sem Apache, sem banco de dados externo.
 
@@ -59,8 +59,8 @@ Se não retornar nada, está livre.
 3. Colar o conteúdo do arquivo [`assets/stacks/owncloud-ocis.yml`](../assets/stacks/owncloud-ocis.yml)
 4. Na seção **Environment variables**, adicionar:
 
-| Variável | Valor |
-|:---------|:------|
+| Variável              | Valor                                                               |
+| :-------------------- | :------------------------------------------------------------------ |
 | `OCIS_ADMIN_PASSWORD` | Sua senha (mín. 8 chars: maiúscula + minúscula + número + especial) |
 
 5. Clicar em **Deploy the stack**
@@ -81,14 +81,14 @@ ocis init || true; ocis server
 
 ### 2.3. Variáveis de ambiente explicadas
 
-| Variável | Valor | Descrição |
-|:---------|:------|:----------|
-| `OCIS_URL` | `https://drive.exemplo.com` | URL pública. Obrigatória para OIDC funcionar |
-| `PROXY_TLS` | `false` | Desabilita TLS no container (Cloudflare cuida) |
-| `OCIS_INSECURE` | `true` | Desativa validação de cert interno (necessário com `PROXY_TLS=false`) |
-| `PROXY_HTTP_ADDR` | `0.0.0.0:9200` | Escuta em todas as interfaces |
-| `IDM_ADMIN_PASSWORD` | `${OCIS_ADMIN_PASSWORD}` | Senha admin vinda do .env |
-| `OCIS_LOG_LEVEL` | `warn` | `info` para debug, `warn` para produção |
+| Variável             | Valor                       | Descrição                                                             |
+| :------------------- | :-------------------------- | :-------------------------------------------------------------------- |
+| `OCIS_URL`           | `https://drive.exemplo.com` | URL pública. Obrigatória para OIDC funcionar                          |
+| `PROXY_TLS`          | `false`                     | Desabilita TLS no container (Cloudflare cuida)                        |
+| `OCIS_INSECURE`      | `true`                      | Desativa validação de cert interno (necessário com `PROXY_TLS=false`) |
+| `PROXY_HTTP_ADDR`    | `0.0.0.0:9200`              | Escuta em todas as interfaces                                         |
+| `IDM_ADMIN_PASSWORD` | `${OCIS_ADMIN_PASSWORD}`    | Senha admin vinda do .env                                             |
+| `OCIS_LOG_LEVEL`     | `warn`                      | `info` para debug, `warn` para produção                               |
 
 ---
 
@@ -120,12 +120,12 @@ O oCIS não funciona acessado por IP direto — o OIDC exige que a URL seja idê
 
 ### Clientes Oficiais
 
-| Plataforma | App | Link |
-|:-----------|:----|:-----|
-| **iOS** | ownCloud | [App Store](https://apps.apple.com/app/owncloud/id1359583808) |
-| **Android** | ownCloud | [Google Play](https://play.google.com/store/apps/details?id=com.owncloud.android) |
-| **Windows** | ownCloud Desktop | [Download](https://owncloud.com/desktop-app/) |
-| **macOS** | ownCloud Desktop | [Download](https://owncloud.com/desktop-app/) |
+| Plataforma  | App              | Link                                                                              |
+| :---------- | :--------------- | :-------------------------------------------------------------------------------- |
+| **iOS**     | ownCloud         | [App Store](https://apps.apple.com/app/owncloud/id1359583808)                     |
+| **Android** | ownCloud         | [Google Play](https://play.google.com/store/apps/details?id=com.owncloud.android) |
+| **Windows** | ownCloud Desktop | [Download](https://owncloud.com/desktop-app/)                                     |
+| **macOS**   | ownCloud Desktop | [Download](https://owncloud.com/desktop-app/)                                     |
 
 ### Configuração nos Apps
 
@@ -218,11 +218,11 @@ docker run --rm -it \
 
 ## 🌐 Acessos
 
-| Recurso | URL |
-|:--------|:----|
-| **Web UI** | `https://drive.exemplo.com` |
-| **WebDAV** | `https://drive.exemplo.com/dav/files/<username>/` |
-| **Portainer** | Stack `ocis` |
+| Recurso       | URL                                               |
+| :------------ | :------------------------------------------------ |
+| **Web UI**    | `https://drive.exemplo.com`                       |
+| **WebDAV**    | `https://drive.exemplo.com/dav/files/<username>/` |
+| **Portainer** | Stack `ocis`                                      |
 
 ---
 
@@ -232,4 +232,3 @@ docker run --rm -it \
 - [oCIS Docker Guide](https://owncloud.dev/ocis/guides/ocis-local-docker/)
 - [oCIS GitHub](https://github.com/owncloud/ocis)
 - [ownCloud Mobile Apps](https://owncloud.com/mobile-apps/)
-

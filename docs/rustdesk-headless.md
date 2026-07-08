@@ -6,7 +6,7 @@ Este guia detalha o processo de instalação e configuração do RustDesk em um 
 
 O objetivo é fazer o `rustdesk.service` (o servidor do RustDesk) ser iniciado apenas **após** uma sessão gráfica XFCE virtual (criada com `Xvfb`) estar pronta e, mais importante, fazer o RustDesk "enxergar" essa sessão virtual.
 
-Isso resolve o problema comum em que o RustDesk funciona, mas só exibe uma tela preta ou só funciona *depois* que um usuário faz login manualmente e inicia um `startx`.
+Isso resolve o problema comum em que o RustDesk funciona, mas só exibe uma tela preta ou só funciona _depois_ que um usuário faz login manualmente e inicia um `startx`.
 
 ## 🛠️ Componentes Utilizados
 
@@ -44,16 +44,16 @@ sudo apt install ./rustdesk-*.deb
 
 **Nota:** A lista acima inclui o essencial para um desktop funcional:
 
--   `xvfb`, `dbus-x11`: O display virtual e barramento de sessão.
--   `x11-utils`: Utilitários X11, inclui `xdpyinfo` (necessário para o script de inicialização).
--   `x11-xserver-utils`: Utilitários do servidor X (`xrandr`, `xrdb`, etc.).
--   `xfce4-session`: O gerenciador de login/sessão.
--   `xfwm4`: O gerenciador de janelas (para mover/fechar janelas).
--   `xfce4-panel`: A barra de tarefas/menu.
--   `xfce4-settings`: O painel de controle.
--   `thunar`: O gerenciador de arquivos.
--   `xfce4-terminal`: Um terminal (essencial!).
-    
+- `xvfb`, `dbus-x11`: O display virtual e barramento de sessão.
+- `x11-utils`: Utilitários X11, inclui `xdpyinfo` (necessário para o script de inicialização).
+- `x11-xserver-utils`: Utilitários do servidor X (`xrandr`, `xrdb`, etc.).
+- `xfce4-session`: O gerenciador de login/sessão.
+- `xfwm4`: O gerenciador de janelas (para mover/fechar janelas).
+- `xfce4-panel`: A barra de tarefas/menu.
+- `xfce4-settings`: O painel de controle.
+- `thunar`: O gerenciador de arquivos.
+- `xfce4-terminal`: Um terminal (essencial!).
+
 Se algo faltar (ex: `mousepad` como editor de texto), você pode instalá-lo da mesma forma.
 
 ## Passo 2: Identificar o Usuário de Sessão
@@ -70,11 +70,10 @@ getent passwd 1000 | cut -d: -f1
 **Anote esse nome** — ele será usado nos passos seguintes no lugar de `<usuario>`.
 
 > Se o comando não retornar nada, significa que não há usuário com UID 1000. Nesse caso, crie um:
+>
 > ```bash
 > sudo useradd --uid 1000 --create-home --shell /bin/bash meuusuario
 > ```
-
-
 
 ## Passo 3: Habilitar "Linger" para o Usuário
 
@@ -87,18 +86,20 @@ Este é um passo **crítico**. Por padrão, os serviços de um usuário (`user@1
 sudo loginctl enable-linger <usuario>
 ```
 
--   **Para verificar:** `loginctl show-user <usuario> -p Linger` (deve retornar `Linger=yes`).
-    
+- **Para verificar:** `loginctl show-user <usuario> -p Linger` (deve retornar `Linger=yes`).
+
 ## Passo 4: Criar o Script de Inicialização da Sessão
 
 Vamos criar um script simples que será responsável por iniciar o `Xvfb` (o monitor virtual) e, em seguida, o `xfce4-session` (o desktop) dentro dele.
 
 Crie o arquivo:
+
 ```bash
 sudo nano /usr/local/bin/start-virtual-session.sh
 ```
 
 Cole o seguinte conteúdo:
+
 ```bash
 #!/bin/bash
 
@@ -119,6 +120,7 @@ exec xfce4-session
 ```
 
 Depois de salvar, torne o script executável:
+
 ```bash
 sudo chmod +x /usr/local/bin/start-virtual-session.sh
 ```
@@ -128,12 +130,12 @@ sudo chmod +x /usr/local/bin/start-virtual-session.sh
 Agora, criamos um serviço de **sistema** que executará o script acima como o nosso usuário (`rustdesk`).
 
 Crie o arquivo:
+
 ```bash
 sudo nano /etc/systemd/system/xfce-virtual.service
 ```
 
 Cole o seguinte conteúdo:
-
 
 ```ini
 [Unit]
@@ -158,12 +160,14 @@ WantedBy=multi-user.target
 Aqui está o **primeiro pulo do gato**. O serviço `xfce-virtual.service` (um serviço de sistema) precisa esperar que os serviços do **usuário** com UID 1000 estejam prontos. (É por isso que habilitamos o "linger" no Passo 3).
 
 Vamos criar um _override_ para adicionar essa dependência.
+
 ```bash
 # Este comando cria o diretório e o arquivo de override
 sudo systemctl edit xfce-virtual.service
 ```
 
 Isso abrirá um editor. Cole o seguinte **exatamente assim** — o nome da unit usa o número do UID (`1000`), não o nome do usuário:
+
 ```ini
 [Unit]
 # Espera o serviço de usuário do UID 1000 estar pronto
@@ -181,11 +185,13 @@ Este é o **segundo pulo do gato** e a solução final. O serviço `rustdesk.ser
 2.  "Saber" que a sessão gráfica existe no `DISPLAY=:0`.
 
 Vamos criar um _override_ para o RustDesk:
+
 ```bash
 sudo systemctl edit rustdesk.service
 ```
 
 Isso abrirá um editor. Cole o seguinte:
+
 ```ini
 [Unit]
 # 1. Faz o RustDesk esperar pelo nosso XFCE
@@ -218,6 +224,7 @@ sudo systemctl restart rustdesk.service
 ```
 
 Para uma garantia extra, você pode reiniciar a máquina:
+
 ```bash
 sudo reboot
 ```
@@ -234,9 +241,9 @@ Se algo der errado, aqui estão os comandos para investigar:
 systemctl status xfce-virtual.service
 ```
 
--   Procure por `Active: active (running)`.
--   Veja se o `Drop-In:` para o `override.conf` foi lido.
--   Nos logs (abaixo), procure pela árvore de processos (`xfce4-session`, `Xvfb`, `xfwm4`, etc.).
+- Procure por `Active: active (running)`.
+- Veja se o `Drop-In:` para o `override.conf` foi lido.
+- Nos logs (abaixo), procure pela árvore de processos (`xfce4-session`, `Xvfb`, `xfwm4`, etc.).
 
 **2. O RustDesk subiu?**
 
@@ -244,8 +251,8 @@ systemctl status xfce-virtual.service
 systemctl status rustdesk.service
 ```
 
--   Procure por `Active: active (running)`.
--   Veja se o `Drop-In:` para o `override.conf` foi lido.
+- Procure por `Active: active (running)`.
+- Veja se o `Drop-In:` para o `override.conf` foi lido.
 
 **3. O que os logs dizem?**
 

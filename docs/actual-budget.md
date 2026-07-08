@@ -15,9 +15,9 @@ Gerenciador financeiro pessoal self-hosted baseado em envelope budgeting. Interf
 
 **Porta no host:**
 
-| Porta Host | Porta Container | Uso                   |
-| :--------- | :-------------- | :-------------------- |
-| `5006/tcp` | `5006`          | Web UI + API de Sync  |
+| Porta Host | Porta Container | Uso                  |
+| :--------- | :-------------- | :------------------- |
+| `5006/tcp` | `5006`          | Web UI + API de Sync |
 
 > [!NOTE]
 > O Actual Budget não requer banco de dados externo. Tudo é persistido em arquivos SQLite dentro do volume `/srv/actualbudget/data`, o que torna o backup extremamente simples.
@@ -172,10 +172,10 @@ Para cada conta:
 
 ## 🌐 Acessos
 
-| Recurso       | URL                              |
-| :------------ | :------------------------------- |
-| **Web UI**    | `http://IP_DO_SERVIDOR:5006`     |
-| **Portainer** | Stack `actual-budget`            |
+| Recurso       | URL                          |
+| :------------ | :--------------------------- |
+| **Web UI**    | `http://IP_DO_SERVIDOR:5006` |
+| **Portainer** | Stack `actual-budget`        |
 
 ---
 

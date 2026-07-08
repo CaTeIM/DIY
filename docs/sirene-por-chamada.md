@@ -33,12 +33,12 @@ Este projeto permite acionar automaticamente uma sirene conectada ao relé do So
 
 ### 🔗 1.2. Ligações
 
-| CH341A | Sonoff RE5V1C  |
-|--------|----------------|
-| GND    | GND            |
-| 3.3V   | 3V3            |
-| TXD    | ERX            |
-| RXD    | ETX            |
+| CH341A | Sonoff RE5V1C |
+| ------ | ------------- |
+| GND    | GND           |
+| 3.3V   | 3V3           |
+| TXD    | ERX           |
+| RXD    | ETX           |
 
 ### 🕹️ 1.3. Modo Bootloader
 
@@ -82,7 +82,7 @@ Este projeto permite acionar automaticamente uma sirene conectada ao relé do So
 ```
 SetOption65 1
 Timezone -3
-``` 
+```
 
 10. Coloque **IP estático** no módulo:
 
@@ -130,8 +130,8 @@ Acesse a interface web do Tasmota e clique em **Toggle**.
 ## 🔁 Fluxo Completo
 
 | Ação do Celular          | Ação do Sonoff    |
-|--------------------------|-------------------|
-| Recebe chamada 📲        | Liga sirene 🚨   |
+| ------------------------ | ----------------- |
+| Recebe chamada 📲        | Liga sirene 🚨    |
 | Atende / Rejeita / Perde | Desliga sirene 📴 |
 
 ## 📝 Considerações Finais
@@ -141,4 +141,4 @@ Acesse a interface web do Tasmota e clique em **Toggle**.
 - Confira bem as ligações no flash
 - Pode acionar outros dispositivos também!
 
-💡 *Este projeto foi construído e documentado com base em uma necessidade real, para automação prática e útil no dia a dia.* 🚀
+💡 _Este projeto foi construído e documentado com base em uma necessidade real, para automação prática e útil no dia a dia._ 🚀

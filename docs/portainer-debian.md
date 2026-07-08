@@ -85,6 +85,7 @@ sudo mkdir -p /srv/portainer
 Este comando irá baixar e executar o Portainer. A imagem `portainer/portainer-ce:latest` é multi-arquitetura e funcionará automaticamente.
 
 **Portas mapeadas:**
+
 - `9000:9000` → Interface web via **HTTP**
 - `9443:9443` → Interface web via **HTTPS** (certificado autoassinado)
 - `8000:8000` → Comunicação com agentes Portainer (Edge Agents)
@@ -107,9 +108,9 @@ Após alguns segundos, o Portainer estará no ar e pronto para ser configurado.
 
 1.  Abra seu navegador de internet.
 2.  Acesse o endereço: `http://IP_DO_SEU_DEBIAN:9000`
-      * (Substitua `IP_DO_SEU_DEBIAN` pelo IP do seu servidor).
+    - (Substitua `IP_DO_SEU_DEBIAN` pelo IP do seu servidor).
 3.  Na primeira tela, crie seu usuário administrador e senha.
-      * Se preferir acessar via HTTPS, use `https://IP_DO_SEU_DEBIAN:9443`. Nesse caso, o navegador exibirá um aviso de certificado autoassinado — clique em "Avançado" e "Aceitar o risco".
+    - Se preferir acessar via HTTPS, use `https://IP_DO_SEU_DEBIAN:9443`. Nesse caso, o navegador exibirá um aviso de certificado autoassinado — clique em "Avançado" e "Aceitar o risco".
 4.  Selecione a opção "Gerenciar o ambiente Docker local" e clique em "Conectar".
 
 Pronto! Seu ambiente Docker e Portainer está 100% operacional. 🚀

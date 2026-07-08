@@ -120,7 +120,7 @@ Isso força um `docker pull` da imagem oficial antes de recriar o container.
 Em vez de `:latest`, fixe a tag de versão no YAML (veja as versões disponíveis em [Docker Hub → Tags](https://hub.docker.com/r/akitaonrails/ai-memory/tags)):
 
 ```yaml
-    image: akitaonrails/ai-memory:0.9.0
+image: akitaonrails/ai-memory:0.9.0
 ```
 
 Para atualizar, edite a stack, **bump a tag** (ex.: `0.9.0` → `0.10.0`) e dê **Update the stack**. Como a tag mudou, o Portainer puxa a imagem nova de forma determinística — e você sempre sabe qual versão está rodando.

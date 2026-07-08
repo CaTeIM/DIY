@@ -5,6 +5,7 @@
 Sistema de proteção ativa usando uma malha eletrificada de 110V/127V. O controle é feito via Sonoff RE5V1C (com Tasmota) e um sensor PIR DYP-ME003 (ou HC-SR501). O acionamento é automatizado localmente (Edge) e o agendamento de ativação/desativação é feito via Home Assistant.
 
 **Recursos de Segurança:**
+
 - Lâmpada incandescente em série para limitar corrente (evita curto-circuito fatal e desarme de disjuntor).
 - Regra de loop restritivo: Choque máximo de 5s seguido de pausa obrigatória de 5s.
 - Watchdog automático: se a lógica travar, o Tasmota reinicia sozinho após 8s.
@@ -25,12 +26,14 @@ Sistema de proteção ativa usando uma malha eletrificada de 110V/127V. O contro
 ### 🔎 Identificação dos Pinos
 
 **Sonoff RE5V1C**
+
 - GND
 - 3V3 (⚠️ Nunca use 5V durante o flash!)
 - ERX
 - ETX
 
 **CH341A Pro**
+
 - GND
 - 3.3V
 - TXD
@@ -38,12 +41,12 @@ Sistema de proteção ativa usando uma malha eletrificada de 110V/127V. O contro
 
 ### 🔗 Ligações
 
-| CH341A | Sonoff RE5V1C  |
-|--------|----------------|
-| GND    | GND            |
-| 3.3V   | 3V3            |
-| TXD    | ERX            |
-| RXD    | ETX            |
+| CH341A | Sonoff RE5V1C |
+| ------ | ------------- |
+| GND    | GND           |
+| 3.3V   | 3V3           |
+| TXD    | ERX           |
+| RXD    | ETX           |
 
 ### 🕹️ Modo Bootloader
 
@@ -88,7 +91,7 @@ Sistema de proteção ativa usando uma malha eletrificada de 110V/127V. O contro
    ```
 7. Em **Configuration > Configure Module**, defina o pino do sensor (ele continua selecionado como Generic):
    - `GPIO4 (User)` (Pino **RX** físico da placa): `Switch1`
-   *(O GPIO12 de Relay já estará configurado pelo template acima)*
+     _(O GPIO12 de Relay já estará configurado pelo template acima)_
 8. Em **Configuration > Configure MQTT**:
    - Configure os dados do seu broker Mosquitto (Host, Porta, Usuário, Senha).
    - Topic: `armadilha_choque`
@@ -104,12 +107,14 @@ Sistema de proteção ativa usando uma malha eletrificada de 110V/127V. O contro
    SerialLog 0
    Mem1 0
    ```
+
    - `SwitchMode1 1` = modo Follow (o Switch acompanha o sinal HIGH/LOW do PIR)
    - `SetOption114 1` = desacopla o Switch do Relay (o PIR não aciona o relé diretamente — quem aciona é a Rule)
 
 ## 🧱 Montagem Física
 
 ### 1. O Cérebro (5V)
+
 - Ligar a Fonte 5V nos pinos `5V` e `GND` do Sonoff.
 - Ligar o DYP-ME003:
   - `VCC` -> `5V` do Sonoff (o sensor aceita 4.5V~20V)
@@ -118,19 +123,22 @@ Sistema de proteção ativa usando uma malha eletrificada de 110V/127V. O contro
 
 > [!IMPORTANT]
 > **Calibração obrigatória do DYP-ME003 antes de usar:**
-> 
+>
 > **Jumper de modo (entre os trimpots):**
+>
 > - ⚠️ Posição **`L` (Single Trigger)** — **USE ESTA**. Gera um pulso HIGH por detecção e retorna a LOW. O Tasmota precisa capturar a transição `0→1` para a Rule disparar.
 > - ❌ Posição `H` (Repeatable): mantém HIGH enquanto houver movimento contínuo. O sinal nunca cai e a Rule **nunca re-dispara**.
-> 
+>
 > **Trimpot TX (Delay) — gire totalmente para a ESQUERDA (mínimo, ~5s).**
+>
 > - Se estiver no máximo (~300s), o sinal fica HIGH por 5 minutos após cada detecção, bloqueando novos disparos.
-> 
+>
 > **Trimpot SX (Sensibilidade) — ajuste conforme o alcance desejado (3m a ~7m).**
-> 
+>
 > **Aguarde 30-60 segundos** após energizar o sensor antes de iniciar testes. O DYP-ME003 precisa se estabilizar.
 
 ### 2. O Músculo (110V) e a Malha
+
 A lâmpada atua como um resistor de proteção. Se a malha fechar curto contínuo, a lâmpada apenas acende, protegendo o relé do Sonoff (que suporta pouca amperagem) e a rede da casa.
 
 1. Pegue a Fase da tomada e ligue em um dos lados do bocal da lâmpada.
@@ -150,11 +158,11 @@ Rule1 ON Switch1#state=1 DO IF (%mem1%==0) Mem1 1; Power1 1; RuleTimer1 5 ENDIF 
 Rule1 1
 ```
 
-*Funcionamento: Quando o PIR detecta movimento (`Switch1#state=1`) e o sistema está pronto (`Mem1=0`), ele trava (`Mem1=1`), aciona o relé (choque de 5s via `PulseTime1 50`) e inicia o timer de cooldown de 5s. Após os 5s, o sistema destrava (`Mem1=0`). Qualquer nova detecção durante o cooldown é ignorada pela condição `IF`.*
+_Funcionamento: Quando o PIR detecta movimento (`Switch1#state=1`) e o sistema está pronto (`Mem1=0`), ele trava (`Mem1=1`), aciona o relé (choque de 5s via `PulseTime1 50`) e inicia o timer de cooldown de 5s. Após os 5s, o sistema destrava (`Mem1=0`). Qualquer nova detecção durante o cooldown é ignorada pela condição `IF`._
 
-*A cláusula `ON System#Boot DO Mem1 0 ENDON` garante que o `Mem1` sempre reinicia em `0` após queda de energia ou reboot, evitando travamento permanente do sistema.*
+_A cláusula `ON System#Boot DO Mem1 0 ENDON` garante que o `Mem1` sempre reinicia em `0` após queda de energia ou reboot, evitando travamento permanente do sistema._
 
-*Ciclo completo: **Detecção PIR → 5s choque → 5s pausa → pronto***
+_Ciclo completo: **Detecção PIR → 5s choque → 5s pausa → pronto**_
 
 ### Watchdog (Rule2)
 
@@ -165,7 +173,7 @@ Rule2 ON Switch1#state=1 DO RuleTimer2 8 ENDON ON Rules#Timer=2 DO IF (%mem1%==1
 Rule2 1
 ```
 
-*Lógica: Em toda detecção de movimento, um timer de 8s é iniciado. Quando disparar, se `Mem1` ainda for `1` (Rule1 não resetou no prazo esperado de 5s), reinicia o dispositivo. Se `Mem1` for `0` (fluxo normal), nada acontece.*
+_Lógica: Em toda detecção de movimento, um timer de 8s é iniciado. Quando disparar, se `Mem1` ainda for `1` (Rule1 não resetou no prazo esperado de 5s), reinicia o dispositivo. Se `Mem1` for `0` (fluxo normal), nada acontece._
 
 ## 🏠 Integração Home Assistant (Agendamento)
 
