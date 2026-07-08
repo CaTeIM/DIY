@@ -1,4 +1,4 @@
-# 🔀 Reverse Proxy (Caddy + forward-auth do Authelia)
+# 🔀 Caddy (Reverse Proxy + forward-auth do Authelia)
 
 Um **Caddy compartilhado** que fica na frente dos seus apps: roteia por hostname e, nos hosts protegidos, exige login no **[Authelia](./authelia.md)** antes de deixar passar (padrão *forward-auth*). É **uma stack só para todos os projetos** — cada app novo só entra na rede `caddy-net` e ganha um bloco no Caddyfile.
 
@@ -8,7 +8,7 @@ O `cloudflared` (bare-metal) passa a apontar **todos** os hostnames para este Ca
 
 **Pré-requisito:** Docker + Portainer ([./portainer-debian.md](./portainer-debian.md)) e a stack **[authelia](./authelia.md)** no ar.
 
-A stack pronta está em [`assets/stacks/reverse-proxy.yml`](../assets/stacks/reverse-proxy.yml) e a config em [`assets/configs/reverse-proxy-Caddyfile`](../assets/configs/reverse-proxy-Caddyfile).
+A stack pronta está em [`assets/stacks/caddy.yml`](../assets/stacks/caddy.yml) e a config em [`assets/configs/caddy-Caddyfile`](../assets/configs/caddy-Caddyfile).
 
 ## Topologia
 
@@ -27,20 +27,20 @@ Só o Caddy publica porta no host (presa em `127.0.0.1:8080`). Ele cruza **duas 
 ```bash
 docker network create caddy-net       # Caddy <-> apps
 docker network create auth-net   # Caddy <-> Authelia/lldap
-sudo mkdir -p /srv/reverse-proxy/{data,config}
+sudo mkdir -p /srv/caddy/{data,config}
 ```
 
-Grave o Caddyfile em `/srv/reverse-proxy/Caddyfile` (conteúdo de [`assets/configs/reverse-proxy-Caddyfile`](../assets/configs/reverse-proxy-Caddyfile)). Ajuste os hostnames (`*.selflabs.org`) para o seu domínio.
+Grave o Caddyfile em `/srv/caddy/Caddyfile` (conteúdo de [`assets/configs/caddy-Caddyfile`](../assets/configs/caddy-Caddyfile)). Ajuste os hostnames (`*.selflabs.org`) para o seu domínio.
 
 > ⚠️ Suba a stack **[authelia](./authelia.md)** primeiro (ela cria/usa a `auth-net`). Se a `auth-net` não existir, o deploy do Caddy falha com `network auth-net not found`.
 
 ## Parte 2: Deploy no Portainer
 
-1. Portainer → **Stacks** → **Add Stack** → Nome: `reverse-proxy`.
-2. Cole o YAML de [`assets/stacks/reverse-proxy.yml`](../assets/stacks/reverse-proxy.yml) no editor.
+1. Portainer → **Stacks** → **Add Stack** → Nome: `caddy`.
+2. Cole o YAML de [`assets/stacks/caddy.yml`](../assets/stacks/caddy.yml) no editor.
 3. **Deploy the stack**.
 
-> Via SSH (alternativa): `docker compose -f reverse-proxy.yml up -d`.
+> Via SSH (alternativa): `docker compose -f caddy.yml up -d`.
 
 ## Parte 3: Exposição via Cloudflare Tunnel (sem IP fixo)
 
@@ -79,7 +79,7 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
        external: true
    ```
    e troque `ports:` por `expose:` (não publique porta no host).
-2. **Adicione um bloco no Caddyfile** (`/srv/reverse-proxy/Caddyfile`):
+2. **Adicione um bloco no Caddyfile** (`/srv/caddy/Caddyfile`):
    ```caddy
    http://novo.selflabs.org {
        import authelia
@@ -92,7 +92,7 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
 
 ## Parte 5: Atualizar
 
-- **Imagem do Caddy:** Portainer → stack `reverse-proxy` → **Re-pull image and redeploy**.
+- **Imagem do Caddy:** Portainer → stack `caddy` → **Re-pull image and redeploy**.
 - **Só o Caddyfile mudou:** `docker exec caddy caddy reload --config /etc/caddy/Caddyfile` (recarrega quente, sem derrubar conexões).
 
 ## Troubleshooting
@@ -109,7 +109,7 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
 
 - O Caddy é **infra compartilhada**: um só para todos os apps. Não crie um por projeto.
 - `admin off` no Caddyfile: sem API de admin exposta dentro do container.
-- Precisa de Caddy **v2.7+** (o `private_ranges`/`trusted_proxies_strict`); a tag `caddy:2-alpine` atende e é multi-arch (roda no Orange Pi 5).
+- Precisa de Caddy **v2.7+** (o `private_ranges`/`trusted_proxies_strict`); a tag `caddy:2-alpine` atende e é multi-arch (roda em x86_64 e ARM).
 
 ## Acessos
 

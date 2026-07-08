@@ -1,12 +1,12 @@
 # ============================================================================
-# reverse-proxy — Caddy compartilhado (roteia por hostname + forward-auth).
-# Guia: ../../docs/reverse-proxy.md   Config: ../configs/reverse-proxy-Caddyfile
+# caddy — Caddy compartilhado (roteia por hostname + forward-auth).
+# Guia: ../../docs/caddy.md   Config: ../configs/caddy-Caddyfile
 #
-# Pré-requisitos (uma vez, via SSH no Orange Pi):
+# Pré-requisitos (uma vez, via SSH no host):
 #   docker network create caddy-net                # rede Caddy <-> apps
 #   docker network create auth-net            # rede Caddy <-> Authelia/lldap
-#   sudo mkdir -p /srv/reverse-proxy/{data,config}
-#   # grave o Caddyfile em /srv/reverse-proxy/Caddyfile
+#   sudo mkdir -p /srv/caddy/{data,config}
+#   # grave o Caddyfile em /srv/caddy/Caddyfile
 #
 # Único serviço publicado no host (preso ao loopback p/ o cloudflared). Ele
 # cruza as duas redes: fala com os apps (caddy-net) e com o Authelia/lldap (auth-net).
@@ -25,9 +25,9 @@ services:
       # única porta publicada; o cloudflared (bare-metal) aponta aqui.
       - "127.0.0.1:8080:8080"
     volumes:
-      - /srv/reverse-proxy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - /srv/reverse-proxy/data:/data         # estado interno do Caddy
-      - /srv/reverse-proxy/config:/config
+      - /srv/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /srv/caddy/data:/data         # estado interno do Caddy
+      - /srv/caddy/config:/config
     networks:
       - caddy-net                                  # alcança os apps (stirling-pdf, ...)
       - auth-net                              # alcança authelia + lldap

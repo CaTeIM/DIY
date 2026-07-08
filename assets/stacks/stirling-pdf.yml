@@ -21,11 +21,22 @@ services:
       SYSTEM_FILEUPLOADLIMIT: "100MB"           # teto de upload (protege a placa); "" = sem limite
       SYSTEM_ENABLEANALYTICS: "false"           # desliga telemetria
       METRICS_ENABLED: "true"                   # NÃO desligar: o healthcheck usa /api/v1/info/status
-      # --- Login DESATIVADO (equivalente oficial ao flavor core, sem buildar nada) ---
-      # Desliga o módulo proprietário de login/usuários -> app ABERTO e SEM o limite
-      # de 5 usuários. Quem autentica é o Authelia na frente (../../docs/authelia.md).
-      # (Se numa versão futura este toggle mudar, o equivalente é SECURITY_ENABLELOGIN: "false".)
-      DISABLE_ADDITIONAL_FEATURES: "true"
+      # --- Login nativo DESATIVADO (app aberto atrás do Authelia) ------------------
+      # Receita OFICIAL da v2 para rodar SEM autenticação (docs.stirlingpdf.com ->
+      # Configuration/System and Security -> "Running Without Authentication", Opção 1):
+      # é a DUPLA abaixo, não uma flag só —
+      #   * SECURITY_ENABLELOGIN=false        desliga login/contas: sem tela de login,
+      #                                       sem /api/v1/auth/*, sem teto de 5 usuários.
+      #   * DISABLE_ADDITIONAL_FEATURES=false OBRIGATÓRIO p/ o enableLogin ser respeitado
+      #     (doc: "enableLogin só disponível com DISABLE_ADDITIONAL_FEATURES=false").
+      # Não habilita nada pago: as features `enterprise` seguem travadas por licença.
+      # Quem autentica é o Authelia na frente (../../docs/authelia.md).
+      #
+      # ⚠️ v1->v2: NÃO use DISABLE_ADDITIONAL_FEATURES=true para "abrir" o app. Na
+      # v2.14.0 essa flag só desativa o grupo `enterprise`; o login continua ATIVO
+      # (cria admin + banco + trava de 5) e você cai em login DUPLO com o Authelia.
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      SECURITY_ENABLELOGIN: "false"
       # Esconde a tela de CONFIGURAÇÕES da UI para todos. Você administra pelo
       # settings.yml em /srv/pdf/config + env do Portainer = config só com quem
       # tem acesso ao host (você).

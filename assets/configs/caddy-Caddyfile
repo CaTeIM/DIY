@@ -1,8 +1,8 @@
 # ============================================================================
 # Caddyfile — reverse proxy compartilhado + forward-auth do Authelia.
-# Guia: ../../docs/reverse-proxy.md   Stack: ../stacks/reverse-proxy.yml
+# Guia: ../../docs/caddy.md   Stack: ../stacks/caddy.yml
 #
-# Grave em /srv/reverse-proxy/Caddyfile no host.
+# Grave em /srv/caddy/Caddyfile no host.
 # O cloudflared (bare-metal) aponta TODOS os hostnames para http://localhost:8080.
 # ============================================================================
 

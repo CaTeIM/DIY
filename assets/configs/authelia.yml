@@ -1,5 +1,5 @@
 # ============================================================================
-# Authelia — configuration.yml  (selflabs.org / Orange Pi 5 arm64)
+# Authelia — configuration.yml  (selflabs.org)
 # Guia: ../../docs/authelia.md   Stack: ../stacks/authelia.yml
 #
 # Segredos NÃO ficam aqui: são injetados pelo mecanismo NATIVO de env do
@@ -56,20 +56,20 @@ authentication_backend:
       group_name: 'cn'
       member_of: 'memberOf'
 
-# Nega por padrão; protege os apps com fator único (usuário/senha do lldap) e
-# libera o próprio portal. Para exigir 2FA num app, troque para 'two_factor'.
+# Nega por padrão; exige 2FA (senha do lldap + TOTP) nos apps e libera só o portal.
+# Para um app menos sensível, troque 'two_factor' por 'one_factor' (só senha).
 access_control:
   default_policy: 'deny'
   rules:
     - domain: 'auth.selflabs.org'
       policy: 'bypass'
     - domain: 'users.selflabs.org'
-      policy: 'one_factor'
+      policy: 'two_factor'
     - domain: 'pdf.selflabs.org'
       policy: 'one_factor'
     # Exemplo p/ restringir a um grupo do lldap:
     # - domain: 'pdf.selflabs.org'
-    #   policy: 'one_factor'
+    #   policy: 'two_factor'
     #   subject: ['group:admins']
 
 # Sessão em memória (SEM Redis). O cookie no domínio-pai selflabs.org faz um
@@ -91,14 +91,24 @@ storage:
   local:
     path: '/config/db.sqlite3'
 
-# Notificador em arquivo (sem SMTP). E-mails de reset/registro 2FA são escritos
-# aqui; para completá-los, leia o arquivo:
-#   docker exec authelia cat /config/notification.txt
+# Notificador por e-mail (SMTP via Resend). Entrega os links de reset de senha e
+# os códigos de verificação do registro de 2FA. A senha (API key `re_...` do
+# Resend) vem da env AUTHELIA_NOTIFIER_SMTP_PASSWORD (ver a stack).
 notifier:
-  disable_startup_check: false
-  filesystem:
-    filename: '/config/notification.txt'
+  # O startup check faz um probe MAIL FROM/RCPT no boot; alguns relays (Resend)
+  # podem recusá-lo e derrubar o Authelia. Desligado -> o SMTP é exercitado no
+  # 1º uso real (reset/registro de 2FA). Teste manualmente após subir.
+  disable_startup_check: true
+  smtp:
+    address: 'submission://smtp.resend.com:587'   # 587 = STARTTLS (scheme submission)
+    username: 'resend'                            # usuário literal do Resend
+    sender: 'Self-Labs <no-reply@selflabs.org>'   # remetente em domínio VERIFICADO no Resend
+    identifier: 'selflabs.org'                    # HELO/EHLO
+    subject: '[Self-Labs] {title}'
 
+# 2FA por TOTP (Google Authenticator, Aegis, 2FAS, etc.). O usuário registra o
+# app no portal auth.selflabs.org; o código de verificação do registro sai pelo
+# SMTP acima. WebAuthn/passkeys é opcional (bloco `webauthn:`), não usado aqui.
 totp:
   issuer: 'selflabs.org'
   period: 30
