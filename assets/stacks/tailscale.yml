@@ -1,0 +1,61 @@
+# ============================================================================
+# tailscale — HUB que publica os seus serviços internos na tailnet via
+# Tailscale Serve (HTTPS), sem expor porta no host, sem Cloudflare/Authelia.
+# UM único node serve VÁRIOS projetos, distinguindo por PORTA (443, 8443, ...).
+# Só os seus devices logados na tailnet alcançam — é uma rota privada.
+#
+# Guia: ../../docs/tailscale.md   Serve config: ../configs/tailscale-serve.json
+#
+# Serviços expostos: definidos no serve.json (../configs/tailscale-serve.json).
+# Hoje: 443 -> stirling-pdf:8080 (app desktop do Stirling, ver docs/stirling-pdf.md).
+#
+# ➕ Expor MAIS um serviço: 1) adicione a porta+backend no serve.json;
+#    2) coloque este container na REDE do serviço-alvo (lista `networks` abaixo).
+#
+# Pré-requisitos (uma vez, via SSH no host):
+#   sudo mkdir -p /srv/tailscale/{state,config}   # o container roda como root; sem chown
+#   # grave o serve.json em /srv/tailscale/config/serve.json (../configs/tailscale-serve.json)
+#   # conta Tailscale + MagicDNS + HTTPS + Auth key -> ver docs/tailscale.md (Partes 1-2)
+# ============================================================================
+
+services:
+  tailscale:
+    image: tailscale/tailscale:latest         # multi-arch (inclui arm64)
+    container_name: tailscale
+    hostname: selflabs                        # nome do node -> selflabs.<tailnet>.ts.net
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: America/Sao_Paulo
+      # Auth key do admin console (segredo; aba Environment variables do Portainer).
+      TS_AUTHKEY: "${TS_AUTHKEY}"
+      # Persiste a identidade do node (senão re-registra a cada boot).
+      TS_STATE_DIR: /var/lib/tailscale
+      # Userspace networking: dispensa /dev/net/tun e NET_ADMIN. O `serve` (proxy
+      # HTTP) funciona assim, e mantém o container sem privilégios extras.
+      TS_USERSPACE: "true"
+      # Publica TODOS os backends do serve.json na tailnet (HTTPS por porta).
+      TS_SERVE_CONFIG: /config/serve.json
+      # Funnel (exposição pública) fica DESLIGADO por padrão — NÃO defina TS_FUNNEL.
+    volumes:
+      - /srv/tailscale/state:/var/lib/tailscale
+      - /srv/tailscale/config:/config         # contém o serve.json
+    networks:
+      - caddy-net                             # alcança stirling-pdf:8080 (e outros apps daqui)
+      # ➕ para expor um serviço que vive em OUTRA rede, adicione-a aqui:
+      # - grafana-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  caddy-net:
+    name: caddy-net
+    external: true                            # criada pela stack caddy (docker network create caddy-net)
+  # ➕ declare aqui cada rede externa extra referenciada acima:
+  # grafana-net:
+  #   name: grafana-net
+  #   external: true

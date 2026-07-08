@@ -32,6 +32,7 @@ Aqui estão os projetos documentados até agora. Cada link contém um `README` c
 | **[🖥️ RustDesk Headless no Debian](./docs/rustdesk-headless.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
 | **[🚨 Sirene Ativada por Chamada](./docs/sirene-por-chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
 | **[📄 Stirling-PDF (oficial, sem login + Authelia)](./docs/stirling-pdf.md)** | Editor de PDF self-hosted com 50+ ferramentas (juntar, dividir, converter, OCR pt-BR, assinar, comprimir). Imagem oficial com login desativado (sem limite de usuários), autenticada pelo Authelia na frente. | `Stirling-PDF`, `Docker`, `Spring Boot`, `Authelia`, `OCR` |
+| **[🔗 Tailscale (acesso privado via tailnet)](./docs/tailscale.md)** | Hub Tailscale que publica os seus serviços internos na tailnet (WireGuard) via Serve HTTPS — rota privada, sem Cloudflare nem Authelia. Um node, vários serviços por porta (ex.: app desktop do Stirling). | `Tailscale`, `WireGuard`, `Docker`, `VPN` |
 
 ## 🛠️ Tecnologias no DNA do Repo
 
