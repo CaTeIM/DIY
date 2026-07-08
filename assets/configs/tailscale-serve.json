@@ -1,15 +1,11 @@
 {
   "TCP": {
-    "443": {
-      "HTTPS": true
-    }
+    "443": { "HTTPS": true }
   },
   "Web": {
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
-        "/": {
-          "Proxy": "http://stirling-pdf:8080"
-        }
+        "/": { "Proxy": "https+insecure://host.docker.internal:9443" }
       }
     }
   }
