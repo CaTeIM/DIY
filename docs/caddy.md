@@ -87,13 +87,13 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
    }
    ```
    Remova o `import authelia` se o app **não** precisar de login.
-3. **Recarregue o Caddy** (sem downtime): `docker exec caddy caddy reload --config /etc/caddy/Caddyfile`.
+3. **Recarregue o Caddy:** `docker restart caddy` (~2s). ⚠️ O `caddy reload` **não** funciona aqui — o `admin off` desliga a API de admin na `:2019`, então o restart (que relê o Caddyfile no boot) é o caminho.
 4. **cloudflared:** publique `novo.selflabs.org → http://localhost:8080`.
 
 ## Parte 5: Atualizar
 
 - **Imagem do Caddy:** Portainer → stack `caddy` → **Re-pull image and redeploy**.
-- **Só o Caddyfile mudou:** `docker exec caddy caddy reload --config /etc/caddy/Caddyfile` (recarrega quente, sem derrubar conexões).
+- **Só o Caddyfile mudou:** `docker restart caddy` (relê o Caddyfile em ~2s). O `caddy reload` falha por causa do `admin off` (sem API na `:2019`).
 
 ## Troubleshooting
 
@@ -103,7 +103,7 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
 | `502 Bad Gateway` num app              | App fora da rede `caddy-net` ou nome de container errado | Ponha o app na `caddy-net`; o `reverse_proxy` usa o `container_name` exato                           |
 | `network caddy-net/auth-net not found` | Rede externa não criada                                  | `docker network create caddy-net` / `auth-net` antes do deploy                                       |
 | UI do lldap abre sem pedir login       | Faltou `import authelia` no bloco `users.`               | Adicione `import authelia` e recarregue                                                              |
-| Mudou o Caddyfile e não aplicou        | Redeploy reusa cache                                     | `docker exec caddy caddy reload ...` ou Re-pull                                                      |
+| Mudou o Caddyfile e não aplicou        | Precisa reler o arquivo                                  | `docker restart caddy` (o `caddy reload` falha: `admin off` desliga a API `:2019`)                    |
 
 ## Notas Importantes
 

@@ -56,6 +56,14 @@ http://pdf.selflabs.org {
 	reverse_proxy stirling-pdf:8080
 }
 
+# --- Portainer (login PRÓPRIO; SEM Authelia) --------------------------------
+# NÃO usa `import authelia`: o forward-auth barraria as chamadas programáticas
+# (webhook do GitHub = POST sem sessão de browser -> 302 login -> quebra).
+# O Portainer se protege com o login dele; os webhooks usam token na URL.
+http://portainervps.selflabs.org {
+	reverse_proxy portainer:9000
+}
+
 # --- Modelo para adicionar um app novo --------------------------------------
 # 1) o app entra na rede externa `caddy-net`; 2) copie o bloco abaixo; 3) no
 #    cloudflared publique novo.selflabs.org -> http://localhost:8080.

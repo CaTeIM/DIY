@@ -5,7 +5,7 @@
   "Web": {
     "${TS_CERT_DOMAIN}:443": {
       "Handlers": {
-        "/": { "Proxy": "https+insecure://host.docker.internal:9443" }
+        "/": { "Proxy": "http://portainer:9000" }
       }
     }
   }
