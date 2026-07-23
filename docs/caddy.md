@@ -90,6 +90,28 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
 3. **Recarregue o Caddy:** `docker restart caddy` (~2s). ⚠️ O `caddy reload` **não** funciona aqui — o `admin off` desliga a API de admin na `:2019`, então o restart (que relê o Caddyfile no boot) é o caminho.
 4. **cloudflared:** publique `novo.selflabs.org → http://localhost:8080`.
 
+> 💡 **Proteger apenas um trecho do app.** Quando só uma parte precisa de login (ex.:
+> `radar.selflabs.org`, onde o `/admin` é privado mas a landing, os shortlinks e os
+> webhooks são públicos), **não** use `import authelia` no host inteiro: passe um
+> **matcher** ao `forward_auth`.
+>
+> ```caddy
+> http://radar.selflabs.org {
+>     @admin path /admin /admin/*
+>     forward_auth @admin authelia:9091 {
+>         uri /api/authz/forward-auth
+>         copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+>     }
+>     reverse_proxy radar-backend:8082
+> }
+> ```
+>
+> ⚠️ Use `path /admin /admin/*`, **nunca** `path /admin*`: este último casaria também
+> `/administrador` e qualquer outro path com o mesmo prefixo textual.
+>
+> A vantagem sobre liberar o resto com `bypass` no Authelia é que webhooks e links
+> públicos **não** pagam round-trip ao Authelia, nem caem junto se ele ficar indisponível.
+
 ## Parte 5: Atualizar
 
 - **Imagem do Caddy:** Portainer → stack `caddy` → **Re-pull image and redeploy**.

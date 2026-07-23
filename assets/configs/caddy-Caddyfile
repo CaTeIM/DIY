@@ -64,10 +64,46 @@ http://portainervps.selflabs.org {
 	reverse_proxy portainer:9000
 }
 
+# --- CriarViral (público; SEM Authelia) --------------------------------------
+# SaaS público com login próprio (Auth.js). NÃO usa `import authelia`: o app
+# autentica os usuários dele, e os webhooks do Mercado Pago (POST sem sessão
+# de browser) precisam chegar direto. Stack: ../stacks/criarviral.yml
+http://criarviral.selflabs.org {
+	reverse_proxy criarviral:3000
+}
+
+# --- radar (SOMENTE /admin protegido) ---------------------------------------
+# Diferente dos outros hosts, aqui o forward-auth recebe um MATCHER em vez de
+# valer para o host inteiro: a landing, os shortlinks (/r/:code, /whats, /tele),
+# o /webhook/evolution e as rotas /internal/* (chamadas pelo n8n, já protegidas
+# no app por x-internal-token) precisam continuar abertos e NÃO podem depender
+# de o Authelia estar de pé.
+# Use `path /admin /admin/*` e NUNCA `path /admin*`: este último casaria também
+# /administrador e qualquer outro path com o mesmo prefixo textual.
+http://radar.selflabs.org {
+	@admin path /admin /admin/*
+	forward_auth @admin authelia:9091 {
+		uri /api/authz/forward-auth
+		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+	}
+	reverse_proxy radar-backend:8082
+}
+
 # --- Modelo para adicionar um app novo --------------------------------------
 # 1) o app entra na rede externa `caddy-net`; 2) copie o bloco abaixo; 3) no
 #    cloudflared publique novo.selflabs.org -> http://localhost:8080.
 # http://novo.selflabs.org {
 # 	import authelia
+# 	reverse_proxy nome-do-container:porta
+# }
+#
+# Para proteger APENAS um trecho do app (o resto continua público), passe um
+# matcher ao forward_auth em vez de usar `import authelia` no host inteiro:
+# http://novo.selflabs.org {
+# 	@privado path /admin /admin/*
+# 	forward_auth @privado authelia:9091 {
+# 		uri /api/authz/forward-auth
+# 		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+# 	}
 # 	reverse_proxy nome-do-container:porta
 # }

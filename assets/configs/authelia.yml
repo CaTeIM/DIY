@@ -67,6 +67,14 @@ access_control:
       policy: 'two_factor'
     - domain: 'pdf.selflabs.org'
       policy: 'one_factor'
+    # Só o painel do radar exige login; a landing, os shortlinks e os webhooks
+    # seguem públicos. O matcher no Caddyfile garante que o Authelia nem seja
+    # consultado fora de /admin, então o `resources` aqui é defesa em
+    # profundidade: se aquele matcher for afrouxado, isto ainda segura.
+    - domain: 'radar.selflabs.org'
+      resources:
+        - '^/admin([/?].*)?$'
+      policy: 'one_factor'
     # Exemplo p/ restringir a um grupo do lldap:
     # - domain: 'pdf.selflabs.org'
     #   policy: 'two_factor'
