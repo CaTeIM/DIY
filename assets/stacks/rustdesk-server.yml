@@ -1,0 +1,44 @@
+services:
+  hbbs:
+    container_name: rustdesk-hbbs
+    image: rustdesk/rustdesk-server:1.1.16   # imagem multi-arch: puxa arm64 no Oracle Ampere A1
+    command: hbbs -r ${RUSTDESK_RELAY_HOST}:21117 -k _
+    environment:
+      - TZ=America/Sao_Paulo
+    ports:
+      - "21115:21115"        # TCP  teste de tipo de NAT
+      - "21116:21116"        # TCP  hole punching / conexão
+      - "21116:21116/udp"    # UDP  registro de ID e heartbeat  (PRECISA de TCP E UDP)
+      - "21118:21118"        # TCP  WebSocket do hbbs (web client; só se for usar navegador)
+    volumes:
+      - /srv/rustdesk/data:/root   # id_ed25519(.pub) + db_v2.sqlite3 (workdir da imagem = /root)
+    networks: [rustdesk-net]
+    security_opt: [no-new-privileges:true]
+    depends_on: [hbbr]
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  hbbr:
+    container_name: rustdesk-hbbr
+    image: rustdesk/rustdesk-server:1.1.16
+    command: hbbr -k _
+    environment:
+      - TZ=America/Sao_Paulo
+    ports:
+      - "21117:21117"        # TCP  relay
+      - "21119:21119"        # TCP  WebSocket do hbbr (web client; só se for usar navegador)
+    volumes:
+      - /srv/rustdesk/data:/root
+    networks: [rustdesk-net]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+networks:
+  rustdesk-net:
+    name: rustdesk-net
+    driver: bridge
