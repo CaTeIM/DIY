@@ -2,7 +2,7 @@
 
 # 🚀 Soluções DIY na Prática
 
-Um repositório para guardar e compartilhar projetos de automação e soluções tecnológicas "faça você mesmo" (DIY). A ideia aqui é resolver problemas do dia a dia de forma criativa e de baixo custo, sem frescura. 
+Um repositório para guardar e compartilhar projetos de automação e soluções tecnológicas "faça você mesmo" (DIY). A ideia aqui é resolver problemas do dia a dia de forma criativa e de baixo custo, sem frescura.
 
 Se dá pra automatizar com um módulo `low-cost`, um sensor e um pouco de código, o lugar é aqui! 👨‍💻🔧
 
@@ -10,44 +10,45 @@ Se dá pra automatizar com um módulo `low-cost`, um sensor e um pouco de códig
 
 Aqui estão os projetos documentados até agora. Cada link contém um `README` com o passo a passo completo.
 
-| Projeto | Descrição Resumida | Tecnologias Principais |
-| :--- | :--- | :--- |
-| **[🏦 Actual Budget (Docker)](./docs/actual-budget.md)** | Gerenciador financeiro pessoal self-hosted com envelope budgeting e importação de CSV (Mobills). | `Actual Budget`, `Docker`, `SQLite`, `PowerShell` |
-| **[🛡️ AdGuard Home (Docker + Cloudflare Tunnel)](./docs/adguard.md)** | DNS server com bloqueio de ads e trackers para toda a rede. DoH externo via Cloudflare Tunnel e perfil iOS. | `AdGuard Home`, `Docker`, `Cloudflare Tunnel`, `DNS-over-HTTPS` |
-| **[🧠 AI-Memory (AkitaOnRails)](./docs/ai-memory.md)** | Memória persistente para o Claude Code via arquitetura cliente-servidor: backend Docker no Orange Pi + CLI Rust no Windows interceptando hooks. | `Docker`, `Rust`, `Gemini API`, `MCP`, `PowerShell` |
-| **[⚡ Armadilha de Choque Automática](./docs/armadilha-choque.md)** | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `Home Assistant` |
-| **[🔐 Authelia + lldap (SSO self-hosted)](./docs/authelia.md)** | Login SSO com usuários ilimitados e MFA para qualquer app, via forward-auth. lldap dá UI web de gestão de usuários. Sem Redis/Postgres (SQLite). | `Authelia`, `lldap`, `Docker`, `LDAP`, `SQLite` |
-| **[💧 Bomba d'ÁGua Automática](./docs/bomba-dagua.md)** | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto. | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `TP-Link CPE` |
-| **[🔀 Caddy (Reverse Proxy + forward-auth)](./docs/caddy.md)** | Caddy compartilhado que roteia por hostname e impõe login (Authelia) nos apps protegidos. Base para reusar auth em vários projetos. | `Caddy`, `Docker`, `Cloudflare Tunnel`, `forward-auth` |
-| **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./docs/cicd-github-actions.md)** | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.). | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian` |
-| **[🐳 Docker + Portainer no Debian](./docs/portainer-debian.md)** | Guia para instalar Docker e Portainer em um Debian (x86/ARM), centralizando dados em `/srv`. | `Docker`, `Portainer`, `Debian`, `Docker Compose` |
-| **[💰 Firefly III (Docker + Cloudflare Tunnel)](./docs/firefly.md)** | Gerenciador financeiro self-hosted com suporte a migração de CSV (Mobills). | `Firefly III`, `Data Importer`, `Docker`, `MariaDB` |
-| **[⚒️ Forgejo (Git Self-Hosted via Docker)](./docs/forgejo.md)** | Servidor Git self-hosted (alternativa ao GitHub/GitLab) com Docker + PostgreSQL. CI/CD com Forgejo Actions (runner + Docker-in-Docker) sobe junto da stack. | `Forgejo`, `Docker`, `PostgreSQL`, `Forgejo Actions` |
-| **[📝 FrankMD (Docker + Cloudflare Tunnel)](./docs/frankmd.md)** | App de notas em Markdown self-hosted (Rails 8), sem banco de dados — cada nota é um arquivo `.md` no disco. IA opcional (Gemini), buscas e exposição via Cloudflare Tunnel + Access. | `FrankMD`, `Docker`, `Rails 8`, `Cloudflare Tunnel` |
-| **[🤖 Home Assistant (Docker)](./docs/home-assistant.md)** | Guia completo para a stack de automação (HA, Mosquitto, Node-RED, ESPHome) no Docker. | `HA`, `Docker`, `Mosquitto`, `Node-RED`, `ESPHome` |
-| **[🔗 n8n (Docker + PostgreSQL + Cloudflare Tunnel)](./docs/n8n.md)** | Automação de workflows self-hosted (alternativa ao Zapier/Make) com PostgreSQL dedicado e webhooks via túnel. Base do projeto radar. | `n8n`, `Docker`, `PostgreSQL`, `Cloudflare Tunnel` |
-| **[📂 OpenList (Docker + Cloudflare Tunnel)](./docs/openlist.md)** | File manager que serve arquivos existentes do HD diretamente, sem importação. WebDAV para apps mobile e Windows. | `OpenList`, `Docker`, `Cloudflare Tunnel`, `WebDAV` |
-| **[☁️ Oracle Cloud Free Tier VPS (ARM) via Pay-As-You-Go](./docs/vps-oracle.md)** | VPS gratuita da Oracle (4 OCPUs, 24GB RAM) com prioridade máxima e custo zero via conta Pay-As-You-Go. | `Oracle Cloud`, `VPS`, `ARM`, `Ubuntu`, `SSH`, `iptables` |
-| **[☁️ ownCloud oCIS (Docker + Cloudflare Tunnel)](./docs/owncloud-ocis.md)** | Cloud storage pessoal com sync, compartilhamento e apps mobile. Acesso via Cloudflare Tunnel. | `ownCloud oCIS`, `Docker`, `Cloudflare Tunnel`, `WebDAV` |
-| **[🖥️ RustDesk Headless no Debian](./docs/rustdesk-headless.md)** | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb). | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd` |
-| **[🚨 Sirene Ativada por Chamada](./docs/sirene-por-chamada.md)** | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação. | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android` |
-| **[📄 Stirling-PDF (oficial, sem login + Authelia)](./docs/stirling-pdf.md)** | Editor de PDF self-hosted com 50+ ferramentas (juntar, dividir, converter, OCR pt-BR, assinar, comprimir). Imagem oficial com login desativado (sem limite de usuários), autenticada pelo Authelia na frente. | `Stirling-PDF`, `Docker`, `Spring Boot`, `Authelia`, `OCR` |
-| **[🔗 Tailscale (acesso privado via tailnet)](./docs/tailscale.md)** | Hub Tailscale que publica os seus serviços internos na tailnet (WireGuard) via Serve HTTPS — rota privada, sem Cloudflare nem Authelia. Um node, vários serviços por porta (ex.: Portainer). | `Tailscale`, `WireGuard`, `Docker`, `VPN` |
+| Projeto                                                                                  | Descrição Resumida                                                                                                                                                                                            | Tecnologias Principais                                                      |
+| :--------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------- |
+| **[🏦 Actual Budget (Docker)](./docs/actual-budget.md)**                                 | Gerenciador financeiro pessoal self-hosted com envelope budgeting e importação de CSV (Mobills).                                                                                                              | `Actual Budget`, `Docker`, `SQLite`, `PowerShell`                           |
+| **[🛡️ AdGuard Home (Docker + Cloudflare Tunnel)](./docs/adguard.md)**                    | DNS server com bloqueio de ads e trackers para toda a rede. DoH externo via Cloudflare Tunnel e perfil iOS.                                                                                                   | `AdGuard Home`, `Docker`, `Cloudflare Tunnel`, `DNS-over-HTTPS`             |
+| **[🧠 AI-Memory (AkitaOnRails)](./docs/ai-memory.md)**                                   | Memória persistente para o Claude Code via arquitetura cliente-servidor: backend Docker no Orange Pi + CLI Rust no Windows interceptando hooks.                                                               | `Docker`, `Rust`, `Gemini API`, `MCP`, `PowerShell`                         |
+| **[⚡ Armadilha de Choque Automática](./docs/armadilha-choque.md)**                      | Sistema de proteção ativa com malha eletrificada (110V/127V), loop de segurança e agendamento pelo Home Assistant.                                                                                            | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `Home Assistant` |
+| **[🔐 Authelia + lldap (SSO self-hosted)](./docs/authelia.md)**                          | Login SSO com usuários ilimitados e MFA para qualquer app, via forward-auth. lldap dá UI web de gestão de usuários. Sem Redis/Postgres (SQLite).                                                              | `Authelia`, `lldap`, `Docker`, `LDAP`, `SQLite`                             |
+| **[💧 Bomba d'ÁGua Automática](./docs/bomba-dagua.md)**                                  | Controla uma bomba d'água remotamente com base no nível do reservatório, usando uma rede Wi-Fi local ponto a ponto.                                                                                           | `Sonoff RE5V1C`, `Tasmota`, `Sensor HC-SR04 ou RCWL-1655`, `TP-Link CPE`    |
+| **[🔀 Caddy (Reverse Proxy + forward-auth)](./docs/caddy.md)**                           | Caddy compartilhado que roteia por hostname e impõe login (Authelia) nos apps protegidos. Base para reusar auth em vários projetos.                                                                           | `Caddy`, `Docker`, `Cloudflare Tunnel`, `forward-auth`                      |
+| **[⚙️ CI/CD com GitHub Actions + Self-Hosted Runner](./docs/cicd-github-actions.md)**    | Configura pipeline de testes e deploy automático no Debian usando runner self-hosted (OrangePi, Raspberry Pi, etc.).                                                                                          | `GitHub Actions`, `Self-Hosted Runner`, `Docker`, `Debian`                  |
+| **[🐳 Docker + Portainer no Debian](./docs/portainer-debian.md)**                        | Guia para instalar Docker e Portainer em um Debian (x86/ARM), centralizando dados em `/srv`.                                                                                                                  | `Docker`, `Portainer`, `Debian`, `Docker Compose`                           |
+| **[💰 Firefly III (Docker + Cloudflare Tunnel)](./docs/firefly.md)**                     | Gerenciador financeiro self-hosted com suporte a migração de CSV (Mobills).                                                                                                                                   | `Firefly III`, `Data Importer`, `Docker`, `MariaDB`                         |
+| **[⚒️ Forgejo (Git Self-Hosted via Docker)](./docs/forgejo.md)**                         | Servidor Git self-hosted (alternativa ao GitHub/GitLab) com Docker + PostgreSQL. CI/CD com Forgejo Actions (runner + Docker-in-Docker) sobe junto da stack.                                                   | `Forgejo`, `Docker`, `PostgreSQL`, `Forgejo Actions`                        |
+| **[📝 FrankMD (Docker + Cloudflare Tunnel)](./docs/frankmd.md)**                         | App de notas em Markdown self-hosted (Rails 8), sem banco de dados — cada nota é um arquivo `.md` no disco. IA opcional (Gemini), buscas e exposição via Cloudflare Tunnel + Access.                          | `FrankMD`, `Docker`, `Rails 8`, `Cloudflare Tunnel`                         |
+| **[🤖 Home Assistant (Docker)](./docs/home-assistant.md)**                               | Guia completo para a stack de automação (HA, Mosquitto, Node-RED, ESPHome) no Docker.                                                                                                                         | `HA`, `Docker`, `Mosquitto`, `Node-RED`, `ESPHome`                          |
+| **[🔗 n8n (Docker + PostgreSQL + Cloudflare Tunnel)](./docs/n8n.md)**                    | Automação de workflows self-hosted (alternativa ao Zapier/Make) com PostgreSQL dedicado e webhooks via túnel. Base do projeto radar.                                                                          | `n8n`, `Docker`, `PostgreSQL`, `Cloudflare Tunnel`                          |
+| **[📂 OpenList (Docker + Cloudflare Tunnel)](./docs/openlist.md)**                       | File manager que serve arquivos existentes do HD diretamente, sem importação. WebDAV para apps mobile e Windows.                                                                                              | `OpenList`, `Docker`, `Cloudflare Tunnel`, `WebDAV`                         |
+| **[☁️ Oracle Cloud Free Tier VPS (ARM) via Pay-As-You-Go](./docs/vps-oracle.md)**        | VPS gratuita da Oracle (4 OCPUs, 24GB RAM) com prioridade máxima e custo zero via conta Pay-As-You-Go.                                                                                                        | `Oracle Cloud`, `VPS`, `ARM`, `Ubuntu`, `SSH`, `iptables`                   |
+| **[☁️ ownCloud oCIS (Docker + Cloudflare Tunnel)](./docs/owncloud-ocis.md)**             | Cloud storage pessoal com sync, compartilhamento e apps mobile. Acesso via Cloudflare Tunnel.                                                                                                                 | `ownCloud oCIS`, `Docker`, `Cloudflare Tunnel`, `WebDAV`                    |
+| **[🖥️ RDP no Navegador (Cloudflare Access + Tunnel)](./docs/cloudflare-browser-rdp.md)** | Acessa o PC de casa a partir de uma máquina corporativa usando só o navegador, sem VPN nem cliente RDP. Contorna bloqueio de acesso remoto por categoria de domínio.                                          | `Cloudflare Access`, `Cloudflare Tunnel`, `RDP`, `Zero Trust`, `PowerShell` |
+| **[🖥️ RustDesk Headless no Debian](./docs/rustdesk-headless.md)**                        | Configura o RustDesk em um servidor Debian sem monitor (headless) com uma sessão XFCE virtual (Xvfb).                                                                                                         | `RustDesk`, `Debian`, `XFCE`, `Xvfb`, `systemd`                             |
+| **[🚨 Sirene Ativada por Chamada](./docs/sirene-por-chamada.md)**                        | Aciona uma sirene (ou qualquer outra coisa) automaticamente quando o celular Android recebe uma ligação.                                                                                                      | `Sonoff RE5V1C`, `Tasmota`, `Tasker`, `Android`                             |
+| **[📄 Stirling-PDF (oficial, sem login + Authelia)](./docs/stirling-pdf.md)**            | Editor de PDF self-hosted com 50+ ferramentas (juntar, dividir, converter, OCR pt-BR, assinar, comprimir). Imagem oficial com login desativado (sem limite de usuários), autenticada pelo Authelia na frente. | `Stirling-PDF`, `Docker`, `Spring Boot`, `Authelia`, `OCR`                  |
+| **[🔗 Tailscale (acesso privado via tailnet)](./docs/tailscale.md)**                     | Hub Tailscale que publica os seus serviços internos na tailnet (WireGuard) via Serve HTTPS — rota privada, sem Cloudflare nem Authelia. Um node, vários serviços por porta (ex.: Portainer).                  | `Tailscale`, `WireGuard`, `Docker`, `VPN`                                   |
 
 ## 🛠️ Tecnologias no DNA do Repo
 
 A maioria dos projetos por aqui gira em torno destas tecnologias:
 
--   **Hardware:**
-    -   📦 **Sonoff:** Especialmente o versátil `RE5V1C` no modo "faça você mesmo".
-    -   🧠 **ESP8266/ESP32:** O cérebro por trás de muitos dispositivos IoT de baixo custo.
-    -   📡 **Sensores:** Como os ultrassônicos `HC-SR04` e `RCWL-1655` (à prova d'água, série JSN-SR04T) para medir distâncias.
-    -   📶 **Rede:** Antenas `TP-Link CPE` para links Wi-Fi de longa distância e equipamentos de rede local.
--   **Software & Firmware:**
-    -   ⚫ **Tasmota:** O firmware open-source que liberta o poder dos dispositivos Sonoff/ESP.
-	-   ⚫ **ESP-IDF:** O framework oficial da Espressif para desenvolvimento avançado em ESP32.
-    -   🤖 **Tasker:** Para criar automações complexas no Android, servindo como gatilho ou interface.
-    -   🌐 **Comandos HTTP/WebSend:** A cola que une os dispositivos na rede local de forma simples e direta.
+- **Hardware:**
+  - 📦 **Sonoff:** Especialmente o versátil `RE5V1C` no modo "faça você mesmo".
+  - 🧠 **ESP8266/ESP32:** O cérebro por trás de muitos dispositivos IoT de baixo custo.
+  - 📡 **Sensores:** Como os ultrassônicos `HC-SR04` e `RCWL-1655` (à prova d'água, série JSN-SR04T) para medir distâncias.
+  - 📶 **Rede:** Antenas `TP-Link CPE` para links Wi-Fi de longa distância e equipamentos de rede local.
+- **Software & Firmware:**
+  - ⚫ **Tasmota:** O firmware open-source que liberta o poder dos dispositivos Sonoff/ESP.
+  - ⚫ **ESP-IDF:** O framework oficial da Espressif para desenvolvimento avançado em ESP32.
+  - 🤖 **Tasker:** Para criar automações complexas no Android, servindo como gatilho ou interface.
+  - 🌐 **Comandos HTTP/WebSend:** A cola que une os dispositivos na rede local de forma simples e direta.
 
 ## 💬 Dúvidas ou Sugestões?
 
@@ -55,4 +56,4 @@ Se tiver qualquer dúvida, encontrar um problema ou tiver uma sugestão de proje
 
 ---
 
-*Repositório mantido com café e curiosidade.* ☕
+_Repositório mantido com café e curiosidade._ ☕

@@ -2,6 +2,14 @@
 
 Este guia detalha o processo de instalação e configuração do RustDesk em um servidor Debian "headless" (sem monitor), garantindo que uma sessão gráfica virtual (XFCE) esteja sempre ativa, mesmo sem login de usuário, permitindo o acesso remoto a qualquer momento.
 
+> ⚠️ **A rede de onde você acessa bloqueia o RustDesk?** Muitas redes corporativas barram ferramentas de
+> acesso remoto por **categoria de domínio**, e aí o cliente nem chega a registrar no servidor de ID (fica
+> sempre desconectado, com ou sem servidor self-hosted). Instalar VPN também não resolve, porque VPN costuma
+> cair na mesma categoria bloqueada. Nesse cenário, o caminho é acessar **pelo navegador**, contra um domínio
+> seu, via Cloudflare Access: veja **[RDP no Navegador](./cloudflare-browser-rdp.md)**. Aquele guia usa RDP
+> (alvo Windows Pro), mas o mesmo recurso renderiza **SSH e VNC** no navegador pelo mesmo toggle, que é o que
+> se aplicaria a um Debian como o deste guia.
+
 ## 🎯 Objetivo
 
 O objetivo é fazer o `rustdesk.service` (o servidor do RustDesk) ser iniciado apenas **após** uma sessão gráfica XFCE virtual (criada com `Xvfb`) estar pronta e, mais importante, fazer o RustDesk "enxergar" essa sessão virtual.
@@ -293,3 +301,11 @@ ls -la /home/<usuario>/.Xauthority
 # Corrige o dono se necessário
 sudo chown <usuario>:<usuario> /home/<usuario>/.Xauthority
 ```
+
+## 🔗 Veja Também
+
+- **[RDP no Navegador (Cloudflare Access + Tunnel)](./cloudflare-browser-rdp.md)**: quando a rede de origem
+  bloqueia o RustDesk por categoria de domínio. Acesso pelo navegador, sem instalar nada do lado de quem
+  acessa, usando um domínio próprio que o filtro não reconhece como ferramenta de acesso remoto.
+- **[Tailscale (acesso privado via tailnet)](./tailscale.md)**: rede privada WireGuard entre os seus
+  devices. Alternativa quando **você controla as duas pontas** e a rede de origem não bloqueia a Tailscale.
