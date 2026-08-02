@@ -1,0 +1,42 @@
+services:
+  cortendesk:
+    container_name: cortendesk
+    image: marcpope/cortendesk:latest        # multi-arch: arm64 nativo (sem QEMU)
+    environment:
+      - TZ=America/Sao_Paulo
+      - APP_URL=https://${CORTENDESK_DOMAIN}
+      - SESSION_SECURE_COOKIE=true            # atras do Cloudflare (TLS termina la)
+      # banco: SQLite no volume /data (self-contained, sem container extra)
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/data/cortendesk.sqlite
+      # servidor RustDesk OSS nativo (host:porta; mostrado no Settings do console)
+      - CORTENDESK_ID_SERVER=${CORTENDESK_ID_SERVER}
+      - CORTENDESK_RELAY_SERVER=${CORTENDESK_RELAY_SERVER}
+      - CORTENDESK_PUBLIC_KEY=${CORTENDESK_PUBLIC_KEY}
+      # bridge WSS interno: alcanca 21118/21119 publicadas no host (nao na internet)
+      - RUSTDESK_WS_HOST=host.docker.internal
+      # endpoints wss como o NAVEGADOR ve (o dominio da propria pagina do console)
+      - CORTENDESK_NATIVE_WEBCLIENT=true
+      - CORTENDESK_WS_ID_URL=wss://${CORTENDESK_DOMAIN}/ws/id
+      - CORTENDESK_WS_RELAY_URL=wss://${CORTENDESK_DOMAIN}/ws/relay
+      # admin inicial (troque a senha no primeiro login)
+      - CORTENDESK_ADMIN_USER=${CORTENDESK_ADMIN_USER}
+      - CORTENDESK_ADMIN_PASSWORD=${CORTENDESK_ADMIN_PASSWORD}
+    volumes:
+      - /srv/cortendesk/data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # resolve o host p/ o bridge WSS alcancar 21118/21119
+    networks:
+      - caddy-net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  caddy-net:
+    external: true

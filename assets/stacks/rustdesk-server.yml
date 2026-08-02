@@ -12,13 +12,18 @@ services:
       - "21118:21118"        # TCP  WebSocket do hbbs (web client; só se for usar navegador)
     volumes:
       - /srv/rustdesk/data:/root   # id_ed25519(.pub) + db_v2.sqlite3 (workdir da imagem = /root)
-    networks: [rustdesk-net]
-    security_opt: [no-new-privileges:true]
-    depends_on: [hbbr]
+    networks:
+      - rustdesk-net
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - hbbr
     restart: unless-stopped
     logging:
       driver: json-file
-      options: { max-size: "10m", max-file: "3" }
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   hbbr:
     container_name: rustdesk-hbbr
@@ -31,12 +36,16 @@ services:
       - "21119:21119"        # TCP  WebSocket do hbbr (web client; só se for usar navegador)
     volumes:
       - /srv/rustdesk/data:/root
-    networks: [rustdesk-net]
-    security_opt: [no-new-privileges:true]
+    networks:
+      - rustdesk-net
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
     logging:
       driver: json-file
-      options: { max-size: "10m", max-file: "3" }
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   rustdesk-net:

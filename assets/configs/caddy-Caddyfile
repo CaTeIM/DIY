@@ -89,6 +89,18 @@ http://radar.selflabs.org {
 	reverse_proxy radar-backend:8082
 }
 
+# --- CortenDesk: console + web client do RustDesk (login PRÓPRIO; SEM Authelia)
+# NÃO usa `import authelia`: o forward-auth quebraria o handshake dos WebSockets
+# do web client (/ws/id e /ws/relay). O app se protege com o login dele + 2FA
+# (TOTP), configurável em Settings. Guia: ../../docs/rustdesk-server.md (Parte 6).
+# Todos os paths vão para a 8080: o próprio container faz o bridge WSS para o
+# hbbs (21118) e o hbbr (21119) via host.docker.internal, então NÃO roteie
+# /ws/* aqui. Hostname separado do `rustdesk-id` (esse é nuvem cinza, protocolo
+# nativo); este é proxied/laranja e chega pelo cloudflared.
+http://rustdesk.selflabs.org {
+	reverse_proxy cortendesk:8080
+}
+
 # --- Modelo para adicionar um app novo --------------------------------------
 # 1) o app entra na rede externa `caddy-net`; 2) copie o bloco abaixo; 3) no
 #    cloudflared publique novo.selflabs.org -> http://localhost:8080.
