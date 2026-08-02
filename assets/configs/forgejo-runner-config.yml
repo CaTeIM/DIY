@@ -5,8 +5,11 @@
 # Guia completo: docs/forgejo.md (seções 5.2 a 5.5).
 #
 # Este é o MÍNIMO funcional. O `forgejo-runner generate-config` gera um arquivo
-# de ~250 linhas, mas só estes dois blocos importam: `labels` e `connections`.
-# Os demais (log, cache, container, timeouts) usam defaults que funcionam.
+# de ~250 linhas, mas só estes blocos importam: `labels`, `container.network` e
+# `connections`. Os demais (log, cache, timeouts) usam defaults que funcionam.
+#
+# ⚠️ Este arquivo NÃO faz parte da stack: um redeploy no Portainer não o altera.
+#    Para mudar `url`, `uuid` ou `token`, edite-o à mão e reinicie o runner.
 # =============================================================================
 
 runner:
@@ -16,22 +19,28 @@ runner:
     - docker:docker://node:24-bookworm
     - ubuntu-latest:docker://ghcr.io/catthehacker/ubuntu:act-22.04
 
+container:
+  # (2) REDE DOS JOBS — coloca cada container de job na mesma bridge do Forgejo,
+  #     para que ele resolva o nome interno `forgejo`. Necessário no modo DOOD
+  #     (o padrão da stack). No modo dind, deixe vazio.
+  network: forgejo-net
+  # `docker_host` não é definido aqui: sem ele, o runner usa o socket do host
+  # montado pela stack (/var/run/docker.sock). Só preencha se usar dind.
+
 server:
   connections:
     forgejo:
-      # (2) CONEXÃO — cole o UUID e o Token que a UI mostrou ao criar o runner.
-      #     `url`: endereço alcançável TANTO pelo runner QUANTO pelos jobs no dind:
-      #       - homelab (1 host só): IP da LAN do host  → http://192.168.68.10:3000/
-      #       - domínio / Cloudflare Tunnel:             → https://git.exemplo.com/
-      #     NUNCA use http://server:3000 — os jobs no dind não resolvem esse nome.
-      #     EXCEÇÃO .onion / VPS c/ firewall restritivo: o IP do host falha
-      #     (no route to host) e o .onion precisa de Tor → troque dind por DOOD
-      #     e use o nome interno http://forgejo:3000/ com `container.network:
-      #     forgejo-net` (ver docs/forgejo.md §5.9).
-      url: https://git.exemplo.com/
+      # (3) CONEXÃO — cole o UUID e o Token que a UI mostrou ao criar o runner.
+      #     `url`: endereço alcançável TANTO pelo runner QUANTO pelos jobs.
+      #       - DOOD (padrão da stack): nome interno   → http://forgejo:3000/
+      #       - dind + homelab (1 host):  IP da LAN     → http://192.168.68.10:3000/
+      #       - dind + domínio público:                 → https://git.exemplo.com/
+      #     No modo dind NUNCA use o nome interno: os jobs não o resolvem.
+      #     Ver docs/forgejo.md §5.5 e §5.9.
+      url: http://forgejo:3000/
       uuid: <UUID_DA_UI>
       token: <TOKEN_DA_UI>
 
-# Opcional — se o cache (ligado por padrão) ficar logando avisos no dind, desligue:
+# Opcional — se o cache (ligado por padrão) ficar logando avisos, desligue:
 # cache:
 #   enabled: false

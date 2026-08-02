@@ -1,6 +1,6 @@
 services:
   server:
-    image: codeberg.org/forgejo/forgejo:15.0.2
+    image: codeberg.org/forgejo/forgejo:15.0.6
     container_name: forgejo
     environment:
       - USER_UID=1000
@@ -12,6 +12,12 @@ services:
       - FORGEJO__database__USER=forgejo
       - FORGEJO__database__PASSWD=${FORGEJO_DB_PASSWORD}
       - FORGEJO__service__DISABLE_REGISTRATION=true
+      # Endereco publico da instancia (links de clone, webhooks, UI).
+      # Troque pelo seu dominio, ou pelo seu endereco .onion se for o caso.
+      - FORGEJO__server__ROOT_URL=https://git.exemplo.com/
+      # Endereco interno usado pelo runner e pelos jobs do CI para falar
+      # com o Forgejo sem sair para a internet (ver Parte 5.5 e 5.9 do guia).
+      - FORGEJO__server__LOCAL_ROOT_URL=http://forgejo:3000/
     restart: always
     volumes:
       - /srv/forgejo/data:/data
@@ -46,34 +52,27 @@ services:
       timeout: 5s
       retries: 5
 
-  docker-in-docker:
-    image: docker:dind
-    container_name: forgejo-dind
-    privileged: true
-    command: ['dockerd', '-H', 'tcp://0.0.0.0:2375', '--tls=false']
-    restart: always
-    volumes:
-      - /srv/forgejo/dind:/var/lib/docker
-    networks:
-      - forgejo-net
-    hostname: forgejo-dind
-
   # Runner que executa os workflows de .forgejo/workflows/*.yml.
   # PRE-REQUISITO (uma vez): crie o runner na UI do Forgejo e grave
   # /srv/forgejo/runner/runner-config.yml com a secao `server` (ver guia, Parte 5).
   # Ate o config existir, o runner reinicia em loop a espera dele.
+  #
+  # Modo DOOD: os jobs rodam no Docker do HOST (socket montado abaixo) e entram
+  # na `forgejo-net` (via `container.network` no runner-config.yml), o que permite
+  # resolverem o nome interno `forgejo`. Alternativa mais isolada (dind): Parte 5.6.
   runner:
     image: data.forgejo.org/forgejo/runner:12
     container_name: forgejo-runner
     command: forgejo-runner daemon --config runner-config.yml
     restart: always
-    environment:
-      - DOCKER_HOST=tcp://docker-in-docker:2375
+    group_add:
+      # GID do grupo `docker` no host: confira com `getent group docker` (3o campo).
+      - '989'
     volumes:
       - /srv/forgejo/runner:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - server
-      - docker-in-docker
     networks:
       - forgejo-net
     hostname: forgejo-runner

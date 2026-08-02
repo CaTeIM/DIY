@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-          # cache: 'npm'       # opcional — depende do cache server alcançável de dentro do dind
+          # cache: 'npm'       # opcional: depende do cache server alcançável de dentro do job
       - run: npm ci
       - run: npm test
 

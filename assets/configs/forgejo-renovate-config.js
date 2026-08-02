@@ -16,10 +16,13 @@ module.exports = {
   // (não reutilize platform: 'gitea').
   platform: 'forgejo',
 
-  // SOMENTE a URL BASE pública (Cloudflare Tunnel). O Renovate acrescenta '/api/v1'
-  // sozinho (e remove um /api/v1 final se você puser por engano); a barra final é
-  // normalizada. Os jobs no dind alcançam o Forgejo só por esta URL.
-  endpoint: 'https://git.exemplo.com/',
+  // SOMENTE a URL BASE. O Renovate acrescenta '/api/v1' sozinho (e remove um
+  // /api/v1 final se você puser por engano); a barra final é normalizada.
+  // Precisa ser alcançável DE DENTRO do container do job:
+  //   - modo DOOD (padrão da stack): 'http://forgejo:3000/'
+  //   - modo dind:                   a URL pública (Cloudflare Tunnel)
+  // Instância só em .onion? Só o endereço interno funciona (jobs não têm Tor).
+  endpoint: 'http://forgejo:3000/',
 
   // O token vem do secret RENOVATE_TOKEN (env var). NUNCA escreva o PAT no arquivo.
   // Escopos do PAT (Forgejo >= 1.20 / v15): repo R+W, user R, issue R+W,
@@ -51,7 +54,7 @@ module.exports = {
   prHourlyLimit: 0,          // sem teto de PRs/hora (default é 2); evita afunilar a 1ª varredura
 
   // platformAutomerge é true por padrão e é suportado no Forgejo >= v10.0.0
-  // (esta instância é v15.0.2), então o automerge nativo da plataforma funciona.
+  // (esta instância é v15.0.6), então o automerge nativo da plataforma funciona.
 
   // OPCIONAL: auto-merge de atualizações patch + minor após o CI passar.
   // Descomente para habilitar. Só faz sentido com proteção de branch / status checks.

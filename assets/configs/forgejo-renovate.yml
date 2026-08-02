@@ -23,7 +23,7 @@ on:
 
 jobs:
   renovate:
-    # `runs-on: docker` seleciona o runner dind pelo label; `container.image` troca
+    # `runs-on: docker` seleciona o runner pelo label; `container.image` troca
     # a imagem do job (padrão documentado no Forgejo v15).
     runs-on: docker
     container:
@@ -47,10 +47,11 @@ jobs:
           # Aponta explicitamente para o config.js no workspace (à prova de mudança
           # no auto-load por CWD). `github.workspace` == FORGEJO_WORKSPACE.
           RENOVATE_CONFIG_FILE: ${{ github.workspace }}/config.js
-          # Endpoint = URL BASE pública (Cloudflare Tunnel). O Renovate acrescenta
-          # /api/v1 sozinho — NÃO inclua aqui. Os jobs no dind alcançam o Forgejo
-          # só por esta URL pública, nunca pelo nome interno do docker.
-          RENOVATE_ENDPOINT: https://git.exemplo.com/
+          # Endpoint = URL BASE. O Renovate acrescenta /api/v1 sozinho, NÃO inclua
+          # aqui. Precisa ser alcançável de dentro do container do job: no modo
+          # DOOD (padrão da stack) use o nome interno; no dind, a URL pública.
+          # Deve ser o MESMO valor do `endpoint` no config.js.
+          RENOVATE_ENDPOINT: http://forgejo:3000/
           RENOVATE_PLATFORM: forgejo
           # PAT da conta-bot, guardado como secret do Forgejo Actions:
           RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
