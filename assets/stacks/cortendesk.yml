@@ -13,8 +13,13 @@ services:
       - CORTENDESK_ID_SERVER=${CORTENDESK_ID_SERVER}
       - CORTENDESK_RELAY_SERVER=${CORTENDESK_RELAY_SERVER}
       - CORTENDESK_PUBLIC_KEY=${CORTENDESK_PUBLIC_KEY}
-      # bridge WSS interno: alcanca 21118/21119 publicadas no host (nao na internet)
-      - RUSTDESK_WS_HOST=host.docker.internal
+      # bridge WSS interno: alcanca 21118/21119 publicadas no host (nao na internet).
+      # PRECISA ser IP, nao nome: o nginx do container usa variavel no proxy_pass e
+      # resolve pelo resolver do Docker (127.0.0.11), ignorando o /etc/hosts. Logo
+      # "host.docker.internal" falha com "could not be resolved". Use o gateway do
+      # docker0 (normalmente 172.17.0.1); confira com:
+      #   docker exec cortendesk getent hosts host.docker.internal
+      - RUSTDESK_WS_HOST=${RUSTDESK_WS_HOST}
       # endpoints wss como o NAVEGADOR ve (o dominio da propria pagina do console)
       - CORTENDESK_NATIVE_WEBCLIENT=true
       - CORTENDESK_WS_ID_URL=wss://${CORTENDESK_DOMAIN}/ws/id

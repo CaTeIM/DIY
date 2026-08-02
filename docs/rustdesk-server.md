@@ -163,7 +163,15 @@ A stack está em [`assets/stacks/cortendesk.yml`](../assets/stacks/cortendesk.ym
    expostas na internet (permitiria falsificar IP e furar log/allowlist).
 2. **Crie um subdomínio novo** para o console (ex.: `rustdesk.selflabs.org`), **diferente** do `rustdesk-id`
    (que é nativo, nuvem cinza). No cloudflared, publique-o → `http://localhost:8080`.
-3. **Pasta:** `ssh vps-oracle 'sudo mkdir -p /srv/cortendesk/data'`.
+3. **Pasta + permissão** (o passo que mais quebra). O php-fpm roda como `www-data`, e o SQLite precisa
+   escrever **no diretório** (arquivos `-journal`/`-wal`), não só no `.sqlite`. Se a pasta ficar `root:root`,
+   o login falha com `500` e `attempt to write a readonly database`:
+   ```bash
+   ssh vps-oracle 'sudo mkdir -p /srv/cortendesk/data'
+   # depois do primeiro deploy, ajuste o dono para o UID real do www-data do container:
+   ssh vps-oracle 'U=$(docker exec cortendesk id -u www-data); G=$(docker exec cortendesk id -g www-data); \
+     sudo chown -R $U:$G /srv/cortendesk/data && sudo chmod 775 /srv/cortendesk/data && docker restart cortendesk'
+   ```
 4. **Caddy** ([./caddy.md](./caddy.md)): app com login **próprio**, **sem** `import authelia` (o forward-auth
    quebraria os WebSockets do web client):
    ```caddyfile
@@ -178,7 +186,15 @@ A stack está em [`assets/stacks/cortendesk.yml`](../assets/stacks/cortendesk.ym
    - `CORTENDESK_ID_SERVER` = `rustdesk-id.selflabs.org:21116`
    - `CORTENDESK_RELAY_SERVER` = `rustdesk-id.selflabs.org:21117`
    - `CORTENDESK_PUBLIC_KEY` = o conteúdo do `id_ed25519.pub`
+   - `RUSTDESK_WS_HOST` = **o IP** do gateway do docker0, normalmente `172.17.0.1` (confira com
+     `docker exec cortendesk getent hosts host.docker.internal`). Tem que ser IP, veja o aviso abaixo.
    - `CORTENDESK_ADMIN_USER` / `CORTENDESK_ADMIN_PASSWORD`
+
+   > ⚠️ **Não use `host.docker.internal` no `RUSTDESK_WS_HOST`.** O nginx do container usa uma variável no
+   > `proxy_pass`, e nesse caso ele resolve o nome em tempo de requisição pelo **resolver do Docker**
+   > (`127.0.0.11`), **ignorando o `/etc/hosts`**. Como esse nome só existe no `/etc/hosts` (via
+   > `extra_hosts`), o WebSocket falha com `could not be resolved (3: Host not found)` mesmo com o
+   > `getent` e o `nc` funcionando (esses dois **usam** o `/etc/hosts`).
 6. Abra `https://<console>`, faça login e **ative o 2FA** (TOTP). Como a página fica exposta com login próprio,
    sem Authelia na frente, o 2FA é a sua camada extra.
 7. Para os **dispositivos aparecerem no console** (frota, address book, audit), aponte o **API Server** dos
@@ -207,9 +223,11 @@ RustDesk Server no Windows Server 2025. Mantenha uma cópia dos arquivos `id_ed2
 | Clientes nunca ficam online (bolinha verde)      | **21116/UDP** fechada                          | Abra 21116 UDP na Security List Oracle **e** no `iptables` do host                                                                              |
 | Todos os clientes com "Key Mismatch"             | Key não migrada; hbbs gerou par novo           | Pare a stack, ponha os `id_ed25519*` antigos em `/srv/rustdesk/data`, suba de novo                                                              |
 | Conecta mas cai para relay sempre                | 21115/21116 TCP bloqueadas (sem hole punching) | Abra 21115 e 21116 TCP; confira NAT dos dois lados                                                                                              |
-| Web client (CortenDesk) não conecta / tela preta | bridge WSS não alcança 21118/21119             | Confira `RUSTDESK_WS_HOST=host.docker.internal`, o `extra_hosts` host-gateway, e as 21118/21119 publicadas no host pela stack `rustdesk-server` |
+| Web client: `websocket error before open: wss://.../ws/id` e o log do nginx diz `host.docker.internal could not be resolved` | o nginx resolve variável do `proxy_pass` pelo DNS do Docker e ignora o `/etc/hosts` | Ponha **o IP** em `RUSTDESK_WS_HOST` (ex.: `172.17.0.1`), não o nome |
+| Web client (CortenDesk) não conecta / tela preta | bridge WSS não alcança 21118/21119             | Confira o `RUSTDESK_WS_HOST` e as 21118/21119 publicadas no host pela stack `rustdesk-server`   |
+| CortenDesk: login retorna `500` e o log diz `attempt to write a readonly database` | `/srv/cortendesk/data` está `root:root`; o `www-data` não consegue criar o journal/WAL do SQLite **no diretório** | `chown -R` para o UID real do `www-data` do container e `chmod 775` na pasta (Parte 6, passo 3), depois `docker restart cortendesk` |
 | Container reinicia em loop                       | Key com permissão errada, ou volume vazio      | `chmod 600 id_ed25519`; confira o bind mount `/srv/rustdesk/data:/root`                                                                         |
-| Imagem não sobe no ARM                           | tag sem manifesto arm64                        | A `:1.1.16` é multi-arch; se preciso, force `:1.1.16-arm64v8`                                                                                   |
+| Imagem não sobe no ARM                           | tag sem manifesto arm64                        | A `:latest` do `rustdesk-server` e a do `cortendesk` são multi-arch com arm64 nativo                                                            |
 
 ## Notas Importantes
 
