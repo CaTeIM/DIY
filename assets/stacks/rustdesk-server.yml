@@ -1,7 +1,7 @@
 services:
   hbbs:
     container_name: rustdesk-hbbs
-    image: rustdesk/rustdesk-server:1.1.16   # imagem multi-arch: puxa arm64 no Oracle Ampere A1
+    image: rustdesk/rustdesk-server:latest   # imagem multi-arch: puxa arm64 no Oracle Ampere A1
     command: hbbs -r ${RUSTDESK_RELAY_HOST}:21117 -k _
     environment:
       - TZ=America/Sao_Paulo
@@ -22,7 +22,7 @@ services:
 
   hbbr:
     container_name: rustdesk-hbbr
-    image: rustdesk/rustdesk-server:1.1.16
+    image: rustdesk/rustdesk-server:latest
     command: hbbr -k _
     environment:
       - TZ=America/Sao_Paulo
