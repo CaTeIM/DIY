@@ -1,0 +1,53 @@
+services:
+  bentopdf:
+    # Build SELF-HOSTED ("simple"): TODAS as ferramentas de PDF, SEM a vitrine de
+    # marketing do bentopdf.com (hero, FAQ, depoimentos, rodapé). NÃO é uma versão
+    # "lite": nenhuma ferramenta é removida. Outras opções de imagem:
+    #   ghcr.io/alam00000/bentopdf:latest         -> build comercial (site completo)
+    #   bentopdfteam/bentopdf-simple:latest       -> mesma imagem no Docker Hub
+    # Multi-arch: linux/amd64 + linux/arm64 (roda na VPS ARM sem QEMU).
+    image: ghcr.io/alam00000/bentopdf-simple:latest
+    container_name: bentopdf
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      TZ: America/Sao_Paulo
+      # Instância privada atrás do Authelia: injeta <meta name="robots" content="noindex">
+      # em todo HTML no boot. Se a imagem for antiga e não tiver o script, é ignorado.
+      ROBOTS_NOINDEX: "true"
+      # Só descomente se o host tiver IPv6 DESABILITADO no kernel (ipv6.disable=1):
+      # sem isso o nginx falha no `listen [::]:8080`.
+      # DISABLE_IPV6: "true"
+    volumes:
+      # ÚNICO arquivo de configuração do app (opcional): esconde ferramentas da UI.
+      # Crie /srv/pdf/config.json com `{}` ANTES do deploy: se o arquivo não
+      # existir, o Docker cria uma PASTA com esse nome e o app recebe 403 ao lê-lo.
+      - /srv/pdf/config.json:/usr/share/nginx/html/config.json:ro
+    # SEM porta no host: o Caddy alcança pela rede `caddy-net` como
+    # http://bentopdf:8080 e publica em https://pdf.selflabs.org (via Authelia).
+    networks:
+      - caddy-net
+    expose:
+      - "8080"
+    hostname: bentopdf
+    healthcheck:
+      # nginx estático: se a raiz responde, o app está no ar. 127.0.0.1 (e não
+      # localhost) evita depender da resolução IPv6 dentro do container.
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    # Observação: não há Java/LibreOffice/Tesseract no servidor. O container é só
+    # um nginx de arquivos estáticos; o trabalho pesado roda no NAVEGADOR via WASM.
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  caddy-net:
+    name: caddy-net
+    external: true                              # docker network create caddy-net

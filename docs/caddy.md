@@ -17,8 +17,9 @@ Cloudflare (TLS) → Cloudflare Tunnel → cloudflared (host) → http://localho
                                                                      │  (Caddy)
         rede auth-net ──► authelia:9091 (forward-auth)  ◄────────────┤
         rede auth-net ──► lldap:17170 (UI de usuários)  ◄────────────┤
-        rede caddy-net     ──► stirling-pdf:8080 (e outros apps) ◄────────┘
+        rede caddy-net     ──► bentopdf:8080 (e outros apps) ◄────────────┘
 ```
+
 
 Só o Caddy publica porta no host (presa em `127.0.0.1:8080`). Ele cruza **duas redes**: `caddy-net` (apps) e `auth-net` (Authelia/lldap). Os apps ficam só na `caddy-net`, sem porta no host.
 
@@ -125,7 +126,7 @@ O Caddy separa por Host header. O Cloudflare força HTTPS na borda, então o `X-
 | `502 Bad Gateway` num app              | App fora da rede `caddy-net` ou nome de container errado | Ponha o app na `caddy-net`; o `reverse_proxy` usa o `container_name` exato                           |
 | `network caddy-net/auth-net not found` | Rede externa não criada                                  | `docker network create caddy-net` / `auth-net` antes do deploy                                       |
 | UI do lldap abre sem pedir login       | Faltou `import authelia` no bloco `users.`               | Adicione `import authelia` e recarregue                                                              |
-| Mudou o Caddyfile e não aplicou        | Precisa reler o arquivo                                  | `docker restart caddy` (o `caddy reload` falha: `admin off` desliga a API `:2019`)                    |
+| Mudou o Caddyfile e não aplicou        | Precisa reler o arquivo                                  | `docker restart caddy` (o `caddy reload` falha: `admin off` desliga a API `:2019`)                   |
 
 ## Notas Importantes
 

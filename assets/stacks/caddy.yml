@@ -29,7 +29,7 @@ services:
       - /srv/caddy/data:/data         # estado interno do Caddy
       - /srv/caddy/config:/config
     networks:
-      - caddy-net                                  # alcança os apps (stirling-pdf, ...)
+      - caddy-net                                  # alcança os apps (bentopdf, ...)
       - auth-net                              # alcança authelia + lldap
     logging:
       driver: "json-file"

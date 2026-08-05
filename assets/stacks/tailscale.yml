@@ -42,7 +42,7 @@ services:
       - /srv/tailscale/state:/var/lib/tailscale
       - /srv/tailscale/config:/config         # contém o serve.json
     networks:
-      - caddy-net                             # p/ expor apps da caddy-net (ex.: stirling-pdf:8080)
+      - caddy-net                             # p/ expor apps da caddy-net (ex.: bentopdf:8080)
       # ➕ para expor um serviço que vive em OUTRA rede, adicione-a aqui:
       # - grafana-net
     logging:

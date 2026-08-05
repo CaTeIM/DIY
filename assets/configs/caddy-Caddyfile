@@ -49,11 +49,14 @@ http://users.selflabs.org {
 	reverse_proxy lldap:17170
 }
 
-# --- Stirling-PDF core (protegido) ------------------------------------------
+# --- BentoPDF (protegido) ----------------------------------------------------
 # Alcançado pelo nome do container via rede externa `caddy-net` (sem porta no host).
+# O app é 100% client-side: NÃO sobrescreva aqui os headers Cross-Origin-Opener-Policy
+# e Cross-Origin-Embedder-Policy que vêm do nginx da imagem. São eles que liberam o
+# SharedArrayBuffer usado pelas conversões de Office (LibreOffice WASM).
 http://pdf.selflabs.org {
 	import authelia
-	reverse_proxy stirling-pdf:8080
+	reverse_proxy bentopdf:8080
 }
 
 # --- Portainer (login PRÓPRIO; SEM Authelia) --------------------------------
