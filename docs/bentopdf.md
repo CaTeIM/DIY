@@ -213,7 +213,9 @@ sudo tar czf bentopdf-backup-$(date +%F).tar.gz -C /srv bentopdf
 
 ## Parte 8: Migração vindo do Stirling-PDF
 
-Se este host rodava o **Stirling-PDF** no mesmo `pdf.selflabs.org`, a troca é direta. A pasta `/srv/pdf` é **reaproveitada**: ela deixa de guardar estado de aplicação e passa a ter só o `config.json`.
+Se este host rodava o **[Stirling-PDF](./stirling-pdf.md)** no mesmo `pdf.selflabs.org`, a troca é direta. A pasta `/srv/pdf` é **reaproveitada**: ela deixa de guardar estado de aplicação e passa a ter só o `config.json`.
+
+> ℹ️ **O guia do Stirling continua no repo** ([./stirling-pdf.md](./stirling-pdf.md)) como alternativa: ele é o caminho quando você **quer** o processamento no servidor em vez de no navegador. Como os dois disputam o mesmo hostname, rode um de cada vez e aponte o Caddyfile para o container correspondente.
 
 1. Portainer → **Stacks** → `stirling-pdf` → **Remove**. Faça isso **primeiro**: com o container de pé, o Docker recria as pastas assim que você apagá-las.
 2. Esvazie a pasta e deixe só o arquivo que a stack nova monta:
