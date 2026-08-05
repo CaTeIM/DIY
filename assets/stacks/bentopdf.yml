@@ -13,9 +13,11 @@ services:
       - no-new-privileges:true
     environment:
       TZ: America/Sao_Paulo
-      # Instância privada atrás do Authelia: injeta <meta name="robots" content="noindex">
-      # em todo HTML no boot. Se a imagem for antiga e não tiver o script, é ignorado.
-      ROBOTS_NOINDEX: "true"
+      # NÃO use ROBOTS_NOINDEX aqui. Nesta imagem (nginx-unprivileged, UID 101) o
+      # script /docker-entrypoint.d/98-noindex.sh roda `sed -i` em /usr/share/nginx/html,
+      # mas só os ARQUIVOS são chown nginx: a PASTA segue root, então o sed não cria o
+      # temp file e o entrypoint aborta (container em loop de restart). Para marcar
+      # noindex, use `header X-Robots-Tag "noindex, nofollow"` no bloco do Caddy.
       # Só descomente se o host tiver IPv6 DESABILITADO no kernel (ipv6.disable=1):
       # sem isso o nginx falha no `listen [::]:8080`.
       # DISABLE_IPV6: "true"

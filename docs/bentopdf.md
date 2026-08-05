@@ -92,11 +92,32 @@ O arquivo [`bentopdf.yml`](../assets/stacks/bentopdf.yml) define **um único ser
 
 O BentoPDF é um site estático: quase toda a configuração é **de build**, e só um punhado de variáveis vale em **runtime** (ou seja, funciona colando na stack do Portainer):
 
-| Variável        | O que faz                                                          | Padrão  |
-| :-------------- | :----------------------------------------------------------------- | :------ |
-| `PORT`          | Porta que o nginx escuta dentro do container                       | `8080`  |
-| `DISABLE_IPV6`  | Desliga o listener IPv6 do nginx (host com IPv6 desabilitado)      | `false` |
-| `ROBOTS_NOINDEX`| Injeta `<meta name="robots" content="noindex">` em todo HTML       | `false` |
+| Variável         | O que faz                                                     | Padrão  |
+| :--------------- | :------------------------------------------------------------- | :------ |
+| `PORT`           | Porta que o nginx escuta dentro do container                  | `8080`  |
+| `DISABLE_IPV6`   | Desliga o listener IPv6 do nginx (host com IPv6 desabilitado) | `false` |
+| `ROBOTS_NOINDEX` | **Não use nesta imagem**, ver aviso abaixo                    | `false` |
+
+> [!WARNING]
+> **`ROBOTS_NOINDEX=true` derruba o container na imagem padrão.** O script
+> `/docker-entrypoint.d/98-noindex.sh` roda `sed -i` sobre os HTML em
+> `/usr/share/nginx/html`, e o `sed -i` precisa criar um arquivo temporário **dentro do
+> diretório**. No `nginx-unprivileged` (UID 101) o `COPY --chown` deixou só os **arquivos**
+> como `nginx`: o **diretório** continua `root`. Resultado:
+> `sed: can't create temp file '/usr/share/nginx/html/index.htmlXXXXXX': Permission denied`,
+> o entrypoint aborta e o container entra em **loop de restart**. A variável só funciona no
+> `Dockerfile.nonroot`, cujo entrypoint dá `chown -R` no diretório antes de dropar privilégios.
+>
+> Para marcar a instância como não indexável, faça no **Caddy**, que é mais limpo e não
+> depende da imagem. No bloco de `pdf.selflabs.org` do
+> [Caddyfile](../assets/configs/caddy-Caddyfile):
+>
+> ```caddy
+> header X-Robots-Tag "noindex, nofollow"
+> ```
+>
+> (na prática é redundante aqui: o app já está atrás do Authelia e de um Cloudflare Tunnel,
+> então nenhum crawler chega nele.)
 
 Tudo o mais (idioma padrão, marca própria, URLs de WASM/OCR internos, `BASE_URL` em subpasta, lista de ferramentas desabilitadas via `DISABLE_TOOLS`) só existe como **build arg**: exige compilar a sua própria imagem a partir do repositório oficial. As duas exceções úteis sem rebuild são o **idioma** (o usuário troca na própria UI) e a **lista de ferramentas escondidas** (via `config.json`, [Parte 5](#parte-5-esconder-ferramentas-opcional)).
 
@@ -223,6 +244,7 @@ sudo chmod 644 /srv/pdf/config.json
 | **Conversão Word/Excel/PPT trava** (~55%) ou `SharedArrayBuffer is not defined` | A página não está cross-origin isolada. Rode `window.crossOriginIsolated` no Console: se der `false`, você abriu por HTTP puro (ex.: `http://192.168.x.x`) ou um proxy externo removeu os headers `Cross-Origin-Opener-Policy` / `Cross-Origin-Embedder-Policy`. Acesse pelo `https://pdf.selflabs.org` (via Caddy + Cloudflare) e não pelo IP da LAN. |
 | **Ferramenta avançada falha** (EPUB/MOBI, PDF/A, comprimir, sumário) | O navegador não conseguiu buscar o módulo WASM em `cdn.jsdelivr.net`. Verifique a internet **da máquina do usuário** (o servidor não participa) e se algum bloqueador de DNS/anúncio está barrando a CDN.                                        |
 | Container reinicia com `socket() [::]:8080 failed`                    | Host com IPv6 desabilitado no kernel. Adicione `DISABLE_IPV6: "true"` nas env vars da stack e redeploy.                                                                                                                                          |
+| Loop de restart com `sed: can't create temp file '/usr/share/nginx/html/index.htmlXXXXXX': Permission denied` | `ROBOTS_NOINDEX=true` na imagem padrão. O `sed -i` do script de noindex não consegue gravar no diretório (dono `root`) e o entrypoint aborta. **Remova a variável** da stack e redeploy; use `header X-Robots-Tag` no Caddy se precisar do noindex ([Variáveis de ambiente](#variáveis-de-ambiente-disponíveis)). |
 | Log do app reclamando de `config.json` / `403`                        | O bind mount virou pasta. Pare a stack, `sudo rmdir /srv/pdf/config.json`, recrie o arquivo com `echo '{}' \| sudo tee /srv/pdf/config.json` ([Parte 1](#parte-1-preparar-a-pasta-de-dados)) e redeploy.                              |
 | **502 / Bad Gateway** em `pdf.selflabs.org`                           | App fora da `caddy-net`, nome de container errado no Caddyfile (tem que ser `bentopdf`), ou o Authelia caído. Confirme com `docker network inspect caddy-net` e que o `authelia` está `Up`.                                                      |
 | Redireciona pro `auth.` e não volta                                   | Problema no forward-auth/`X-Forwarded-Proto`. Ver [caddy → Troubleshooting](./caddy.md#troubleshooting).                                                                                                                                        |
