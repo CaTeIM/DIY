@@ -1,0 +1,14 @@
+# Normaliza fim de linha no repositório: LF no que é armazenado.
+* text=auto
+
+# Arquivos consumidos por Linux precisam de LF mesmo em checkout no Windows.
+# Um .sh com CRLF quebra o shebang no servidor: "#!/bin/bash\r: not found".
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+
+# Binários, nunca converter.
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.img   binary
