@@ -1,0 +1,307 @@
+name: "midia"
+
+# Stack de streaming doméstico automatizado (Orange Pi 5 / RK3588).
+#
+# Rede: todos os serviços web ficam em `midia-net` e se resolvem por NOME
+# (ex.: http://qbittorrent:8080). Plex, Jellyfin e PlexTraktSync ficam em
+# `network_mode: host` porque precisam de multicast (GDM/DLNA discovery) e de
+# acesso direto aos devices de vídeo do Rockchip.
+#
+# Segredos: definir na aba "Environment variables" do Portainer, nunca aqui.
+#   FILEBOT_VNC_PASSWORD   senha do VNC do FileBot (obrigatória)
+#   PLEX_CLAIM             claim token do Plex, só no primeiro boot (opcional)
+#   PLEX_ADVERTISE_IP      ex.: http://192.168.1.10:32400/ (opcional)
+
+services:
+  # ─── Download ──────────────────────────────────────────────────────────────
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - PUID=1000
+      - PGID=1000
+      - WEBUI_PORT=8080
+    volumes:
+      - /srv/qbittorrent/config:/config
+      # Mount único: downloads e biblioteca no MESMO volume, senão o hardlink
+      # do Radarr/Sonarr vira cópia e duplica o espaço em disco.
+      - /srv/midia:/data
+    networks:
+      - midia-net
+    ports:
+      - "8080:8080"
+      # Porta de escuta do BitTorrent. Deve bater com a definida em
+      # Preferências → Conexão → Porta usada para conexões de entrada.
+      - "62609:62609"
+      - "62609:62609/udp"
+    hostname: qbittorrent
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─── Indexadores ───────────────────────────────────────────────────────────
+  prowlarr:
+    image: ghcr.io/hotio/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /srv/prowlarr/config:/config
+    networks:
+      - midia-net
+    ports:
+      - "9696:9696"
+    hostname: prowlarr
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+    networks:
+      - midia-net
+    ports:
+      - "8191:8191"
+    hostname: flaresolverr
+
+  # ─── Gerenciadores de biblioteca ───────────────────────────────────────────
+  radarr:
+    image: ghcr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - qbittorrent
+    environment:
+      - TZ=America/Sao_Paulo
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /srv/radarr/appdata/config:/config
+      - /srv/midia:/data
+    networks:
+      - midia-net
+    ports:
+      - "7878:7878"
+    hostname: radarr
+
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - qbittorrent
+    environment:
+      - TZ=America/Sao_Paulo
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /srv/sonarr/appdata/config:/config
+      - /srv/midia:/data
+    networks:
+      - midia-net
+    ports:
+      - "8989:8989"
+    hostname: sonarr
+
+  bazarr:
+    image: ghcr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - radarr
+      - sonarr
+    environment:
+      - TZ=America/Sao_Paulo
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /srv/bazarr/appdata/config:/config
+      - /srv/midia:/data
+    networks:
+      - midia-net
+    ports:
+      - "6767:6767"
+    hostname: bazarr
+
+  # ─── Requisições ───────────────────────────────────────────────────────────
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - PORT=5055
+    volumes:
+      # Caminho herdado do Overseerr. Renomear exigiria mover os dados no
+      # servidor e o ganho seria só cosmético, então fica como está.
+      - /srv/overseerr/config:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    networks:
+      - midia-net
+    # O Plex roda na rede do host: o seerr o alcança por host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "5055:5055"
+    hostname: seerr
+
+  # ─── Players ───────────────────────────────────────────────────────────────
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+      # A imagem plexinc/pms-docker usa PLEX_UID/PLEX_GID. PUID/PGID (padrão
+      # linuxserver) são silenciosamente ignorados aqui.
+      - PLEX_UID=1000
+      - PLEX_GID=1000
+      - PLEX_CLAIM=${PLEX_CLAIM:-}
+      - ADVERTISE_IP=${PLEX_ADVERTISE_IP:-}
+    volumes:
+      - /srv/plex/config:/config
+      - /srv/midia:/data
+      - /srv/plex/transcode:/transcode
+    # SEM `devices: /dev/dri`. O Plex só acelera via Intel Quick Sync, AMD ou
+    # NVIDIA, e ainda exige Plex Pass ativo. No RK3588 (Mali + RKMPP) não há
+    # aceleração possível: mapear /dev/dri e PLEX_HW_TRANS_MAX não faz efeito.
+    # Para transcode acelerado nesta placa, use o Jellyfin abaixo.
+    network_mode: host
+    hostname: plex
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  jellyfin:
+    # Fork do nyanmisaka com pipeline RKMPP/RGA completo para RK3588 (arm64).
+    # A imagem oficial jellyfin/jellyfin NÃO tem esse suporte.
+    image: nyanmisaka/jellyfin:latest-rockchip
+    container_name: jellyfin
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo
+    user: "1000:1000"
+    # video (44) e render (105) dão acesso aos devices de vídeo do Rockchip.
+    # Confirme os GIDs no host com: getent group video render
+    group_add:
+      - "44"
+      - "105"
+    volumes:
+      - /srv/jellyfin/config:/config
+      - /srv/jellyfin/cache:/cache
+      - /srv/midia:/data
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/mpp_service:/dev/mpp_service
+      - /dev/rga:/dev/rga
+      - /dev/mali0:/dev/mali0
+      - /dev/dma_heap:/dev/dma_heap
+    network_mode: host
+    hostname: jellyfin
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─── Extras ────────────────────────────────────────────────────────────────
+  tautulli:
+    image: ghcr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /srv/tautulli/config:/config
+    networks:
+      - midia-net
+    # O Plex roda na rede do host: apontar o Tautulli para
+    # host.docker.internal:32400 em vez de localhost.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8181:8181"
+    hostname: tautulli
+
+  plextraktsync:
+    image: ghcr.io/taxel/plextraktsync
+    container_name: plextraktsync
+    command: sync
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /srv/plextrakt/config:/app/config
+      - /srv/plextrakt/xdg:/app/xdg
+    # Rede do host para alcançar o Plex em localhost:32400.
+    network_mode: host
+    hostname: plextraktsync
+    healthcheck:
+      test: ["CMD", "plextraktsync", "healthcheck"]
+      interval: 60s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  filebot:
+    image: jlesage/filebot:latest
+    container_name: filebot
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=America/Sao_Paulo
+      - USER_ID=1000
+      - GROUP_ID=1000
+      - VNC_PASSWORD=${FILEBOT_VNC_PASSWORD}
+    volumes:
+      - /srv/filebot/config:/config
+      - /srv/midia:/storage:rw
+    networks:
+      - midia-net
+    ports:
+      - "5800:5800"
+    hostname: filebot
+
+networks:
+  midia-net:
+    name: midia-net
+    driver: bridge
