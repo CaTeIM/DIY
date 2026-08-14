@@ -110,11 +110,12 @@ bootloader, e é isso que precisa ser capturado separadamente.
 | :---------------- | :----------------------------------------------------------- |
 | Modo              | RSYNC com hardlinks entre snapshots                          |
 | Destino           | `/dev/sdb1`, disco **separado** do sistema                   |
-| Snapshots         | 16, o mais recente de 2026-08-08 17:00                       |
+| Snapshots         | 16 em rodízio, com 153,9 GB livres no destino                |
 | Espaço ocupado    | 5,9 GB para os 16 snapshots (o hardlink evita duplicar)      |
 | Retenção          | mensal 6, semanal 4, diário 7, boot 1, horário desligado     |
 | Agendamento       | `/etc/cron.d/timeshift-hourly` roda `timeshift --check` de hora em hora |
 | Snapshot de boot  | `/etc/cron.d/timeshift-boot`, 10 minutos após cada reboot    |
+| Exclusões         | `/srv/midia/**`, `/srv/dev-disk-by-uuid*/**`, `/mnt/**`, `/media/**` |
 
 Verificar a qualquer momento:
 
@@ -139,7 +140,7 @@ Confirmado por inspeção dentro do snapshot mais recente:
 | Bootloader (SPI + raw NVMe) | Não é arquivo, são setores brutos                         | **Parte 3**          |
 | Tabela de partições (GPT)   | Idem                                                      | **Parte 3**          |
 | `/var/lib/docker`           | **Exclusão interna do Timeshift**, não configurável       | **Parte 4**          |
-| `/home/**` e `/root/**`     | Exclusão na configuração deste servidor                   | **Parte 4**          |
+| `/home/**` e `/root/**`     | Eram excluídos aqui. **Corrigido em 2026-08-13**, hoje entram no snapshot | Parte 2.4 |
 | `/srv/midia/**`             | Exclusão proposital: é a biblioteca de vídeo              | (não faz backup)     |
 | `/srv/dev-disk-by-uuid*/**` | Exclusão proposital: são os discos de dados do OMV        | (não faz backup)     |
 
@@ -162,7 +163,28 @@ incluí-los, edite as exclusões no painel do OMV (**Serviços** → **Timeshift
 sudo nano /etc/timeshift/timeshift.json
 ```
 
-> Se preferir não inflar os snapshots, o script da Parte 6 já faz um `tar` separado dos dois.
+A lista de exclusões deste servidor depois do ajuste:
+
+```json
+"exclude" : [
+  "/srv/midia/**",
+  "/srv/dev-disk-by-uuid*/**",
+  "/mnt/**",
+  "/media/**"
+],
+```
+
+Confirme que funcionou olhando dentro do próximo snapshot:
+
+```bash
+SNAP=/srv/dev-disk-by-uuid-ac8dc031-1e89-495a-b7df-002c7652b786/timeshift/snapshots
+sudo ls "$SNAP/$(sudo ls -t $SNAP | head -1)/localhost/home/"
+```
+
+Deve listar os usuários. Se vier vazio, a exclusão continua ativa.
+
+> A alternativa é manter as exclusões e usar `INCLUDE_HOME=1` no script da Parte 6, que faz um `tar`
+> separado. É pior: o `tar` é completo a cada rodada, sem dedupe. Ver Parte 4.2.
 
 ### 2.5. Snapshot manual antes de mexer em algo
 
@@ -176,6 +198,15 @@ sudo timeshift --create --comments "antes de atualizar o OMV"
 
 Esta é a camada que faltava. Tudo aqui pode ser capturado **com a placa ligada e em produção**,
 porque são regiões que não mudam durante a operação normal.
+
+> Os comandos a seguir são a versão manual, útil para entender o que está sendo salvo. Se quiser
+> apenas rodar, pule para a **Parte 6**: o script faz tudo isso com verificação e rotação.
+
+Crie a pasta de destino antes:
+
+```bash
+sudo mkdir -p /srv/backup-boot
+```
 
 ### 3.1. SPI NOR: o bootloader da placa (16 MB)
 
@@ -217,11 +248,25 @@ Em dois formatos, porque cada um serve melhor a um cenário:
 
 ```bash
 # Texto, legível e editável. Restaura com: sfdisk /dev/nvme0n1 < particoes.sfdisk
-sudo sfdisk --dump /dev/nvme0n1 > /srv/backup-boot/particoes.sfdisk
+sudo sfdisk --dump /dev/nvme0n1 | sudo tee /srv/backup-boot/particoes.sfdisk > /dev/null
 
 # Binário, preserva GUIDs exatos das partições
 sudo sgdisk --backup=/srv/backup-boot/particoes.gpt /dev/nvme0n1
 ```
+
+> [!IMPORTANT]
+> Repare no `| sudo tee` em vez de `>`. O redirecionamento `>` é executado pelo **seu shell**, não
+> pelo `sudo`, então ele tenta criar o arquivo com o seu usuário e falha com
+> `permissão negada` numa pasta que pertence ao `root`:
+>
+> ```
+> ❯ sudo sfdisk --dump /dev/nvme0n1 > /srv/backup-boot/particoes.sfdisk
+> zsh: permissão negada: /srv/backup-boot/particoes.sfdisk
+> ```
+>
+> Isso vale para qualquer `sudo comando > arquivo` deste guia. Use `| sudo tee arquivo > /dev/null`.
+> Comandos como `dd of=...` e `sgdisk --backup=...` não têm esse problema, porque quem abre o
+> arquivo é o próprio programa, já elevado pelo `sudo`.
 
 > [!NOTE]
 > O `sgdisk` vem do pacote `gdisk`, que **já está instalado** neste servidor (o OMV depende dele).
@@ -294,16 +339,21 @@ O que você vai querer ter em mãos com o servidor fora do ar:
 ```bash
 {
   lsblk -o NAME,SIZE,FSTYPE,LABEL,UUID,MOUNTPOINT
-  blkid
+  sudo blkid
   cat /etc/fstab
   cat /boot/orangepiEnv.txt
   uname -a
-  docker ps -a --format '{{.Names}}\t{{.Image}}'
-} > /srv/backup-boot/inventario.txt
+  sudo docker ps -a --format '{{.Names}}\t{{.Image}}'
+} | sudo tee /srv/backup-boot/inventario.txt > /dev/null
 
 # Lista de pacotes, para reinstalar tudo de uma vez em um sistema novo
-dpkg --get-selections > /srv/backup-boot/pacotes.list
+dpkg --get-selections | sudo tee /srv/backup-boot/pacotes.list > /dev/null
 ```
+
+> [!TIP]
+> O `sudo` fica **dentro** do bloco, nos comandos que precisam dele, e o `sudo tee` fica na saída.
+> Não tente escrever `sudo { ... }`: o `{ }` é uma construção do shell, não um programa, e o
+> resultado é `parse error near '}'`.
 
 ---
 
@@ -716,6 +766,10 @@ kernel, mudança de particionamento).
 | `/srv/midia` aponta para lugar nenhum                       | UUID do HD de mídia mudou                     | Recriar o symlink para o novo caminho `/srv/dev-disk-by-uuid-.../midia`        |
 | Discos de dados não montam após restaurar                   | OMV precisa reaplicar a configuração          | `sudo omv-salt deploy run fstab`                                               |
 | `sgdisk: command not found`                                 | Binário em `/sbin`, fora do `PATH` do usuário | Usar `sudo sgdisk` ou `/sbin/sgdisk`. Se faltar mesmo: `sudo apt install gdisk` |
+| `permissão negada` em `sudo comando > arquivo`              | O `>` é do shell, não do `sudo`               | `sudo comando \| sudo tee arquivo > /dev/null`                                  |
+| `parse error near '}'` ao tentar `sudo { ... }`             | `{ }` é construção do shell, não um programa  | Pôr o `sudo` nos comandos de dentro do bloco, e `\| sudo tee` na saída          |
+| `permission denied ... docker.sock`                         | Usuário fora do grupo `docker`                | Usar `sudo docker`, ou `sudo usermod -aG docker $USER` e reabrir a sessão       |
+| Arquivo de backup gerado com 20 bytes                       | Dump de um banco que não existe mais          | 20 bytes é um gzip vazio. Ver **Notas Importantes**, backup que falha em silêncio |
 | `dd` da SPI resulta em arquivo só de zeros                   | Placa sem bootloader na SPI (boota de SD/eMMC)| Normal em algumas configurações. Nesse caso o Cenário C exige a forma B        |
 | GPT inválida após restaurar em disco maior                  | GPT secundária no lugar antigo                | `sudo sgdisk -e /dev/nvme0n1`                                                  |
 
@@ -729,6 +783,28 @@ kernel, mudança de particionamento).
 - **`/var/log` está em zram**, ou seja, em RAM. Os logs somem a cada reboot, por decisão do plugin
   `openmediavault-flashmemory` para poupar escritas. Não conte com log histórico para investigar um
   problema pós-reboot.
+- **Backup que falha em silêncio é pior que backup nenhum**, porque ele te dá confiança falsa.
+  Caso real neste servidor: o `/srv/logistics/infra/backup.sh` roda todo dia às 03:00 e gera
+  `atlas_AAAAMMDD.sql.gz`. Quando o container do banco foi removido, o `pg_dump` passou a falhar,
+  mas o `gzip` continuou produzindo um arquivo. O resultado são dumps de **20 bytes** (um gzip
+  vazio) com data de hoje, que parecem backups recentes numa listagem por data. Monitore
+  **tamanho**, não só existência:
+
+  ```bash
+  # Alerta se o dump de hoje tiver menos de 1 KB
+  find /srv/<serviço>/backups -name '*.sql.gz' -mtime -1 -size -1k \
+    -exec echo "ALERTA: backup suspeito: {}" \;
+  ```
+
+  Em scripts de dump, use `set -o pipefail` e verifique o código de saída do `pg_dump` antes de
+  compactar. Sem isso, o `pg_dump ... | gzip > arquivo` retorna sucesso mesmo com o `pg_dump`
+  falhando.
+
+- **Arquivos soltos na raiz de `/srv/backup-boot` não são rotacionados.** O script só remove
+  subpastas com nome de data (`20*`). Se você rodar os comandos manuais da Parte 3 apontando para a
+  raiz, esses arquivos ficam lá para sempre, ocupando espaço em duplicidade. Rode-os em uma subpasta
+  ou apague depois de conferir.
+
 - **Anote os UUIDs em papel.** Eles estão no `inventario.txt` do backup, mas se o backup não abrir,
   você vai querer esses números em algum lugar que não dependa do servidor.
 - **Snapshot manual antes de qualquer mudança grande.** Upgrade de OMV, troca de kernel,

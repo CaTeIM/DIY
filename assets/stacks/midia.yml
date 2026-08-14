@@ -3,14 +3,20 @@ name: "midia"
 # Stack de streaming doméstico automatizado (Orange Pi 5 / RK3588).
 #
 # Rede: todos os serviços web ficam em `midia-net` e se resolvem por NOME
-# (ex.: http://qbittorrent:8080). Plex, Jellyfin e PlexTraktSync ficam em
-# `network_mode: host` porque precisam de multicast (GDM/DLNA discovery) e de
-# acesso direto aos devices de vídeo do Rockchip.
+# (ex.: http://qbittorrent:8080). Plex e Jellyfin ficam em `network_mode: host`
+# porque precisam de multicast (GDM/DLNA discovery) e de acesso direto aos
+# devices de vídeo do Rockchip.
 #
 # Segredos: definir na aba "Environment variables" do Portainer, nunca aqui.
 #   FILEBOT_VNC_PASSWORD   senha do VNC do FileBot (obrigatória)
+#   YAMTRACK_SECRET        chave de assinatura do Django (obrigatória)
+#                          gerar com: openssl rand -base64 48
 #   PLEX_CLAIM             claim token do Plex, só no primeiro boot (opcional)
 #   PLEX_ADVERTISE_IP      ex.: http://192.168.1.10:32400/ (opcional)
+#   YAMTRACK_URLS          origens públicas confiáveis, se usar proxy reverso
+#                          ex.: https://yamtrack.exemplo.com (opcional)
+#   YAMTRACK_REGISTRATION  True no primeiro boot para criar sua conta, depois
+#                          troque para False (opcional, padrão True)
 
 services:
   # ─── Download ──────────────────────────────────────────────────────────────
@@ -226,6 +232,11 @@ services:
       - /dev/rga:/dev/rga
       - /dev/mali0:/dev/mali0
       - /dev/dma_heap:/dev/dma_heap
+    # Transcode em RAM: os arquivos temporários são descartáveis e escrevê-los
+    # no NVMe só desgasta o SSD. Ajuste o `size` conforme a RAM disponível.
+    # Precisa bater com "Local de transcodificação" no painel do Jellyfin.
+    tmpfs:
+      - /cache/transcodes:size=2g,mode=1777
     network_mode: host
     hostname: jellyfin
     logging:
@@ -257,29 +268,53 @@ services:
       - "8181:8181"
     hostname: tautulli
 
-  plextraktsync:
-    image: ghcr.io/taxel/plextraktsync
-    container_name: plextraktsync
-    command: sync
+  # Rastreador de histórico self-hosted, no lugar do PlexTraktSync.
+  # O Trakt passou a exigir assinatura VIP para criar aplicativos OAuth em
+  # julho de 2026 e apagou os apps de contas gratuitas, o que inviabilizou o
+  # PlexTraktSync aqui. O Yamtrack guarda o histórico na própria placa e recebe
+  # os eventos por webhook do Jellyfin, do Plex e do Emby.
+  yamtrack:
+    image: ghcr.io/fuzzygrim/yamtrack:latest
+    container_name: yamtrack
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      - yamtrack-redis
     environment:
       - TZ=America/Sao_Paulo
-      - PUID=1000
-      - PGID=1000
+      - SECRET=${YAMTRACK_SECRET}
+      # Nome explícito do container: evita colidir com qualquer outro serviço
+      # chamado `redis` que venha a compartilhar a rede.
+      - REDIS_URL=redis://yamtrack-redis:6379
+      - URLS=${YAMTRACK_URLS:-}
+      - REGISTRATION=${YAMTRACK_REGISTRATION:-True}
+      - TMDB_LANG=pt-BR
     volumes:
-      - /srv/plextrakt/config:/app/config
-      - /srv/plextrakt/xdg:/app/xdg
-    # Rede do host para alcançar o Plex em localhost:32400.
-    network_mode: host
-    hostname: plextraktsync
-    healthcheck:
-      test: ["CMD", "plextraktsync", "healthcheck"]
-      interval: 60s
-      timeout: 10s
-      start_period: 30s
-      retries: 3
+      - /srv/yamtrack/db:/yamtrack/db
+    networks:
+      - midia-net
+    ports:
+      # 8000 no host já é do Portainer, por isso o mapeamento 8010 -> 8000.
+      - "8010:8000"
+    hostname: yamtrack
+
+  yamtrack-redis:
+    image: redis:8-alpine
+    container_name: yamtrack-redis
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    # Mesmo UID do resto da stack, para o bind mount funcionar sem chown extra.
+    user: "1000:1000"
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      # Bind mount em vez de volume nomeado: volumes nomeados vivem em
+      # /var/lib/docker, que o Timeshift exclui e não entra no backup.
+      - /srv/yamtrack/redis:/data
+    networks:
+      - midia-net
+    hostname: yamtrack-redis
 
   filebot:
     image: jlesage/filebot:latest

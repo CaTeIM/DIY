@@ -1,4 +1,4 @@
-# 🎬 Stack de Mídia (Plex + Jellyfin + *arrs + qBittorrent)
+# 🎬 Stack de Mídia (Plex + Jellyfin + \*arrs + qBittorrent)
 
 Servidor de streaming doméstico automatizado rodando em uma Orange Pi 5 (Rockchip RK3588S). Você pede
 um filme pelo celular, e alguns minutos depois ele aparece na sua "Netflix particular" já renomeado,
@@ -17,20 +17,20 @@ A stack pronta está em [`assets/stacks/midia.yml`](../assets/stacks/midia.yml).
 
 ## Quem é quem
 
-| Serviço           | Papel                                                                                  |
-| :---------------- | :------------------------------------------------------------------------------------- |
-| **qBittorrent**   | Cliente de torrent. Recebe os magnet links e baixa                                     |
-| **Prowlarr**      | Agregador de indexadores. Alimenta Radarr e Sonarr com as fontes de torrent            |
-| **FlareSolverr**  | Proxy que resolve desafios Cloudflare de indexadores protegidos                        |
-| **Radarr**        | Gerencia filmes: procura, baixa, renomeia, organiza e faz upgrade de qualidade         |
-| **Sonarr**        | O mesmo para séries e animes, com agenda de episódios que ainda vão ao ar              |
-| **Bazarr**        | Busca e sincroniza legendas para o que Radarr e Sonarr importaram                      |
-| **Seerr**         | Portal de requisições. Fork do Overseerr. É por aqui que a família pede conteúdo        |
-| **Plex**          | Player principal. Interface polida, apps em toda TV, console e celular                 |
-| **Jellyfin**      | Player alternativo, 100% aberto e o **único com transcode por hardware nesta placa**   |
-| **Tautulli**      | Estatísticas e monitoramento de quem assistiu o quê no Plex                             |
-| **PlexTraktSync** | Sincroniza histórico e listas do Plex com o Trakt.tv                                   |
-| **FileBot**       | Renomeador manual (interface gráfica via navegador) para o que os `*arrs` não pegaram  |
+| Serviço          | Papel                                                                                 |
+| :--------------- | :------------------------------------------------------------------------------------ |
+| **qBittorrent**  | Cliente de torrent. Recebe os magnet links e baixa                                    |
+| **Prowlarr**     | Agregador de indexadores. Alimenta Radarr e Sonarr com as fontes de torrent           |
+| **FlareSolverr** | Proxy que resolve desafios Cloudflare de indexadores protegidos                       |
+| **Radarr**       | Gerencia filmes: procura, baixa, renomeia, organiza e faz upgrade de qualidade        |
+| **Sonarr**       | O mesmo para séries e animes, com agenda de episódios que ainda vão ao ar             |
+| **Bazarr**       | Busca e sincroniza legendas para o que Radarr e Sonarr importaram                     |
+| **Seerr**        | Portal de requisições. Fork do Overseerr. É por aqui que a família pede conteúdo      |
+| **Plex**         | Player principal. Interface polida, apps em toda TV, console e celular                |
+| **Jellyfin**     | Player alternativo, 100% aberto e o **único com transcode por hardware nesta placa**  |
+| **Tautulli**     | Estatísticas e monitoramento de quem assistiu o quê no Plex                           |
+| **Yamtrack**     | Histórico de exibição self-hosted. Recebe por webhook o que você assiste              |
+| **FileBot**      | Renomeador manual (interface gráfica via navegador) para o que os `*arrs` não pegaram |
 
 ---
 
@@ -71,30 +71,36 @@ A stack pronta está em [`assets/stacks/midia.yml`](../assets/stacks/midia.yml).
        ┌────────────┐                    ┌────────────┐
        │   Bazarr   │  legendas          │ Plex/Jelly │──► TV, celular, PC
        └────────────┘                    └──────┬─────┘
-                                                │
+                                                │ webhook ao assistir
                                    ┌────────────┴────────────┐
                                    ▼                         ▼
                             ┌────────────┐          ┌───────────────┐
-                            │  Tautulli  │          │ PlexTraktSync │
-                            └────────────┘          └───────────────┘
+                            │  Tautulli  │          │   Yamtrack    │
+                            │ (só Plex)  │          │ (histórico)   │
+                            └────────────┘          └───────┬───────┘
+                                                            │
+                                                    ┌───────▼───────┐
+                                                    │ yamtrack-redis│
+                                                    └───────────────┘
 ```
 
 ### Portas no host
 
-| Porta          | Serviço      | Observação                                       |
-| :------------- | :----------- | :----------------------------------------------- |
-| `8080/tcp`     | qBittorrent  | Web UI                                           |
-| `62609/tcp+udp`| qBittorrent  | Porta de escuta do BitTorrent. Precisa ser aberta no roteador |
-| `9696/tcp`     | Prowlarr     | Web UI                                           |
-| `8191/tcp`     | FlareSolverr | API interna. **Não** expor à internet            |
-| `7878/tcp`     | Radarr       | Web UI                                           |
-| `8989/tcp`     | Sonarr       | Web UI                                           |
-| `6767/tcp`     | Bazarr       | Web UI                                           |
-| `5055/tcp`     | Seerr        | Web UI                                           |
-| `32400/tcp`    | Plex         | `network_mode: host`                             |
-| `8096/tcp`     | Jellyfin     | `network_mode: host`                             |
-| `8181/tcp`     | Tautulli     | Web UI                                           |
-| `5800/tcp`     | FileBot      | Interface gráfica via navegador (noVNC)          |
+| Porta           | Serviço      | Observação                                                                        |
+| :-------------- | :----------- | :-------------------------------------------------------------------------------- |
+| `8080/tcp`      | qBittorrent  | Web UI                                                                            |
+| `62609/tcp+udp` | qBittorrent  | Porta de escuta do BitTorrent. Precisa ser aberta no roteador                     |
+| `9696/tcp`      | Prowlarr     | Web UI                                                                            |
+| `8191/tcp`      | FlareSolverr | API interna. **Não** expor à internet                                             |
+| `7878/tcp`      | Radarr       | Web UI                                                                            |
+| `8989/tcp`      | Sonarr       | Web UI                                                                            |
+| `6767/tcp`      | Bazarr       | Web UI                                                                            |
+| `5055/tcp`      | Seerr        | Web UI                                                                            |
+| `32400/tcp`     | Plex         | `network_mode: host`                                                              |
+| `8096/tcp`      | Jellyfin     | `network_mode: host`                                                              |
+| `8181/tcp`      | Tautulli     | Web UI                                                                            |
+| `8010/tcp`      | Yamtrack     | Web UI. Mapeia para a `8000` do container, porque a `8000` do host é do Portainer |
+| `5800/tcp`      | FileBot      | Interface gráfica via navegador (noVNC)                                           |
 
 ---
 
@@ -147,9 +153,13 @@ sudo mkdir -p /srv/overseerr/config
 sudo mkdir -p /srv/plex/{config,transcode}
 sudo mkdir -p /srv/jellyfin/{config,cache}
 sudo mkdir -p /srv/tautulli/config
-sudo mkdir -p /srv/plextrakt/{config,xdg}
+sudo mkdir -p /srv/yamtrack/{db,redis}
 sudo mkdir -p /srv/filebot/config
 ```
+
+> [!NOTE]
+> O Jellyfin usa `tmpfs` para os arquivos temporários de transcode, então **não** existe pasta
+> criada para eles. A pasta `/srv/jellyfin/cache` continua servindo para imagens e metadados.
 
 ### 1.3. Ajustar as permissões
 
@@ -159,8 +169,11 @@ falham com `EACCES` na primeira escrita.
 ```bash
 sudo chown -R 1000:1000 /srv/midia
 sudo chown -R 1000:1000 /srv/{qbittorrent,prowlarr,radarr,sonarr,bazarr,overseerr}
-sudo chown -R 1000:1000 /srv/{plex,jellyfin,tautulli,plextrakt,filebot}
+sudo chown -R 1000:1000 /srv/{plex,jellyfin,tautulli,yamtrack,filebot}
 ```
+
+> O `yamtrack-redis` roda com `user: "1000:1000"` na stack justamente para caber nesse mesmo
+> `chown`. A imagem oficial do Redis usaria o UID `999` e exigiria um comando à parte.
 
 ### 1.4. Confirmar os GIDs de vídeo (para o Jellyfin)
 
@@ -177,7 +190,44 @@ render:x:105:orangepi
 
 Se os números forem diferentes na sua placa, ajuste o `group_add` do serviço `jellyfin` no YAML.
 
-### 1.5. Conferir os devices de vídeo do Rockchip
+### 1.5. Liberar as portas no firewall (só para Plex e Jellyfin)
+
+Esta é a pegadinha menos óbvia da stack, e ela atinge **apenas** os serviços em `network_mode: host`.
+
+Containers que publicam portas com `ports:` são alcançáveis mesmo com o firewall fechado, porque o
+Docker escreve as próprias regras na chain `DOCKER` do iptables e **contorna o UFW**. Já Plex e
+Jellyfin usam a rede do host, então o tráfego bate na chain `INPUT` e obedece ao firewall.
+
+O resultado confunde: Radarr e Sonarr abrem normalmente, e o Jellyfin não abre, mesmo com o
+container saudável e respondendo em `localhost` dentro do servidor.
+
+```bash
+# O firewall está ativo e com política DROP?
+sudo ufw status
+
+# Liberar o Jellyfin
+sudo ufw allow 8096/tcp comment 'Jellyfin'
+
+# Opcional: descoberta automática pelos apps de TV e celular na LAN
+sudo ufw allow 7359/udp comment 'Jellyfin discovery'
+sudo ufw allow 1900/udp comment 'DLNA'
+
+# O Plex costuma já estar liberado, confirme
+sudo ufw status | grep 32400
+```
+
+Como diagnosticar quando algo em `network_mode: host` não abre:
+
+```bash
+# Dentro do servidor: o serviço está escutando e respondendo?
+sudo ss -tlnp | grep 8096
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8096/
+```
+
+Se aqui responder (o Jellyfin devolve `302`, que é o redirect para `/web/`) e mesmo assim não abrir
+de outra máquina, o problema é firewall, não o container.
+
+### 1.6. Conferir os devices de vídeo do Rockchip
 
 ```bash
 ls -l /dev/mpp_service /dev/rga /dev/mali0 && ls /dev/dri /dev/dma_heap
@@ -192,11 +242,24 @@ Rockchip e o transcode por hardware do Jellyfin não vai funcionar.
 
 Na criação da stack, aba **Environment variables** do Portainer:
 
-| Variável                | Obrigatória | Descrição                                                                 |
-| :---------------------- | :---------- | :------------------------------------------------------------------------ |
-| `FILEBOT_VNC_PASSWORD`  | Sim         | Senha de acesso à interface gráfica do FileBot                            |
-| `PLEX_CLAIM`            | Não         | Token de [plex.tv/claim](https://plex.tv/claim), válido por 4 minutos. Só no primeiro boot |
-| `PLEX_ADVERTISE_IP`     | Não         | Ex.: `http://192.168.x.x:32400/`. Ajuda o Plex a se anunciar na LAN       |
+| Variável                | Obrigatória | Descrição                                                                                        |
+| :---------------------- | :---------- | :----------------------------------------------------------------------------------------------- |
+| `FILEBOT_VNC_PASSWORD`  | Sim         | Senha de acesso à interface gráfica do FileBot                                                   |
+| `YAMTRACK_SECRET`       | Sim         | Chave de assinatura do Django no Yamtrack. Gere com `openssl rand -base64 48`                    |
+| `YAMTRACK_REGISTRATION` | Não         | `True` no primeiro boot para criar sua conta. Troque para `False` depois                         |
+| `YAMTRACK_URLS`         | Não         | Origens públicas confiáveis, se for expor por proxy reverso. Ex.: `https://yamtrack.exemplo.com` |
+| `PLEX_CLAIM`            | Não         | Token de [plex.tv/claim](https://plex.tv/claim), válido por 4 minutos. Só no primeiro boot       |
+| `PLEX_ADVERTISE_IP`     | Não         | Ex.: `http://192.168.x.x:32400/`. Ajuda o Plex a se anunciar na LAN                              |
+
+Para gerar o segredo do Yamtrack:
+
+```bash
+openssl rand -base64 48
+```
+
+> [!WARNING]
+> Trocar o `YAMTRACK_SECRET` depois invalida as sessões de login. Gere uma vez e guarde junto dos
+> seus outros segredos.
 
 > [!CAUTION]
 > Nunca escreva senha diretamente no YAML. O arquivo da stack acaba no Git, em backup e no export
@@ -223,11 +286,14 @@ Isso importa: se a stack usar `network_mode: bridge` sem rede dedicada, cada ser
 outros pelo IP do host. No dia em que o servidor mudar de IP (troca de roteador, DHCP, mudança de
 faixa), **todos** os apontamentos quebram de uma vez.
 
-Plex, Jellyfin e PlexTraktSync são a exceção e ficam em `network_mode: host`, porque dependem de
-multicast para o discovery na rede local e de acesso direto aos devices de vídeo.
+Plex e Jellyfin são a exceção e ficam em `network_mode: host`, porque dependem de multicast para o
+discovery na rede local e de acesso direto aos devices de vídeo.
 
 Para os containers da rede bridge falarem com o Plex (que está na rede do host), a stack define
 `extra_hosts: host.docker.internal:host-gateway` no Tautulli e no Seerr.
+
+No sentido inverso, quando o Jellyfin (rede do host) precisa alcançar o Yamtrack (rede bridge com
+porta publicada), o endereço é simplesmente `http://localhost:8010`.
 
 ---
 
@@ -260,12 +326,12 @@ Sem isso, o qBittorrent devolve `401 Unauthorized` para requisições que chegam
 
 Em **Opções** → **Downloads**:
 
-| Configuração                                  | Valor                           |
-| :-------------------------------------------- | :------------------------------ |
-| Modo de gerenciamento padrão dos torrents     | **Automático**                  |
-| Quando a categoria do torrent for mudada      | Re-alocar torrent               |
-| Quando o caminho padrão de salvamento mudar   | Re-alocar torrents afetados     |
-| Caminho padrão de salvamento                  | `/data/Downloads/torrents`      |
+| Configuração                                      | Valor                       |
+| :------------------------------------------------ | :-------------------------- |
+| Modo de gerenciamento padrão dos torrents         | **Automático**              |
+| Quando a categoria do torrent for mudada          | Re-alocar torrent           |
+| Quando o caminho padrão de salvamento mudar       | Re-alocar torrents afetados |
+| Caminho padrão de salvamento                      | `/data/Downloads/torrents`  |
 | Pré-alocar espaço em disco para todos os arquivos | Marcado                     |
 
 > [!IMPORTANT]
@@ -277,10 +343,10 @@ Em **Opções** → **Downloads**:
 O Radarr e o Sonarr criam as categorias sozinhos no primeiro download. Se quiser adiantar, clique
 com o botão direito em **Categorias** → **Adicionar categoria**:
 
-| Categoria   | Caminho de salvamento               |
-| :---------- | :---------------------------------- |
-| `radarr`    | `/data/Downloads/torrents/radarr`   |
-| `tv-sonarr` | `/data/Downloads/torrents/tv-sonarr`|
+| Categoria   | Caminho de salvamento                |
+| :---------- | :----------------------------------- |
+| `radarr`    | `/data/Downloads/torrents/radarr`    |
+| `tv-sonarr` | `/data/Downloads/torrents/tv-sonarr` |
 
 ### 4.5. Porta de conexão
 
@@ -298,11 +364,11 @@ Acesse `http://192.168.x.x:9696`.
 
 **Settings** → **Indexers** → **+** (em Indexer Proxies) → **FlareSolverr**:
 
-| Campo | Valor                     |
-| :---- | :------------------------ |
-| Name  | `FlareSolverr`            |
-| Tags  | `flaresolverr`            |
-| Host  | `http://flaresolverr:8191`|
+| Campo | Valor                      |
+| :---- | :------------------------- |
+| Name  | `FlareSolverr`             |
+| Tags  | `flaresolverr`             |
+| Host  | `http://flaresolverr:8191` |
 
 Depois, em cada indexador que exija Cloudflare, adicione a tag `flaresolverr`.
 
@@ -310,12 +376,12 @@ Depois, em cada indexador que exija Cloudflare, adicione a tag `flaresolverr`.
 
 **Settings** → **Apps** → **+** → **Radarr**:
 
-| Campo             | Valor                     |
-| :---------------- | :------------------------ |
-| Sync Level        | `Full Sync`               |
-| Prowlarr Server   | `http://prowlarr:9696`    |
-| Radarr Server     | `http://radarr:7878`      |
-| API Key           | Radarr → Settings → General → API Key |
+| Campo           | Valor                                 |
+| :-------------- | :------------------------------------ |
+| Sync Level      | `Full Sync`                           |
+| Prowlarr Server | `http://prowlarr:9696`                |
+| Radarr Server   | `http://radarr:7878`                  |
+| API Key         | Radarr → Settings → General → API Key |
 
 Repita para o Sonarr com `http://sonarr:8989`.
 
@@ -372,11 +438,11 @@ o Plex e o Jellyfin acertam o filme na primeira varredura, sem depender de heur�
 
 Ainda em **Media Management**, seção **Importing**:
 
-| Configuração                        | Valor       |
-| :---------------------------------- | :---------- |
-| **Use Hard Links instead of Copy**  | **Marcado** |
-| Skip Free Space Check               | Marcado     |
-| Import Extra Files                  | Desmarcado  |
+| Configuração                       | Valor       |
+| :--------------------------------- | :---------- |
+| **Use Hard Links instead of Copy** | **Marcado** |
+| Skip Free Space Check              | Marcado     |
+| Import Extra Files                 | Desmarcado  |
 
 ### 6.3. Lixeira
 
@@ -400,9 +466,11 @@ Também em **File Management**: **Propers and Repacks** → `Do not Prefer`.
 > lugares dependendo de onde o item foi adicionado.
 >
 > Antes de remover a raiz sobrando, verifique se há mídia nela:
+>
 > ```bash
 > ls -la /srv/midia/radarr/
 > ```
+>
 > Se houver, mova para `/srv/midia/Filmes/` e rode **Movies** → **Mass Editor** para reapontar a
 > pasta raiz dos filmes afetados. Só então remova a raiz antiga.
 
@@ -412,11 +480,11 @@ Também em **File Management**: **Propers and Repacks** → `Do not Prefer`.
 
 Os três essenciais, com os `trash_id` do [TRaSH Guides](https://trash-guides.info/):
 
-| Formato        | `trash_id`                         | Pontuação | Para quê                                                    |
-| :------------- | :--------------------------------- | :-------- | :---------------------------------------------------------- |
+| Formato        | `trash_id`                         | Pontuação | Para quê                                                          |
+| :------------- | :--------------------------------- | :-------- | :---------------------------------------------------------------- |
 | **BR-DISK**    | `ed38b889b31be83fda192888e2286d83` | `-10000`  | Bloqueia releases ISO/BD completos, de 50 GB, que o Plex nem abre |
-| **3D**         | `b8cd450cbfa689c0259a01d9e29ba3d6` | `-10000`  | Bloqueia releases 3D (SBS, Half-OU)                          |
-| **Open Matte** | `09d9dd29a0fc958f9796e65c2a8864b4` | `25`      | Prefere versões com o quadro completo, sem corte             |
+| **3D**         | `b8cd450cbfa689c0259a01d9e29ba3d6` | `-10000`  | Bloqueia releases 3D (SBS, Half-OU)                               |
+| **Open Matte** | `09d9dd29a0fc958f9796e65c2a8864b4` | `25`      | Prefere versões com o quadro completo, sem corte                  |
 
 > [!TIP]
 > Pegue o JSON sempre atualizado em
@@ -472,14 +540,14 @@ Dá para o Radarr monitorar uma lista do Letterboxd e baixar tudo que você adic
    Radarr entende
 3. **Settings** → **Lists** → **+** → **Advanced** → **Custom Lists**
 
-| Campo                 | Valor            |
-| :-------------------- | :--------------- |
-| Enable Automatic Add  | Marcado          |
-| Monitor               | `Movie Only`     |
-| Search on Add         | Marcado          |
-| Minimum Availability  | `Announced`      |
-| Root Folder           | `/data/Filmes`   |
-| List URL              | a URL gerada     |
+| Campo                | Valor          |
+| :------------------- | :------------- |
+| Enable Automatic Add | Marcado        |
+| Monitor              | `Movie Only`   |
+| Search on Add        | Marcado        |
+| Minimum Availability | `Announced`    |
+| Root Folder          | `/data/Filmes` |
+| List URL             | a URL gerada   |
 
 Em **Options** → **Clean Library Level**: `Remove Movie and Delete Files` faz o filme sumir do
 servidor quando você tira da lista. Útil com pouco espaço, perigoso se você esquecer que está ligado.
@@ -562,11 +630,11 @@ Acesse `http://192.168.x.x:6767`.
 
 **Settings** → **Subtitles**:
 
-| Configuração                        | Valor                                              |
-| :---------------------------------- | :------------------------------------------------- |
-| Subtitle Folder                     | `Alongside Media File`                             |
-| Upgrade Previously Downloaded Subtitles | Marcado                                        |
-| **Automatic Subtitle Synchronization** | **Marcado**                                     |
+| Configuração                            | Valor                  |
+| :-------------------------------------- | :--------------------- |
+| Subtitle Folder                         | `Alongside Media File` |
+| Upgrade Previously Downloaded Subtitles | Marcado                |
+| **Automatic Subtitle Synchronization**  | **Marcado**            |
 
 A sincronização automática é o recurso que mais vale a pena aqui: o Bazarr alinha o tempo da legenda
 com o áudio do arquivo, resolvendo o clássico "a legenda está 3 segundos adiantada".
@@ -611,24 +679,24 @@ Portainer. O token vale **4 minutos**, então gere e faça o redeploy na sequên
 
 ### 10.2. Bibliotecas
 
-| Biblioteca | Tipo         | Pasta          |
-| :--------- | :----------- | :------------- |
-| Filmes     | Movies       | `/data/Filmes` |
-| Séries     | TV Shows     | `/data/Series` |
-| Animes     | TV Shows     | `/data/Animes` |
+| Biblioteca | Tipo     | Pasta          |
+| :--------- | :------- | :------------- |
+| Filmes     | Movies   | `/data/Filmes` |
+| Séries     | TV Shows | `/data/Series` |
+| Animes     | TV Shows | `/data/Animes` |
 
 ### 10.3. Configurações recomendadas
 
 **Configurações** → **Biblioteca**:
 
-| Configuração                                        | Estado       |
-| :-------------------------------------------------- | :----------- |
-| Digitalizar minha biblioteca automaticamente        | Habilitado   |
-| Executar varredura parcial quando detectar alterações| Habilitado  |
-| Escanear minha biblioteca periodicamente            | Desabilitado |
-| Esvaziar lixeira automaticamente após cada varredura| Habilitado   |
-| Permitir exclusão de mídia                          | Desabilitado |
-| Executar tarefas de varredura em prioridade menor   | Habilitado   |
+| Configuração                                          | Estado       |
+| :---------------------------------------------------- | :----------- |
+| Digitalizar minha biblioteca automaticamente          | Habilitado   |
+| Executar varredura parcial quando detectar alterações | Habilitado   |
+| Escanear minha biblioteca periodicamente              | Desabilitado |
+| Esvaziar lixeira automaticamente após cada varredura  | Habilitado   |
+| Permitir exclusão de mídia                            | Desabilitado |
+| Executar tarefas de varredura em prioridade menor     | Habilitado   |
 
 Desligar a varredura periódica e deixar só a detecção de alterações economiza bastante CPU numa
 placa ARM.
@@ -694,14 +762,50 @@ As mesmas pastas do Plex: `/data/Filmes`, `/data/Series`, `/data/Animes`.
 
 **Painel** → **Reprodução** → **Transcodificação**:
 
-| Configuração                                     | Valor                                     |
-| :----------------------------------------------- | :---------------------------------------- |
-| Aceleração de hardware                            | **Rockchip RKMPP**                        |
-| Habilitar decodificação por hardware              | H264, HEVC, VP9, AV1 (marque o que a placa suportar) |
-| Habilitar codificação por hardware                | Marcado                                   |
-| Permitir codificação HEVC                         | Marcado                                   |
-| Habilitar tone mapping por hardware               | Marcado                                   |
-| Caminho de transcodificação                       | deixe o padrão                            |
+| Configuração                    | Valor                                                                  |
+| :------------------------------ | :--------------------------------------------------------------------- |
+| Aceleração de hardware          | **Rockchip MPP (RKMPP)**                                               |
+| Decodificação por hardware      | H264, HEVC, VP9, AV1, HEVC 10bit, VP9 10bit                            |
+| Decodificação, opcionais        | MPEG1, MPEG2, MPEG4, VP8 (a VPU também faz, útil para material antigo) |
+| Ativar codificação por hardware | Marcado                                                                |
+| Permitir codificação HEVC       | Marcado                                                                |
+| **Permitir codificação AV1**    | **DESMARCADO** (ver aviso abaixo)                                      |
+| Ativar mapeamento de tons       | Marcado, algoritmo `BT.2390`                                           |
+| Local de transcodificação       | `/cache/transcodes`, que a stack monta como `tmpfs`                    |
+
+> [!CAUTION]
+> **Deixe "Permitir codificação em formato AV1" desmarcado.** O RK3588 **decodifica** AV1, mas não
+> **codifica**. Confira você mesmo:
+>
+> ```bash
+> docker exec jellyfin /usr/lib/jellyfin-ffmpeg/ffmpeg -hide_banner -encoders | grep rkmpp
+> ```
+>
+> A saída lista apenas três encoders de hardware:
+>
+> ```
+> V..... h264_rkmpp    Rockchip MPP H264 encoder
+> V..... hevc_rkmpp    Rockchip MPP HEVC encoder
+> V..... mjpeg_rkmpp   Rockchip MPP MJPEG encoder
+> ```
+>
+> Não existe `av1_rkmpp`. Com a opção marcada, o Jellyfin cai no `libsvtav1` **por software**, e
+> numa placa ARM o transcode nunca acompanha a reprodução. A própria tela avisa: "O Jellyfin usará
+> codificação por software quando a aceleração de hardware para o formato selecionado não estiver
+> disponível."
+
+Para conferir a lista de decoders que a sua VPU realmente entrega:
+
+```bash
+docker exec jellyfin /usr/lib/jellyfin-ffmpeg/ffmpeg -hide_banner -decoders | grep rkmpp
+```
+
+No RK3588 saem dez: `av1`, `h263`, `h264`, `hevc`, `mjpeg`, `mpeg1`, `mpeg2`, `mpeg4`, `vp8` e `vp9`.
+
+> [!TIP]
+> **Transcode em RAM.** A stack monta `/cache/transcodes` como `tmpfs` de 2 GB. Os arquivos
+> temporários de transcode são descartáveis e escrevê-los no NVMe só desgasta o SSD à toa. Se você
+> transcodifica 4K com frequência, aumente o `size` no YAML, lembrando que sai da RAM da placa.
 
 ### 11.3. Validar que está funcionando
 
@@ -731,43 +835,109 @@ getent group video render
 
 ---
 
-## 📊 Parte 12: Tautulli, PlexTraktSync e FileBot
+## 📊 Parte 12: Tautulli, Yamtrack e FileBot
 
 ### 12.1. Tautulli
 
 Acesse `http://192.168.x.x:8181`. Na configuração inicial, aponte para o Plex:
 
-| Campo         | Valor                     |
-| :------------ | :------------------------ |
-| Plex IP/Host  | `host.docker.internal`    |
-| Port          | `32400`                   |
+| Campo        | Valor                  |
+| :----------- | :--------------------- |
+| Plex IP/Host | `host.docker.internal` |
+| Port         | `32400`                |
 
-### 12.2. PlexTraktSync
+### 12.2. Yamtrack (histórico de exibição)
 
-Sincroniza o que você assistiu no Plex com o Trakt.tv. Exige autenticação OAuth nos dois serviços,
-feita **uma vez** por linha de comando:
+O Yamtrack é um rastreador de mídia self-hosted. Ele guarda o que você assistiu, com nota, progresso
+por episódio, datas e rewatches, e recebe os eventos automaticamente por **webhook** do Jellyfin, do
+Plex e do Emby.
 
-```bash
-docker exec -it plextraktsync plextraktsync login
-```
+> [!NOTE]
+> **Por que ele está aqui no lugar do PlexTraktSync.** Em julho de 2026 o Trakt passou a exigir
+> assinatura **VIP** para criar aplicativos OAuth, e apagou os apps de contas gratuitas mesmo tendo
+> dito que as conexões existentes seriam mantidas. O sintoma era o container em crash loop com
+> `invalid_grant: session not found`, e o Trakt respondendo `invalid_client: client not found` na
+> tentativa de reautenticar.
+>
+> Não havia correção possível do lado do projeto, como discutido em
+> [Taxel/PlexTraktSync#2548](https://github.com/Taxel/PlexTraktSync/issues/2548). A diferença de
+> fundo é que o Yamtrack **guarda o histórico na sua própria placa**, então nenhuma mudança de
+> política de terceiros derruba o serviço de novo.
 
-Siga as instruções (ele abre um código para você colar no site do Trakt).
+Ele usa Redis para tarefas em segundo plano, por isso a stack tem dois containers: `yamtrack` e
+`yamtrack-redis`.
+
+#### 12.2.1. Primeiro acesso
+
+Acesse `http://192.168.x.x:8010`.
+
+1. Crie sua conta na tela de cadastro
+2. Depois de criada, troque `YAMTRACK_REGISTRATION` para `False` nas Environment variables do
+   Portainer e redeploy. Isso fecha o cadastro para estranhos, e você continua podendo criar contas
+   pelo painel administrativo
+
+#### 12.2.2. Rastreamento automático pelo Jellyfin
+
+O Jellyfin envia um webhook ao Yamtrack sempre que você assiste algo.
+
+1. No **Yamtrack**, abra as configurações do seu usuário e copie a **URL de webhook do Jellyfin**.
+   Ela tem o formato `/webhook/jellyfin/<token>`, onde o token identifica a sua conta
+2. No **Jellyfin**, vá em **Painel** → **Plugins** → **Catálogo** e instale o plugin **Webhook**
+3. Reinicie o Jellyfin: `docker restart jellyfin`
+4. Em **Painel** → **Plugins** → **Webhook**, adicione um **Generic Destination**:
+
+| Campo             | Valor                                                                |
+| :---------------- | :------------------------------------------------------------------- |
+| Webhook URL       | `http://localhost:8010/webhook/jellyfin/SEU_TOKEN`                   |
+| Notification Type | `Playback Stop` (e `Playback Progress`, se quiser progresso parcial) |
+| User Filter       | seu usuário, para não registrar o que a família assiste              |
+
+> O endereço é `localhost:8010` porque o Jellyfin roda em `network_mode: host` e o Yamtrack publica
+> a porta `8010` nesse mesmo host. Não use `yamtrack:8000`: esse nome só resolve **dentro** da rede
+> `midia-net`, e o Jellyfin não está nela.
+
+Assista alguns minutos de qualquer coisa e confira se o item apareceu no Yamtrack.
+
+#### 12.2.3. Rastreamento pelo Plex
+
+O endpoint existe (`/webhook/plex/<token>`), mas há uma barreira do lado do Plex:
 
 > [!WARNING]
-> **O token do Trakt expira.** Nesta instalação o container está hoje em crash loop:
->
-> ```
-> INFO     OAuth token has expired, refreshing now...
-> ERROR    invalid_grant: session not found
-> CRITICAL Error running sync command: Trakt error: Unable to refresh token
-> ```
->
-> A correção é refazer o login:
-> ```bash
-> docker exec -it plextraktsync plextraktsync login
-> docker restart plextraktsync
-> ```
-> Se persistir, apague o token e refaça: `rm /srv/plextrakt/config/.pytrakt.json`
+> **Webhooks do Plex são recurso exclusivo de assinantes do Plex Pass.** Sem a assinatura, o menu de
+> webhooks nem aparece nas configurações da conta. É a mesma barreira comercial que impede o
+> transcode por hardware (ver Parte 10.4).
+
+Se você tem Plex Pass, o caminho é **Configurações da conta** → **Webhooks** → **Add Webhook**, com a
+URL `http://localhost:8010/webhook/plex/SEU_TOKEN`.
+
+Se não tem, o rastreamento automático fica só pelo Jellyfin, o que é mais um motivo para concentrar
+a reprodução nele nesta placa.
+
+#### 12.2.4. Importar o histórico do Trakt
+
+Você não perde o que já tinha, e **não precisa de API key nem de VIP** para isso.
+
+1. Exporte seus dados em <https://app.trakt.tv/settings/data>
+2. No Yamtrack, vá em **Importar** e escolha a origem **Trakt**
+
+O Yamtrack aceita duas rotas: informar o **nome de usuário de um perfil público** do Trakt, que
+dispensa qualquer credencial, ou autorizar por OAuth. Além do Trakt, ele importa de **Simkl**,
+**MyAnimeList**, **AniList**, **Kitsu**, **IMDb**, **Steam** e **Goodreads**, e aceita CSV.
+
+> [!TIP]
+> Se o seu perfil do Trakt for privado, torne-o público por alguns minutos para usar a rota simples,
+> e depois volte a fechá-lo.
+
+#### 12.2.5. O que fica no backup
+
+| Caminho               | Conteúdo                              |
+| :-------------------- | :------------------------------------ |
+| `/srv/yamtrack/db`    | Banco SQLite com todo o seu histórico |
+| `/srv/yamtrack/redis` | Fila de tarefas, descartável          |
+
+A stack usa **bind mount** em vez de volume nomeado justamente para que o banco entre nos snapshots
+do Timeshift. Volumes nomeados vivem em `/var/lib/docker`, que o Timeshift exclui internamente.
+Ver [`./orangepi5-backup-restore.md`](./orangepi5-backup-restore.md).
 
 ### 12.3. FileBot
 
@@ -799,6 +969,7 @@ docker compose -f midia.yml pull && docker compose -f midia.yml up -d
 > [!TIP]
 > O Plex quebra compatibilidade com apps antigos de vez em quando, e o Sonarr teve migrações de
 > banco pesadas entre versões maiores. Antes de atualizar, tire um snapshot manual do Timeshift:
+>
 > ```bash
 > sudo timeshift --create --comments "antes de atualizar a stack midia"
 > ```
@@ -813,17 +984,18 @@ e o banco de metadados do Plex.
 
 Tudo isso vive em `/srv/<serviço>`, no disco do sistema, e é coberto pelos snapshots do Timeshift.
 
-| Caminho                    | Conteúdo                                  | No Timeshift? |
-| :------------------------- | :---------------------------------------- | :------------ |
-| `/srv/radarr/appdata`      | Banco, perfis, formatos, histórico        | Sim           |
-| `/srv/sonarr/appdata`      | Idem, para séries                         | Sim           |
-| `/srv/prowlarr/config`     | Indexadores e apps                        | Sim           |
-| `/srv/qbittorrent/config`  | Torrents ativos, categorias, preferências | Sim           |
-| `/srv/bazarr/appdata`      | Provedores e perfis de idioma             | Sim           |
-| `/srv/overseerr/config`    | Usuários e requisições do Seerr           | Sim           |
-| `/srv/plex/config`         | Biblioteca, metadados, histórico          | Sim           |
-| `/srv/jellyfin/config`     | Biblioteca e usuários                     | Sim           |
-| `/srv/midia`               | Os arquivos de vídeo                      | **Não** (excluído de propósito) |
+| Caminho                   | Conteúdo                                  | No Timeshift?                   |
+| :------------------------ | :---------------------------------------- | :------------------------------ |
+| `/srv/radarr/appdata`     | Banco, perfis, formatos, histórico        | Sim                             |
+| `/srv/sonarr/appdata`     | Idem, para séries                         | Sim                             |
+| `/srv/prowlarr/config`    | Indexadores e apps                        | Sim                             |
+| `/srv/qbittorrent/config` | Torrents ativos, categorias, preferências | Sim                             |
+| `/srv/bazarr/appdata`     | Provedores e perfis de idioma             | Sim                             |
+| `/srv/overseerr/config`   | Usuários e requisições do Seerr           | Sim                             |
+| `/srv/plex/config`        | Biblioteca, metadados, histórico          | Sim                             |
+| `/srv/jellyfin/config`    | Biblioteca e usuários                     | Sim                             |
+| `/srv/yamtrack/db`        | Histórico de exibição (SQLite)            | Sim                             |
+| `/srv/midia`              | Os arquivos de vídeo                      | **Não** (excluído de propósito) |
 
 > 💾 O procedimento completo, incluindo o que fazer se a placa queimar, está em
 > [`./orangepi5-backup-restore.md`](./orangepi5-backup-restore.md).
@@ -832,20 +1004,25 @@ Tudo isso vive em `/srv/<serviço>`, no disco do sistema, e é coberto pelos sna
 
 ## ⚠️ Troubleshooting
 
-| Sintoma                                              | Causa provável                                      | Solução                                                                 |
-| :--------------------------------------------------- | :-------------------------------------------------- | :---------------------------------------------------------------------- |
-| Radarr/Sonarr: `401 Unauthorized` no qBittorrent     | Validação de cabeçalho Host ativa                   | qBittorrent → Opções → Interface Web → desmarcar host header validation  |
-| Import cai para cópia e o disco enche                | Downloads e biblioteca em volumes Docker diferentes | Usar mount único `/srv/midia:/data` em todos os containers               |
-| `find /srv/midia -links +1` não retorna nada         | Hardlink desligado nos `*arrs`                      | Marcar "Use Hard Links instead of Copy" no Radarr e no Sonarr            |
-| Indexador dá `Cloudflare protection detected`        | Falta o FlareSolverr no indexador                   | Adicionar a tag `flaresolverr` ao indexador no Prowlarr                  |
-| Nada baixa, mas a busca encontra resultados          | Formato personalizado com pontuação negativa demais | Conferir Custom Formats: nota abaixo de 0 bloqueia o download            |
-| Torrent fica em `Stalled` para sempre                | Porta de entrada fechada                            | Redirecionar 62609 TCP/UDP no roteador e conferir a porta no qBittorrent |
-| Vídeo engasga no Plex                                | Transcode por software                               | Ver Parte 10.4. Use Direct Play ou migre para o Jellyfin                 |
-| Jellyfin: "Permission denied" nos devices            | GID errado no `group_add`                           | `getent group video render` e ajustar o YAML                            |
-| `plextraktsync` reiniciando em loop                  | Token OAuth do Trakt expirado                       | `docker exec -it plextraktsync plextraktsync login`                     |
-| Container sobe e morre com `EACCES`                  | Pasta em `/srv` criada como `root`                  | `sudo chown -R 1000:1000 /srv/<serviço>`                                |
-| Filme importado some da pasta e o torrent para       | Clean Library Level em `Remove and Delete`          | Radarr → Lists → Options → revisar a opção                              |
-| Plex não aparece na conta                            | Falta o claim token                                 | Gerar em plex.tv/claim e redeployar em até 4 minutos                     |
+| Sintoma                                          | Causa provável                                                | Solução                                                                  |
+| :----------------------------------------------- | :------------------------------------------------------------ | :----------------------------------------------------------------------- |
+| Radarr/Sonarr: `401 Unauthorized` no qBittorrent | Validação de cabeçalho Host ativa                             | qBittorrent → Opções → Interface Web → desmarcar host header validation  |
+| Import cai para cópia e o disco enche            | Downloads e biblioteca em volumes Docker diferentes           | Usar mount único `/srv/midia:/data` em todos os containers               |
+| `find /srv/midia -links +1` não retorna nada     | Hardlink desligado nos `*arrs`                                | Marcar "Use Hard Links instead of Copy" no Radarr e no Sonarr            |
+| Indexador dá `Cloudflare protection detected`    | Falta o FlareSolverr no indexador                             | Adicionar a tag `flaresolverr` ao indexador no Prowlarr                  |
+| Nada baixa, mas a busca encontra resultados      | Formato personalizado com pontuação negativa demais           | Conferir Custom Formats: nota abaixo de 0 bloqueia o download            |
+| Torrent fica em `Stalled` para sempre            | Porta de entrada fechada                                      | Redirecionar 62609 TCP/UDP no roteador e conferir a porta no qBittorrent |
+| Vídeo engasga no Plex                            | Transcode por software                                        | Ver Parte 10.4. Use Direct Play ou migre para o Jellyfin                 |
+| Jellyfin: "Permission denied" nos devices        | GID errado no `group_add`                                     | `getent group video render` e ajustar o YAML                             |
+| Jellyfin não abre, mas o container está healthy  | Porta 8096 bloqueada pelo UFW (só afeta `network_mode: host`) | `sudo ufw allow 8096/tcp`. Ver Parte 1.5                                 |
+| Jellyfin transcodifica AV1 e trava               | "Permitir codificação AV1" marcado                            | Desmarcar. O RK3588 decodifica AV1 mas não codifica. Ver Parte 11.2      |
+| Yamtrack não registra o que você assiste         | Webhook do Jellyfin não configurado ou token errado           | Ver Parte 12.2.2. Conferir com `docker logs yamtrack`                    |
+| Yamtrack: `DisallowedHost` ou erro de CSRF       | Origem não confiável no Django                                | Preencher `YAMTRACK_URLS` com o endereço usado no navegador              |
+| Yamtrack não sobe: `SECRET` ausente              | Variável obrigatória não definida                             | Gerar com `openssl rand -base64 48` e pôr em `YAMTRACK_SECRET`           |
+| Plex não mostra o menu de Webhooks               | Recurso exclusivo de Plex Pass                                | Usar o rastreamento pelo Jellyfin. Ver Parte 12.2.3                      |
+| Container sobe e morre com `EACCES`              | Pasta em `/srv` criada como `root`                            | `sudo chown -R 1000:1000 /srv/<serviço>`                                 |
+| Filme importado some da pasta e o torrent para   | Clean Library Level em `Remove and Delete`                    | Radarr → Lists → Options → revisar a opção                               |
+| Plex não aparece na conta                        | Falta o claim token                                           | Gerar em plex.tv/claim e redeployar em até 4 minutos                     |
 
 ---
 
@@ -870,18 +1047,19 @@ Tudo isso vive em `/srv/<serviço>`, no disco do sistema, e é coberto pelos sna
 
 ## 🌐 Acessos
 
-| Serviço      | URL local                    | Portainer     |
-| :----------- | :--------------------------- | :------------ |
-| qBittorrent  | `http://192.168.x.x:8080`    | Stack `midia` |
-| Prowlarr     | `http://192.168.x.x:9696`    | Stack `midia` |
-| Radarr       | `http://192.168.x.x:7878`    | Stack `midia` |
-| Sonarr       | `http://192.168.x.x:8989`    | Stack `midia` |
-| Bazarr       | `http://192.168.x.x:6767`    | Stack `midia` |
-| Seerr        | `http://192.168.x.x:5055`    | Stack `midia` |
-| Plex         | `http://192.168.x.x:32400/web` | Stack `midia` |
-| Jellyfin     | `http://192.168.x.x:8096`    | Stack `midia` |
-| Tautulli     | `http://192.168.x.x:8181`    | Stack `midia` |
-| FileBot      | `http://192.168.x.x:5800`    | Stack `midia` |
+| Serviço     | URL local                      | Portainer     |
+| :---------- | :----------------------------- | :------------ |
+| qBittorrent | `http://192.168.x.x:8080`      | Stack `midia` |
+| Prowlarr    | `http://192.168.x.x:9696`      | Stack `midia` |
+| Radarr      | `http://192.168.x.x:7878`      | Stack `midia` |
+| Sonarr      | `http://192.168.x.x:8989`      | Stack `midia` |
+| Bazarr      | `http://192.168.x.x:6767`      | Stack `midia` |
+| Seerr       | `http://192.168.x.x:5055`      | Stack `midia` |
+| Plex        | `http://192.168.x.x:32400/web` | Stack `midia` |
+| Jellyfin    | `http://192.168.x.x:8096`      | Stack `midia` |
+| Tautulli    | `http://192.168.x.x:8181`      | Stack `midia` |
+| Yamtrack    | `http://192.168.x.x:8010`      | Stack `midia` |
+| FileBot     | `http://192.168.x.x:5800`      | Stack `midia` |
 
 ---
 
@@ -897,3 +1075,7 @@ Tudo isso vive em `/srv/<serviço>`, no disco do sistema, e é coberto pelos sna
 - [Jellyfin: Hardware Acceleration](https://jellyfin.org/docs/general/post-install/transcoding/hardware-acceleration/)
 - [Plex: Using Hardware-Accelerated Streaming](https://support.plex.tv/articles/115002178853-using-hardware-accelerated-streaming/)
 - [Seerr (fork do Overseerr)](https://github.com/seerr-team/seerr)
+- [Yamtrack, rastreador de mídia self-hosted](https://github.com/FuzzyGrim/Yamtrack)
+- [Yamtrack: variáveis de ambiente](https://fuzzygrim.github.io/Yamtrack/release/env-variables/)
+- [Jellyfin: plugin Webhook](https://github.com/jellyfin/jellyfin-plugin-webhook)
+- [PlexTraktSync #2548: o Trakt exigindo VIP para apps OAuth](https://github.com/Taxel/PlexTraktSync/issues/2548)
