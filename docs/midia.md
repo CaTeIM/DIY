@@ -521,14 +521,14 @@ primeiro.
 
 **Bloco 1: regras de upgrade** (topo da tela)
 
-| Campo | Valor sugerido | O que faz |
-| :--- | :--- | :--- |
-| Upgrades Allowed | marcado | Permite trocar por uma versão melhor depois |
-| Upgrade Until | `WEB 1080p` ou `Bluray-1080p` | Teto de qualidade. Chegou aqui, para de procurar |
-| Minimum Custom Format Score | `0` | Nota mínima aceita. Abaixo disso, não baixa |
-| Upgrade Until Custom Format Score | `10000` | Teto de nota. Serve para continuar melhorando por formato mesmo já no teto de qualidade |
-| Minimum Custom Format Score Increment | `1` | Ganho mínimo para valer a pena trocar o arquivo |
-| Language | `Any` ou `Original` | `Original` evita baixar dublagem por engano |
+| Campo                                 | Valor sugerido                | O que faz                                                                               |
+| :------------------------------------ | :---------------------------- | :-------------------------------------------------------------------------------------- |
+| Upgrades Allowed                      | marcado                       | Permite trocar por uma versão melhor depois                                             |
+| Upgrade Until                         | `WEB 1080p` ou `Bluray-1080p` | Teto de qualidade. Chegou aqui, para de procurar                                        |
+| Minimum Custom Format Score           | `0`                           | Nota mínima aceita. Abaixo disso, não baixa                                             |
+| Upgrade Until Custom Format Score     | `10000`                       | Teto de nota. Serve para continuar melhorando por formato mesmo já no teto de qualidade |
+| Minimum Custom Format Score Increment | `1`                           | Ganho mínimo para valer a pena trocar o arquivo                                         |
+| Language                              | `Any` ou `Original`           | `Original` evita baixar dublagem por engano                                             |
 
 **Bloco 2: qualidades** (a lista com caixas)
 
@@ -547,13 +547,13 @@ Marque da melhor até o piso que você tolera. Ordem = preferência, o topo é o
 
 É aqui que os formatos da Parte 6.5 ganham efeito:
 
-| Formato | Pontuação | Efeito |
-| :--- | ---: | :--- |
-| **BR-DISK** | `-10000` | Nunca baixa |
-| **3D** | `-10000` | Nunca baixa |
-| **Open Matte** | `25` | Prefere, mas aceita outros se não houver |
-| HEVC | `1000` | Prefere fortemente HEVC (economiza espaço, e o Jellyfin decodifica por hardware) |
-| WEBRip Preference | `10` | Leve preferência por WEBRip |
+| Formato           | Pontuação | Efeito                                                                           |
+| :---------------- | --------: | :------------------------------------------------------------------------------- |
+| **BR-DISK**       |  `-10000` | Nunca baixa                                                                      |
+| **3D**            |  `-10000` | Nunca baixa                                                                      |
+| **Open Matte**    |      `25` | Prefere, mas aceita outros se não houver                                         |
+| HEVC              |    `1000` | Prefere fortemente HEVC (economiza espaço, e o Jellyfin decodifica por hardware) |
+| WEBRip Preference |      `10` | Leve preferência por WEBRip                                                      |
 
 > [!WARNING]
 > Qualquer formato deixado em `0` **não faz nada**. Se o seu BR-DISK e o 3D estiverem zerados, eles
@@ -625,16 +625,16 @@ nome do arquivo.
 
 Nomes curtos e legíveis. A informação técnica fica dentro do arquivo, não no nome.
 
-| Campo | Valor |
-| :--- | :--- |
-| Formato do Episódio Padrão | `S{Season:00}E{Episode:00} - {Episode Title}` |
-| Formato do episódio diário | `{Series Title} - {Air-Date} - {Episode Title}` |
-| Formato do episódio de anime | `S{Season:00}E{Episode:00} - {Episode Title}` |
-| Formato de Pasta das Séries | `{Series Title}` |
-| Formato da Pasta da Temporada | `Season {season:00}` |
-| Formato da Pasta para Especiais | `Specials` |
-| Estilo de multiepisódio | `Faixa Prefixada` |
-| Substituto para dois-pontos | `Substituição inteligente` |
+| Campo                           | Valor                                           |
+| :------------------------------ | :---------------------------------------------- |
+| Formato do Episódio Padrão      | `S{Season:00}E{Episode:00} - {Episode Title}`   |
+| Formato do episódio diário      | `{Series Title} - {Air-Date} - {Episode Title}` |
+| Formato do episódio de anime    | `S{Season:00}E{Episode:00} - {Episode Title}`   |
+| Formato de Pasta das Séries     | `{Series Title}`                                |
+| Formato da Pasta da Temporada   | `Season {season:00}`                            |
+| Formato da Pasta para Especiais | `Specials`                                      |
+| Estilo de multiepisódio         | `Faixa Prefixada`                               |
+| Substituto para dois-pontos     | `Substituição inteligente`                      |
 
 Resultado: `Steins;Gate/Season 01/S01E12 - Dogma in Event Horizon.mkv`
 
@@ -681,15 +681,15 @@ modo de seleção:
 2. Marque as séries, ou use **Selecionar tudo**
 3. Uma barra de ações aparece **no rodapé** da página:
 
-| Ação no rodapé | Para que serve |
-| :--- | :--- |
-| **Editar** | É o antigo Mass Editor: Perfil de Qualidade, **Pasta Raiz**, Tipo de Série, Tags |
-| **Renomear Arquivos** | Renomeia **apenas os arquivos** de episódio, nunca as pastas |
-| Definir tags / Atualizar Monitoramento | O que o nome diz |
+| Ação no rodapé                         | Para que serve                                                                   |
+| :------------------------------------- | :------------------------------------------------------------------------------- |
+| **Editar**                             | É o antigo Mass Editor: Perfil de Qualidade, **Pasta Raiz**, Tipo de Série, Tags |
+| **Renomear Arquivos**                  | Renomeia **apenas os arquivos** de episódio, nunca as pastas                     |
+| Definir tags / Atualizar Monitoramento | O que o nome diz                                                                 |
 
 > [!CAUTION]
 > **"Renomear Arquivos" não renomeia pastas, e é aí que quase todo mundo trava.** O próprio modal
-> avisa: *"deseja organizar todos os **arquivos** da N série selecionada?"*. Se você mudou o
+> avisa: _"deseja organizar todos os **arquivos** da N série selecionada?"_. Se você mudou o
 > **Formato de Pasta das Séries** e rodou o Organizar, os arquivos são renomeados e as pastas
 > continuam com o nome velho, sem o `{tvdb-...}`.
 
@@ -701,8 +701,8 @@ modo de seleção:
 4. Em **Pasta raiz**, escolha **a mesma pasta em que as séries já estão** (`/data/Animes`)
 5. **Aplicar mudanças**
 
-A dica embaixo do campo confirma: *"Mover séries para a mesma pasta raiz pode ser usado para
-renomear pastas de séries para corresponder ao título atualizado ou formato de nomenclatura"*.
+A dica embaixo do campo confirma: _"Mover séries para a mesma pasta raiz pode ser usado para
+renomear pastas de séries para corresponder ao título atualizado ou formato de nomenclatura"_.
 
 Parece que não faz nada, mas o Sonarr recalcula o nome de cada pasta com o formato novo e move as
 séries. Como origem e destino estão no mesmo sistema de arquivos, é um `rename` de inode:
@@ -711,11 +711,11 @@ semear.
 
 Resumindo qual botão usar:
 
-| Você mudou... | Use |
-| :--- | :--- |
-| Formato do Episódio (nome do arquivo) | **Renomear Arquivos** |
-| **Formato de Pasta das Séries** | **Editar** → **Pasta raiz** → a mesma pasta |
-| Os dois | Primeiro a Pasta raiz, depois Renomear Arquivos |
+| Você mudou...                         | Use                                             |
+| :------------------------------------ | :---------------------------------------------- |
+| Formato do Episódio (nome do arquivo) | **Renomear Arquivos**                           |
+| **Formato de Pasta das Séries**       | **Editar** → **Pasta raiz** → a mesma pasta     |
+| Os dois                               | Primeiro a Pasta raiz, depois Renomear Arquivos |
 
 Feito isso, rode **Update Library** no Plex e **Atualizar metadados** no Jellyfin.
 
@@ -769,11 +769,11 @@ A tela é longa, então vai por blocos.
 
 **Subtitle File Options**
 
-| Configuração | Valor | Por quê |
-| :--- | :--- | :--- |
-| Subtitle Folder | `AlongSide Media File` | A legenda fica ao lado do vídeo, como Plex e Jellyfin esperam |
-| Encode Subtitles To UTF-8 | ligado | Evita acento quebrado em legenda pt-BR |
-| Change Subtitle File Permission (chmod) | `0644` | Ver aviso abaixo |
+| Configuração                            | Valor                  | Por quê                                                       |
+| :-------------------------------------- | :--------------------- | :------------------------------------------------------------ |
+| Subtitle Folder                         | `AlongSide Media File` | A legenda fica ao lado do vídeo, como Plex e Jellyfin esperam |
+| Encode Subtitles To UTF-8               | ligado                 | Evita acento quebrado em legenda pt-BR                        |
+| Change Subtitle File Permission (chmod) | `0644`                 | Ver aviso abaixo                                              |
 
 > [!WARNING]
 > **`0640` é arriscado.** Com esse valor só o dono e o grupo leem o arquivo. Como Bazarr, Plex e
@@ -782,13 +782,13 @@ A tela é longa, então vai por blocos.
 
 **Embedded Subtitles Handling**
 
-| Configuração | Valor | Por quê |
-| :--- | :--- | :--- |
-| Treat Embedded Subtitles as Downloaded | ligado | Não baixa legenda se o arquivo já tem uma |
-| Parser | `ffprobe` | Mais rápido que o mediainfo e já vem instalado |
-| **Ignore Embedded PGS Subtitles** | **ligar** | Ver dica abaixo |
-| Ignore Embedded VobSub Subtitles | ligar | Mesmo motivo do PGS |
-| Show Only Desired Languages | ligado | Esconde o que não interessa |
+| Configuração                           | Valor     | Por quê                                        |
+| :------------------------------------- | :-------- | :--------------------------------------------- |
+| Treat Embedded Subtitles as Downloaded | ligado    | Não baixa legenda se o arquivo já tem uma      |
+| Parser                                 | `ffprobe` | Mais rápido que o mediainfo e já vem instalado |
+| **Ignore Embedded PGS Subtitles**      | **ligar** | Ver dica abaixo                                |
+| Ignore Embedded VobSub Subtitles       | ligar     | Mesmo motivo do PGS                            |
+| Show Only Desired Languages            | ligado    | Esconde o que não interessa                    |
 
 > [!TIP]
 > **Ligue "Ignore Embedded PGS/VobSub".** As duas são legenda em **imagem**, não em texto. Para
@@ -800,30 +800,30 @@ A tela é longa, então vai por blocos.
 
 **Performance / Optimization**
 
-| Configuração | Valor | Observação |
-| :--- | :--- | :--- |
-| Adaptive Searching | ligado | Evita martelar provedores atrás de legenda que não existe |
-| Search Enabled Providers Simultaneously | ligado | A tela desaconselha em "low powered devices", mas com 8 núcleos aqui é tranquilo |
-| Skip video file hash calculation | desligado | O hash é o que dá o melhor casamento de legenda |
+| Configuração                            | Valor     | Observação                                                                       |
+| :-------------------------------------- | :-------- | :------------------------------------------------------------------------------- |
+| Adaptive Searching                      | ligado    | Evita martelar provedores atrás de legenda que não existe                        |
+| Search Enabled Providers Simultaneously | ligado    | A tela desaconselha em "low powered devices", mas com 8 núcleos aqui é tranquilo |
+| Skip video file hash calculation        | desligado | O hash é o que dá o melhor casamento de legenda                                  |
 
 **Sub-Zero Modifications**
 
-| Configuração | Valor | Por quê |
-| :--- | :--- | :--- |
-| OCR Fixes | ligado | Corrige `I`/`l`/`1` trocados em legenda vinda de OCR |
+| Configuração     | Valor     | Por quê                                                             |
+| :--------------- | :-------- | :------------------------------------------------------------------ |
+| OCR Fixes        | ligado    | Corrige `I`/`l`/`1` trocados em legenda vinda de OCR                |
 | **Common Fixes** | **ligar** | Arruma espaçamento e pontuação. Não há motivo para deixar desligado |
-| Hearing Impaired | desligado | Só ligue para remover marcações de som |
-| Fix Uppercase | desligado | Ligue apenas se pegar legenda toda em caixa alta |
+| Hearing Impaired | desligado | Só ligue para remover marcações de som                              |
+| Fix Uppercase    | desligado | Ligue apenas se pegar legenda toda em caixa alta                    |
 
 **Audio Synchronization**, a parte que mais resolve na prática
 
-| Configuração | Valor | Por quê |
-| :--- | :--- | :--- |
-| Enable Automatic Subtitles Audio Synchronization | ligado | Alinha a legenda com o áudio |
-| Synchronization Reference | `Use Audio Track as Reference` | Mais confiável que usar outra legenda |
-| **Do Not Fix Framerate Mismatch** | **DESLIGAR** | Ver aviso abaixo |
-| Golden-Section Search | ligado | Busca o melhor ajuste |
-| Max Offset Seconds | `60` | Suficiente para o desalinhamento normal |
+| Configuração                                     | Valor                          | Por quê                                 |
+| :----------------------------------------------- | :----------------------------- | :-------------------------------------- |
+| Enable Automatic Subtitles Audio Synchronization | ligado                         | Alinha a legenda com o áudio            |
+| Synchronization Reference                        | `Use Audio Track as Reference` | Mais confiável que usar outra legenda   |
+| **Do Not Fix Framerate Mismatch**                | **DESLIGAR**                   | Ver aviso abaixo                        |
+| Golden-Section Search                            | ligado                         | Busca o melhor ajuste                   |
+| Max Offset Seconds                               | `60`                           | Suficiente para o desalinhamento normal |
 
 > [!CAUTION]
 > **"Do Not Fix Framerate Mismatch" ligado atrapalha justamente o pior caso de dessincronia.**
@@ -967,22 +967,60 @@ As mesmas pastas do Plex: `/data/Filmes`, `/data/Series`, `/data/Animes`.
 Se a biblioteca mostra 進撃の巨人 em vez de "Attack on Titan", **não é bug**: o Jellyfin está pedindo
 ao TMDB o título no idioma configurado **na biblioteca**, e o padrão é o idioma original da obra.
 
-A configuração **não** fica no perfil do usuário nem no idioma da interface. É por biblioteca:
+A configuração **não** fica no perfil do usuário nem no idioma da interface, e existe em **dois
+níveis**. É por isso que ajustar só um deles não resolve.
 
-**Painel** → **Bibliotecas** → selecionar a biblioteca → **Gerenciar biblioteca**:
+**Nível 1, o padrão do servidor**
 
-| Campo | Valor |
-| :--- | :--- |
-| Idioma preferido de metadados (Preferred metadata language) | `Português (Brasil)` |
-| País ou região (Country/Metadata country code) | `Brasil` |
+**Painel** → **Bibliotecas** → **Metadados**:
 
-Repita para **cada** biblioteca (Filmes, Séries, Animes).
+| Campo       | Valor                 |
+| :---------- | :-------------------- |
+| Idioma      | `Portuguese (Brazil)` |
+| País/Região | `Brazil`              |
 
-Mudar isso **não** reescreve o que já foi baixado. Depois de salvar:
+A própria tela avisa: _"Estas são suas configurações padrão e podem ser personalizadas por
+biblioteca"_.
 
-1. **Painel** → **Bibliotecas** → **Atualizar metadados**
-2. Marque **"Substituir todos os metadados"** (`Replace all metadata`), senão ele mantém o que já
-   existe e nada muda
+**Nível 2, o override de cada biblioteca**
+
+> [!IMPORTANT]
+> **É aqui que os animes ficam em japonês.** Cada biblioteca guarda o próprio idioma, e ele
+> **sobrescreve** o padrão do servidor. Uma biblioteca de anime costuma vir com `Japanese`, porque
+> foi o idioma detectado ou escolhido na criação.
+
+**Painel** → **Bibliotecas** → clicar na biblioteca (ou no **⋮** → **Gerenciar biblioteca**) → rolar
+até **Configurações da Biblioteca**:
+
+| Campo                            | Trocar para           |
+| :------------------------------- | :-------------------- |
+| **Idioma preferido de download** | `Portuguese (Brazil)` |
+| **País/Região**                  | `Brazil`              |
+
+O nome do campo confunde: "Idioma preferido de **download**" não tem a ver com baixar arquivos, e sim
+com o idioma dos **metadados** que o Jellyfin busca no TMDB.
+
+Repita para **cada** biblioteca: Filmes, Séries e Animes.
+
+**Aplicar no que já existe**
+
+Mudar o idioma **não** reescreve o que já foi baixado. O aviso no topo da própria tela diz isso:
+
+> _"Alterações nas configurações de metadados e artes baixados serão aplicadas apenas a novos
+> conteúdos adicionados a sua biblioteca. Para aplicar as alterações nos títulos existentes, será
+> necessário atualizar os metadados deles manualmente."_
+
+Então, depois de salvar:
+
+1. **Painel** → **Bibliotecas** → **⋮** na biblioteca → **Atualizar metadados**
+2. Escolha **"Substituir todos os metadados"** (`Replace all metadata`)
+
+Sem marcar essa opção, o Jellyfin preserva o que já tem e nada muda.
+
+> [!WARNING]
+> "Substituir todos os metadados" **apaga edições manuais** que você tenha feito, inclusive as
+> correções por "Identificar". Por isso vale fazer a limpeza de identificação **depois** dessa
+> atualização, e não antes.
 
 > [!TIP]
 > Nem todo anime tem título em português no TMDB. Quando não houver tradução, o Jellyfin cai para o
@@ -1093,13 +1131,13 @@ No log do FFmpeg:
 
 O que **não** resolve, tudo testado nesta placa:
 
-| Tentativa | Resultado |
-| :--- | :--- |
-| Mapear os 5 devices e usar `group_add: [44, 105]` | falha |
-| Rodar o container como `root` (`docker exec -u 0`) | falha |
-| Montar `/dev` inteiro (`-v /dev:/dev`) | falha |
-| Fazer bind de `/sys/firmware/devicetree/base` em `/proc/device-tree` | falha |
-| **`privileged: true`** | **funciona** |
+| Tentativa                                                            | Resultado    |
+| :------------------------------------------------------------------- | :----------- |
+| Mapear os 5 devices e usar `group_add: [44, 105]`                    | falha        |
+| Rodar o container como `root` (`docker exec -u 0`)                   | falha        |
+| Montar `/dev` inteiro (`-v /dev:/dev`)                               | falha        |
+| Fazer bind de `/sys/firmware/devicetree/base` em `/proc/device-tree` | falha        |
+| **`privileged: true`**                                               | **funciona** |
 
 A `librockchip_mpp` precisa de um acesso que o **cgroup de devices do Docker** bloqueia, e rodar como
 root dentro do container não contorna cgroup. É por isso que o mantenedor da imagem responde
@@ -1353,11 +1391,11 @@ Uma requisição bem processada aparece como `Received webhook for tv: Dr. Stone
 
 ##### Os três erros possíveis
 
-| Resposta | Significado |
-| :--- | :--- |
-| `400 Missing payload` | Template vazio ou ausente |
-| `500` com `Tvdb error: NotFoundException` | O payload chegou certo, mas os **IDs não casam** com nada |
-| `504` | O Yamtrack ainda está buscando metadados. Nesta placa, a primeira consulta de um item novo é lenta e pode estourar o tempo do proxy |
+| Resposta                                  | Significado                                                                                                                         |
+| :---------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------- |
+| `400 Missing payload`                     | Template vazio ou ausente                                                                                                           |
+| `500` com `Tvdb error: NotFoundException` | O payload chegou certo, mas os **IDs não casam** com nada                                                                           |
+| `504`                                     | O Yamtrack ainda está buscando metadados. Nesta placa, a primeira consulta de um item novo é lenta e pode estourar o tempo do proxy |
 
 > [!IMPORTANT]
 > O `500` com `NotFoundException` amarra com a Parte 11.1: se a série está **identificada errada** no
@@ -1471,34 +1509,34 @@ Tudo isso vive em `/srv/<serviço>`, no disco do sistema, e é coberto pelos sna
 
 ## ⚠️ Troubleshooting
 
-| Sintoma                                          | Causa provável                                                | Solução                                                                  |
-| :----------------------------------------------- | :------------------------------------------------------------ | :----------------------------------------------------------------------- |
-| Radarr/Sonarr: `401 Unauthorized` no qBittorrent | Validação de cabeçalho Host ativa                             | qBittorrent → Opções → Interface Web → desmarcar host header validation  |
-| Import cai para cópia e o disco enche            | Downloads e biblioteca em volumes Docker diferentes           | Usar mount único `/srv/midia:/data` em todos os containers               |
-| `find /srv/midia -links +1` não retorna nada     | Hardlink desligado nos `*arrs`                                | Marcar "Use Hard Links instead of Copy" no Radarr e no Sonarr            |
-| Indexador dá `Cloudflare protection detected`    | Falta o FlareSolverr no indexador                             | Adicionar a tag `flaresolverr` ao indexador no Prowlarr                  |
-| Nada baixa, mas a busca encontra resultados      | Formato personalizado com pontuação negativa demais           | Conferir Custom Formats: nota abaixo de 0 bloqueia o download            |
-| Torrent fica em `Stalled` para sempre            | Porta de entrada fechada                                      | Redirecionar 62609 TCP/UDP no roteador e conferir a porta no qBittorrent |
-| Vídeo engasga no Plex                            | Transcode por software                                        | Ver Parte 10.4. Use Direct Play ou migre para o Jellyfin                 |
-| Jellyfin: "Permission denied" nos devices        | GID errado no `group_add`                                     | `getent group video render` e ajustar o YAML                             |
-| Jellyfin não abre, mas o container está healthy  | Porta 8096 bloqueada pelo UFW (só afeta `network_mode: host`) | `sudo ufw allow 8096/tcp`. Ver Parte 1.5                                 |
-| Jellyfin transcodifica AV1 e trava               | "Permitir codificação AV1" marcado                            | Desmarcar. O RK3588 decodifica AV1 mas não codifica. Ver Parte 11.2      |
-| Jellyfin: "Erro na Reprodução" só no navegador   | `Failed to init MPP context: -1` no transcode                  | Adicionar `privileged: true` ao serviço. Ver Parte 11.4                  |
-| Vídeo volta ao começo em vez de continuar        | A sessão morre junto com o transcode e não salva a posição     | Mesma correção da Parte 11.4                                            |
-| Toca no celular mas falha no navegador           | iOS faz Direct Play, navegador força transcode                 | Ver Parte 11.5                                                          |
-| Jellyfin mostra títulos em japonês               | Idioma de metadados é definido por biblioteca                  | Ver Parte 11.1, exige "Substituir todos os metadados"                    |
-| Série identificada como outra obra               | Pasta sem ID externo, o scanner adivinha pelo título           | Ver Parte 11.1 e o aviso da Parte 7.1                                   |
+| Sintoma                                           | Causa provável                                                 | Solução                                                                  |
+| :------------------------------------------------ | :------------------------------------------------------------- | :----------------------------------------------------------------------- |
+| Radarr/Sonarr: `401 Unauthorized` no qBittorrent  | Validação de cabeçalho Host ativa                              | qBittorrent → Opções → Interface Web → desmarcar host header validation  |
+| Import cai para cópia e o disco enche             | Downloads e biblioteca em volumes Docker diferentes            | Usar mount único `/srv/midia:/data` em todos os containers               |
+| `find /srv/midia -links +1` não retorna nada      | Hardlink desligado nos `*arrs`                                 | Marcar "Use Hard Links instead of Copy" no Radarr e no Sonarr            |
+| Indexador dá `Cloudflare protection detected`     | Falta o FlareSolverr no indexador                              | Adicionar a tag `flaresolverr` ao indexador no Prowlarr                  |
+| Nada baixa, mas a busca encontra resultados       | Formato personalizado com pontuação negativa demais            | Conferir Custom Formats: nota abaixo de 0 bloqueia o download            |
+| Torrent fica em `Stalled` para sempre             | Porta de entrada fechada                                       | Redirecionar 62609 TCP/UDP no roteador e conferir a porta no qBittorrent |
+| Vídeo engasga no Plex                             | Transcode por software                                         | Ver Parte 10.4. Use Direct Play ou migre para o Jellyfin                 |
+| Jellyfin: "Permission denied" nos devices         | GID errado no `group_add`                                      | `getent group video render` e ajustar o YAML                             |
+| Jellyfin não abre, mas o container está healthy   | Porta 8096 bloqueada pelo UFW (só afeta `network_mode: host`)  | `sudo ufw allow 8096/tcp`. Ver Parte 1.5                                 |
+| Jellyfin transcodifica AV1 e trava                | "Permitir codificação AV1" marcado                             | Desmarcar. O RK3588 decodifica AV1 mas não codifica. Ver Parte 11.2      |
+| Jellyfin: "Erro na Reprodução" só no navegador    | `Failed to init MPP context: -1` no transcode                  | Adicionar `privileged: true` ao serviço. Ver Parte 11.4                  |
+| Vídeo volta ao começo em vez de continuar         | A sessão morre junto com o transcode e não salva a posição     | Mesma correção da Parte 11.4                                             |
+| Toca no celular mas falha no navegador            | iOS faz Direct Play, navegador força transcode                 | Ver Parte 11.5                                                           |
+| Jellyfin mostra títulos em japonês                | A biblioteca tem override de idioma sobre o padrão do servidor | Trocar "Idioma preferido de download" na biblioteca. Ver Parte 11.1      |
+| Série identificada como outra obra                | Pasta sem ID externo, o scanner adivinha pelo título           | Ver Parte 11.1 e o aviso da Parte 7.1                                    |
 | Mudei o formato da pasta e nada foi renomeado     | "Renomear Arquivos" só mexe em arquivos, não em pastas         | Editar → Pasta raiz → a mesma pasta atual. Ver Parte 7.1                 |
-| Formato personalizado não bloqueia nada          | Pontuação `0` no perfil de qualidade                           | Criar o formato é só metade, pontue em Profiles. Ver Partes 6.5 e 6.6    |
-| Legenda dessincroniza ao longo do episódio       | "Do Not Fix Framerate Mismatch" ligado no Bazarr               | Desligar. Ver Parte 8.3                                                 |
-| Arquivo com legenda embutida sempre transcodifica| Legenda PGS/VobSub é imagem e precisa ser queimada no vídeo    | Ligar "Ignore Embedded PGS/VobSub" no Bazarr. Ver Parte 8.3              |
-| Yamtrack não registra o que você assiste         | Webhook do Jellyfin não configurado ou token errado           | Ver Parte 12.2.2. Conferir com `docker logs yamtrack`                    |
-| Yamtrack: `DisallowedHost` ou erro de CSRF       | Origem não confiável no Django                                | Preencher `YAMTRACK_URLS` com o endereço usado no navegador              |
-| Yamtrack não sobe: `SECRET` ausente              | Variável obrigatória não definida                             | Gerar com `openssl rand -base64 48` e pôr em `YAMTRACK_SECRET`           |
-| Plex não mostra o menu de Webhooks               | Recurso exclusivo de Plex Pass                                | Usar o rastreamento pelo Jellyfin. Ver Parte 12.2.3                      |
-| Container sobe e morre com `EACCES`              | Pasta em `/srv` criada como `root`                            | `sudo chown -R 1000:1000 /srv/<serviço>`                                 |
-| Filme importado some da pasta e o torrent para   | Clean Library Level em `Remove and Delete`                    | Radarr → Lists → Options → revisar a opção                               |
-| Plex não aparece na conta                        | Falta o claim token                                           | Gerar em plex.tv/claim e redeployar em até 4 minutos                     |
+| Formato personalizado não bloqueia nada           | Pontuação `0` no perfil de qualidade                           | Criar o formato é só metade, pontue em Profiles. Ver Partes 6.5 e 6.6    |
+| Legenda dessincroniza ao longo do episódio        | "Do Not Fix Framerate Mismatch" ligado no Bazarr               | Desligar. Ver Parte 8.3                                                  |
+| Arquivo com legenda embutida sempre transcodifica | Legenda PGS/VobSub é imagem e precisa ser queimada no vídeo    | Ligar "Ignore Embedded PGS/VobSub" no Bazarr. Ver Parte 8.3              |
+| Yamtrack não registra o que você assiste          | Webhook do Jellyfin não configurado ou token errado            | Ver Parte 12.2.2. Conferir com `docker logs yamtrack`                    |
+| Yamtrack: `DisallowedHost` ou erro de CSRF        | Origem não confiável no Django                                 | Preencher `YAMTRACK_URLS` com o endereço usado no navegador              |
+| Yamtrack não sobe: `SECRET` ausente               | Variável obrigatória não definida                              | Gerar com `openssl rand -base64 48` e pôr em `YAMTRACK_SECRET`           |
+| Plex não mostra o menu de Webhooks                | Recurso exclusivo de Plex Pass                                 | Usar o rastreamento pelo Jellyfin. Ver Parte 12.2.3                      |
+| Container sobe e morre com `EACCES`               | Pasta em `/srv` criada como `root`                             | `sudo chown -R 1000:1000 /srv/<serviço>`                                 |
+| Filme importado some da pasta e o torrent para    | Clean Library Level em `Remove and Delete`                     | Radarr → Lists → Options → revisar a opção                               |
+| Plex não aparece na conta                         | Falta o claim token                                            | Gerar em plex.tv/claim e redeployar em até 4 minutos                     |
 
 ---
 
