@@ -232,6 +232,14 @@ services:
       - /dev/rga:/dev/rga
       - /dev/mali0:/dev/mali0
       - /dev/dma_heap:/dev/dma_heap
+    # OBRIGATÓRIO para o RKMPP funcionar. Sem isto o transcode falha com
+    # "Failed to init MPP context: -1", mesmo com todos os devices mapeados,
+    # os grupos video/render corretos e até rodando como root no container.
+    # A librockchip_mpp precisa de acesso que o cgroup de devices do Docker
+    # bloqueia, e só `privileged` libera. É a recomendação do mantenedor da
+    # imagem (nyanmisaka) em jellyfin/jellyfin#12174.
+    # Compensação: o container continua rodando como user 1000:1000, sem root.
+    privileged: true
     # Transcode em RAM: os arquivos temporários são descartáveis e escrevê-los
     # no NVMe só desgasta o SSD. Ajuste o `size` conforme a RAM disponível.
     # Precisa bater com "Local de transcodificação" no painel do Jellyfin.
