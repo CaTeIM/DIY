@@ -471,8 +471,8 @@ Também em **File Management**: **Propers and Repacks** → `Do not Prefer`.
 > ls -la /srv/midia/radarr/
 > ```
 >
-> Se houver, mova para `/srv/midia/Filmes/` e rode **Movies** → **Mass Editor** para reapontar a
-> pasta raiz dos filmes afetados. Só então remova a raiz antiga.
+> Se houver, mova para `/srv/midia/Filmes/` e reaponte a pasta raiz dos filmes afetados pelo modo
+> de seleção em massa (ver quadro na Parte 7.1). Só então remova a raiz antiga.
 
 ### 6.5. Formatos personalizados
 
@@ -672,8 +672,57 @@ fansub usam) e `{MediaInfo AudioLanguages}`, que separa legendado de dublado:
 > Para séries e animes o Sonarr usa **TVDB**, então prefira `{tvdb-{TvdbId}}`. O Radarr usa
 > **IMDb**, e por isso a Parte 6.1 usa `{imdb-{ImdbId}}` nas pastas de filme.
 
-Depois de mudar o formato da pasta, use **Series** → **Mass Editor** → selecionar tudo →
-**Rename Files**, e em seguida **Update Library** no Plex e no Jellyfin.
+#### Como aplicar em massa (Sonarr v4)
+
+O antigo **Mass Editor** saiu do menu lateral na versão 4. As ações em massa agora ficam atrás de um
+modo de seleção:
+
+1. **Séries** → botão **Selecionar a Série** na barra de ferramentas do topo
+2. Marque as séries, ou use **Selecionar tudo**
+3. Uma barra de ações aparece **no rodapé** da página:
+
+| Ação no rodapé | Para que serve |
+| :--- | :--- |
+| **Editar** | É o antigo Mass Editor: Perfil de Qualidade, **Pasta Raiz**, Tipo de Série, Tags |
+| **Renomear Arquivos** | Renomeia **apenas os arquivos** de episódio, nunca as pastas |
+| Definir tags / Atualizar Monitoramento | O que o nome diz |
+
+> [!CAUTION]
+> **"Renomear Arquivos" não renomeia pastas, e é aí que quase todo mundo trava.** O próprio modal
+> avisa: *"deseja organizar todos os **arquivos** da N série selecionada?"*. Se você mudou o
+> **Formato de Pasta das Séries** e rodou o Organizar, os arquivos são renomeados e as pastas
+> continuam com o nome velho, sem o `{tvdb-...}`.
+
+**Para renomear as PASTAS**, o caminho é outro, e a própria interface o descreve:
+
+1. **Séries** → **Selecionar a Série** → **Selecionar tudo**
+2. No rodapé, **Editar**
+3. Deixe tudo em "Sem alteração", **exceto Pasta raiz**
+4. Em **Pasta raiz**, escolha **a mesma pasta em que as séries já estão** (`/data/Animes`)
+5. **Aplicar mudanças**
+
+A dica embaixo do campo confirma: *"Mover séries para a mesma pasta raiz pode ser usado para
+renomear pastas de séries para corresponder ao título atualizado ou formato de nomenclatura"*.
+
+Parece que não faz nada, mas o Sonarr recalcula o nome de cada pasta com o formato novo e move as
+séries. Como origem e destino estão no mesmo sistema de arquivos, é um `rename` de inode:
+**instantâneo, mesmo com centenas de GB, e sem quebrar os hardlinks** que o qBittorrent usa para
+semear.
+
+Resumindo qual botão usar:
+
+| Você mudou... | Use |
+| :--- | :--- |
+| Formato do Episódio (nome do arquivo) | **Renomear Arquivos** |
+| **Formato de Pasta das Séries** | **Editar** → **Pasta raiz** → a mesma pasta |
+| Os dois | Primeiro a Pasta raiz, depois Renomear Arquivos |
+
+Feito isso, rode **Update Library** no Plex e **Atualizar metadados** no Jellyfin.
+
+> [!TIP]
+> Como as séries normais e os animes estão em raízes diferentes, repita o processo uma vez por raiz,
+> filtrando a lista antes de selecionar. Selecionar séries de `/data/Animes` e apontar para
+> `/data/Series` moveria tudo de lugar.
 
 ### 7.2. Importação e pastas raiz
 
@@ -687,7 +736,7 @@ de nomenclatura de anime e a numeração absoluta.
 > **Limpeza necessária nesta instalação.** O Sonarr tem hoje **quatro** pastas raiz cadastradas:
 > `/data/Series`, `/data/Animes`, `/data/sonarr/tv` e `/data/sonarr/anime`. Aplique o mesmo
 > procedimento da seção 6.4: verifique `/srv/midia/sonarr/`, mova o que houver e use o
-> **Mass Editor** antes de remover as raízes antigas.
+> modo de seleção em massa antes de remover as raízes antigas.
 
 ### 7.3. Cliente de download
 
@@ -958,7 +1007,8 @@ Correção pontual, item a item:
 Correção definitiva, para não voltar a acontecer:
 
 1. No Sonarr, mudar o **Series Folder Format** para incluir `{tvdb-{TvdbId}}` (Parte 7.1)
-2. **Series** → **Mass Editor** → selecionar tudo → **Rename Files**
+2. **Séries** → **Selecionar a Série** → selecionar tudo → **Editar** → **Pasta raiz** = a mesma
+   pasta atual (isso renomeia as pastas, ver Parte 7.1)
 3. No Jellyfin, **Atualizar metadados** com **Substituir todos os metadados** marcado
 
 > [!NOTE]
@@ -1438,6 +1488,7 @@ Tudo isso vive em `/srv/<serviço>`, no disco do sistema, e é coberto pelos sna
 | Toca no celular mas falha no navegador           | iOS faz Direct Play, navegador força transcode                 | Ver Parte 11.5                                                          |
 | Jellyfin mostra títulos em japonês               | Idioma de metadados é definido por biblioteca                  | Ver Parte 11.1, exige "Substituir todos os metadados"                    |
 | Série identificada como outra obra               | Pasta sem ID externo, o scanner adivinha pelo título           | Ver Parte 11.1 e o aviso da Parte 7.1                                   |
+| Mudei o formato da pasta e nada foi renomeado     | "Renomear Arquivos" só mexe em arquivos, não em pastas         | Editar → Pasta raiz → a mesma pasta atual. Ver Parte 7.1                 |
 | Formato personalizado não bloqueia nada          | Pontuação `0` no perfil de qualidade                           | Criar o formato é só metade, pontue em Profiles. Ver Partes 6.5 e 6.6    |
 | Legenda dessincroniza ao longo do episódio       | "Do Not Fix Framerate Mismatch" ligado no Bazarr               | Desligar. Ver Parte 8.3                                                 |
 | Arquivo com legenda embutida sempre transcodifica| Legenda PGS/VobSub é imagem e precisa ser queimada no vídeo    | Ligar "Ignore Embedded PGS/VobSub" no Bazarr. Ver Parte 8.3              |
