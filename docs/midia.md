@@ -1116,6 +1116,45 @@ docker stats jellyfin --no-stream
 
 Se aparecer `-hwaccel rkmpp` e a CPU ficar abaixo de uns 30%, a aceleração está ativa.
 
+#### Medir o ganho, sem depender de "parece mais rápido"
+
+O melhor indicador é o `speed=` do próprio FFmpeg. Rode os dois e compare:
+
+```bash
+ARQ="/data/Animes/ALGUMA_SERIE/ALGUM_EPISODIO.mkv"
+
+# Hardware: decode RKMPP -> RGA -> encode RKMPP
+docker exec jellyfin /usr/lib/jellyfin-ffmpeg/ffmpeg -hide_banner -nostats -loglevel info \
+  -init_hw_device rkmpp=rk -hwaccel rkmpp -hwaccel_output_format drm_prime \
+  -i "$ARQ" -t 60 -an -vf "scale_rkrga=w=1280:h=720:format=nv12" \
+  -c:v h264_rkmpp -b:v 3M -f null - 2>&1 | grep -E "^frame=" | tail -1
+
+# Software, para comparar
+docker exec jellyfin /usr/lib/jellyfin-ffmpeg/ffmpeg -hide_banner -nostats -loglevel info \
+  -i "$ARQ" -t 60 -an -vf "scale=1280:720" \
+  -c:v libx264 -preset veryfast -b:v 3M -f null - 2>&1 | grep -E "^frame=" | tail -1
+```
+
+Medição real nesta placa, transcodificando 60 s de HEVC 1080p 10-bit para H.264 720p:
+
+| Modo | fps | `speed` |
+| :--- | ---: | ---: |
+| **Hardware** (RKMPP + RGA) | 664 | **27,7x** |
+| Software (libx264 veryfast) | 24 | **1,02x** |
+
+O número que realmente importa é o `1,02x` do software: o transcode mal empatava com a reprodução em
+tempo real, então qualquer seek, segundo cliente ou tarefa concorrente já causava engasgo. Com a VPU
+sobra folga de 27 vezes.
+
+> [!TIP]
+> O `rga_api version 1.10.4` que aparece no início da saída é informativo, não é erro: significa que
+> a biblioteca de scaling por hardware inicializou.
+
+Se o teste de hardware falhar com `Unsupported input pixel format 'nv15'`, não é defeito: o decode de
+HEVC **10-bit** no Rockchip devolve `nv15`, e o encoder só aceita `nv12`. É exatamente para isso que
+serve o filtro `scale_rkrga=...:format=nv12` no meio do comando. O Jellyfin monta essa conversão
+sozinho, então isso só aparece em teste manual mal montado.
+
 ### 11.4. `Failed to init MPP context: -1`, o erro que exige `privileged`
 
 Este é o erro que trava o transcode por hardware e engana quem procura a causa, porque **parece**
